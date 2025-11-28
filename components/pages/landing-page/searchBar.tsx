@@ -1,29 +1,81 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { useState } from "react";
 
 export default function SearchBar() {
+  // === Local States ===
   const [query, setQuery] = useState({ type: "buy", location: "", minPrice: 0, maxPrice: 0 });
 
+  // === Toggle between "buy" and "rent" ===
   const switchType = (value: string) => {
-    setQuery((prev) => ({ ...prev, type: value}))
+    setQuery((prev) => ({ ...prev, type: value }))
   }
 
   return (
     <div>
-      <div className="border w-fit rounded-tl-xs rounded-none rounded-tr-xs">
-        <Button onClick={() => switchType("buy")} className={`${ query.type === 'buy' ? 'bg-[#262626] text-white' : 'bg-transparent text-black' } px-9 py-6 rounded-tl-xs rounded-bl-none rounded-tr-none rounded-br-none hover:text-white `}>Buy</Button>
-        <Button onClick={() => switchType("rent")} className={`${ query.type === 'rent' ? 'bg-[#262626] text-white' : 'bg-transparent text-black' } px-9 py-6 rounded-tr-xs rounded-bl-none rounded-tl-none rounded-br-none hover:text-white `}>Rent</Button>
+
+      {/* Top Toggle Buttons (Dynamic) */}
+      <div className="border w-fit rounded-tl-xs rounded-tr-xs overflow-hidden">
+        {["buy", "rent"].map((type) => (
+          <Button
+            key={type}
+            onClick={() => switchType(type)}
+            className={cn(
+              "px-9 py-6 rounded-none hover:text-white transition-colors",
+              query.type === type
+                ? "bg-[#262626] text-white"
+                : "bg-transparent text-black"
+            )}
+          >
+            {type.charAt(0).toUpperCase() + type.slice(1)}
+          </Button>
+        ))}
       </div>
 
-        <form action="" className="border h-16 -mt-px flex flex-row justify-between gap-1 rounded-bl-xs rounded-tl-none overflow-hidden rounded-tr-xs rounded-br-xs">
-          <input type="text" name="city" placeholder="City Location" className="px-0.5 w-48 outline-none  py-2.5"/>
-          <input type="number" min={0} name="min-price" placeholder="Min Price" className="px-9 w-48 outline-none py-6"/>
-          <input type="number" min={0} name="max-price" placeholder="Max Price" className="px-9 w-48 outline-none py-6"/>
-          <Button type="submit" size={'icon'} className="border-none cursor-pointer bg-[#cb6441] flex-1 h-full rounded-none"><Search className="size-6" /></Button>
-        </form>
+      {/* Form Section */}
+      <form action="" className="sm:border py-1 sm:py-0 -mt-px grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-1 rounded-bl-xs rounded-tl-none overflow-hidden rounded-tr-xs rounded-br-xs">
+
+        {/* Location */}
+        <input
+          type="text"
+          name="city"
+          onChange={(e) =>
+            setQuery((prev) => ({ ...prev, location: e.target.value }))
+          }
+          placeholder="City Location"
+          className="px-3 w-full sm:max-w-60 min-w-20 border sm:border-none h-16"
+        />
+
+        {/* Min Price */}
+        <input
+          type="number"
+          min={0}
+          name="min-price"
+          onChange={(e) =>
+            setQuery((prev) => ({ ...prev, minPrice: Number(e.target.value) }))
+          }
+          placeholder="Min Price"
+          className="px-3 w-full sm:max-w-60 min-w-20 border sm:border-none h-16"
+        />
+
+        {/* Max Price */}
+        <input
+          type="number"
+          min={0}
+          name="max-price"
+          onChange={(e) =>
+            setQuery((prev) => ({ ...prev, maxPrice: Number(e.target.value) }))
+          }
+          placeholder="Max Price"
+          className="px-3 w-full sm:max-w-60 min-w-20 border sm:border-none h-16"
+        />
+
+        {/* Search Button */}
+        <Button type="submit" size={'icon'} className="max-w-20 w-20 border-none cursor-pointer bg-[#cb6441] flex-1 h-16 rounded-none"><Search className="size-6" /></Button>
+      </form>
     </div>
   )
 }
