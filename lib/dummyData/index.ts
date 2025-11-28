@@ -1,4 +1,17 @@
-export const listData = [
+
+export interface listDataInterface {
+    id: number
+      title: string
+      img: string
+      bedRooms: number
+      bathRooms: number
+      price: number
+      address: string
+      latitude: number
+      longitude: number
+}
+
+export const listData: listDataInterface[] = [
     {
       id: 1,
       title: 'A Great Apartment Next to the Beach',
