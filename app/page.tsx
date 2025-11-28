@@ -51,7 +51,7 @@ export default function Home() {
         <div className="w-1/2 lg:flex hidden items-center justify-center relative">
 
           {/* Soft background orbs + light Background */}
-          <div className="absolute w-96 right-0 h-full bg-[#eac9a8]/50 "></div>
+          <div className="absolute w-md right-0 h-full bg-[#eac9a8]/50 "></div>
           <div className="absolute top-20 left-10 w-28 h-28 bg-[#cb6441]/30 blur-3xl rounded-full"></div>
           <div className="absolute bottom-1/2 right-1/2 w-36 h-36 bg-[#eac9a8]/30 blur-2xl rounded-full"></div>
 
