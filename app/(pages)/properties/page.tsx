@@ -1,6 +1,7 @@
 import ListCard from "@/components/pages/properties/list-card";
 import Filter from "@/components/pages/properties/filter";
 import { listData } from "@/lib/dummyData";
+import MapWrapper from "@/components/ui/map-wrapper";
 
 export default function Properties() {
   return (
@@ -21,11 +22,12 @@ export default function Properties() {
       </section>
 
       {/* Right Sidebar Background (Desktop Only) */}
-      <aside className="hidden lg:flex w-md items-center justify-center relative">
+      <aside className="hidden lg:flex w-md items-center justify-center relative h-calc(100vh-100px)">
         
         {/* Soft background panel */}
         <div className="absolute right-0 h-full w-md bg-[#eac9a8]/50"></div>
 
+          <MapWrapper />
       </aside>
     </main>
   );
