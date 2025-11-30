@@ -71,7 +71,7 @@ export const listData: listDataInterface[] = [
       id: 6,
       title: 'Charming Apartment Near Park',
       img: "https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750",
-      bedRooms: 2,
+      bedRooms: 1,
       bathRooms: 1,
       price: 1100,
       address: "89 Green Street, London",
