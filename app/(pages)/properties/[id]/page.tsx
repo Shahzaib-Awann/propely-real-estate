@@ -16,32 +16,33 @@ export default function Properties() {
         {/* Image Carousel */}
         <div>
           <ImageSlider images={post.images} />
-          <div>
+        </div>
 
-            {/* Top: Post details & user info  */}
-            <div className="flex flex-row justify-between">
+        <div>
 
-              {/* Post Info */}
-              <div className="flex flex-col gap-5">
-                <h1 className="text-3xl font-semibold">{post.title}</h1>
-                <p className="flex items-center gap-1 text-xs sm:text-sm"><MapPin className="size-4 text-muted-foreground" /> {post.address}</p>
-                <p className="inline-flex items-center rounded-sm bg-[#eac9a8]/50 w-fit px-2.5 py-1 text-base sm:text-lg font-semibold text-[#cb6441]">$ {post.price}</p>
-              </div>
+          {/* Top: Post details & user info  */}
+          <div className="flex flex-row justify-between">
 
-              {/* User Info */}
-              <div className="flex flex-col items-center justify-center px-12 bg-[#eac9a8]/50 rounded-lg gap-5 ">
-                <div className="h-12 w-12 rounded-full overflow-hidden relative">
-                  <Image src={user.img} alt="Profile" fill className="object-cover" />
-                </div>
-                <span>{user.name}</span>
-              </div>
-
+            {/* Post Info */}
+            <div className="flex flex-col gap-5">
+              <h1 className="text-3xl font-semibold">{post.title}</h1>
+              <p className="flex items-center gap-1 text-xs sm:text-sm"><MapPin className="size-4 text-muted-foreground" /> {post.address}</p>
+              <p className="inline-flex items-center rounded-sm bg-[#eac9a8]/50 w-fit px-2.5 py-1 text-base sm:text-lg font-semibold text-[#cb6441]">$ {post.price}</p>
             </div>
 
-            {/* Bottom: Post description */}
-            <div className="mt-12 bg-[#eac9a8]/20 leading-6">
-              {post.description}
+            {/* User Info */}
+            <div className="flex flex-col items-center justify-center px-12 bg-[#eac9a8]/50 rounded-lg gap-5 ">
+              <div className="h-12 w-12 rounded-full overflow-hidden relative">
+                <Image src={user.img} alt="Profile" fill className="object-cover" />
+              </div>
+              <span>{user.name}</span>
             </div>
+
+          </div>
+
+          {/* Bottom: Post description */}
+          <div className="mt-12 bg-[#eac9a8]/20 leading-6">
+            {post.description}
           </div>
         </div>
 
