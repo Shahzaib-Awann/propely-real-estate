@@ -1,6 +1,21 @@
+import MapWrapper from "@/components/map/map-wrapper";
 import ImageSlider from "@/components/pages/view-property/image-slider";
+import { Button } from "@/components/ui/button";
 import { singlePostData, userData } from "@/lib/dummyData";
-import { MapPin } from "lucide-react";
+import {
+  Bath,
+  BedDouble,
+  Bookmark,
+  Building,
+  Bus,
+  CircleDollarSign,
+  MapPin,
+  MessageSquareText,
+  PawPrint,
+  Ruler,
+  School,
+  ToolCase,
+} from "lucide-react";
 import Image from "next/image";
 
 export default function Properties() {
@@ -8,52 +23,166 @@ export default function Properties() {
   const post = singlePostData;
 
   return (
-    <main className="flex flex-row flex-1 bg-transparent">
+    <main className="flex flex-col lg:flex-row flex-1 px-4 pb-20 lg:pb-0 max-h-[calc(100vh-80px)] bg-transparent overflow-y-scroll lg:overflow-y-hidden scroll-smooth">
 
-      {/* Left: Post Details */}
-      <section className="flex-1 w-full flex flex-col gap-10 pr-2 md:pr-10 max-h-[calc(100vh-100px)] pb-12">
+      {/* LEFT: Main Post Content */}
+      <section className="flex-3 max-h-full lg:overflow-y-auto scroll-smooth">
 
-        {/* Image Carousel */}
-        <div>
-          <ImageSlider images={post.images} />
-        </div>
+        {/* Post Content Container */}
+        <div className="w-full h-full flex flex-col gap-10 lg:pr-10">
 
-        <div>
+          {/* Image Slider */}
+          <div>
+            <ImageSlider images={post.images} />
+          </div>
 
-          {/* Top: Post details & user info  */}
-          <div className="flex flex-row justify-between">
+          {/* Details Wrapper */}
+          <div className="pb-12">
 
-            {/* Post Info */}
-            <div className="flex flex-col gap-5">
-              <h1 className="text-3xl font-semibold">{post.title}</h1>
-              <p className="flex items-center gap-1 text-xs sm:text-sm"><MapPin className="size-4 text-muted-foreground" /> {post.address}</p>
-              <p className="inline-flex items-center rounded-sm bg-[#eac9a8]/50 w-fit px-2.5 py-1 text-base sm:text-lg font-semibold text-[#cb6441]">$ {post.price}</p>
-            </div>
+            {/* Top Section: Title + User Info */}
+            <div className="flex flex-col md:flex-row justify-between gap-10">
 
-            {/* User Info */}
-            <div className="flex flex-col items-center justify-center px-12 bg-[#eac9a8]/50 rounded-lg gap-5 ">
-              <div className="h-12 w-12 rounded-full overflow-hidden relative">
-                <Image src={user.img} alt="Profile" fill className="object-cover" />
+              {/* Property Text Info */}
+              <div className="flex flex-col gap-3">
+                <h1 className="text-xl sm:text-2xl xl:text-3xl font-semibold">
+                  {post.title} Lorem ipsum dolor sit amet consectetur adipisicing elit. Quod, ab.
+                </h1>
+                <p className="flex items-center gap-1 text-sm">
+                  <MapPin className="size-4 text-muted-foreground" /> {post.address}
+                </p>
+                <p className="inline-flex items-center bg-[#eac9a8]/50 w-fit px-2.5 py-1 text-lg sm:text-xl font-semibold text-[#cb6441] rounded-sm">
+                  ${post.price}
+                </p>
               </div>
-              <span>{user.name}</span>
+
+              {/* User Card */}
+              <div className="flex flex-row md:flex-col items-center justify-center px-12 py-5 bg-[#eac9a8]/50 rounded-lg gap-5">
+                <div className="h-12 w-12 rounded-full overflow-hidden relative">
+                  <Image src={user.img} alt="Profile" fill className="object-cover" />
+                </div>
+                <span className="text-center">{user.name}</span>
+              </div>
             </div>
 
-          </div>
-
-          {/* Bottom: Post description */}
-          <div className="mt-12 bg-[#eac9a8]/20 leading-6">
-            {post.description}
+            {/* Description */}
+            <div className="mt-12 bg-[#eac9a8]/15 text-sm sm:text-base rounded-lg leading-6 p-4">
+              {post.description}
+            </div>
           </div>
         </div>
-
       </section>
 
-      {/* Right: Post Details */}
-      <aside className="hidden lg:flex w-md items-center justify-center relative h-calc(100vh-100px)">
+      {/* RIGHT: Sidebar */}
+      <aside className="flex-2 max-h-full lg:overflow-y-auto bg-[#eac9a8]/50 rounded-lg lg:rounded-none">
 
-        {/* Soft background panel */}
-        <div className="absolute right-0 h-full w-md bg-[#eac9a8]/50"></div>
+        {/* Sidebar Content */}
+        <div className="w-full p-5 flex flex-col gap-6">
 
+          {/* General Section */}
+          <h3 className="font-bold">General</h3>
+          <div className="bg-white/75 p-4 rounded-lg space-y-4 shadow-sm">
+
+            {/* Utilities */}
+            <div className="flex items-center gap-3">
+              <ToolCase className="text-[#cb6441]" />
+              <div>
+                <h2 className="font-bold">Utilities</h2>
+                <p className="text-sm">Renter is responsible</p>
+              </div>
+            </div>
+
+            {/* Pet Policy */}
+            <div className="flex items-center gap-3">
+              <PawPrint className="text-[#cb6441]" />
+              <div>
+                <h2 className="font-bold">Pet Policy</h2>
+                <p className="text-sm">Pets Allowed</p>
+              </div>
+            </div>
+
+            {/* Property Fees */}
+            <div className="flex items-center gap-3">
+              <CircleDollarSign className="text-[#cb6441]" />
+              <div>
+                <h2 className="font-bold">Property Fees</h2>
+                <p className="text-sm">Must have 3x the rent in total household income</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Sizes Section */}
+          <h3 className="font-bold">Sizes</h3>
+          <div className="w-full flex flex-wrap gap-4">
+
+            {/* Size */}
+            <div className="flex items-center gap-3 bg-white/75 p-2 rounded-lg shadow-sm">
+              <Ruler className="text-[#cb6441]" />
+              <p className="text-sm font-semibold">
+                {post.size} sqm ({Math.floor(post.size * 10.7639)} sqft)
+              </p>
+            </div>
+
+            {/* Bedrooms */}
+            <div className="flex items-center gap-3 bg-white/75 p-2 rounded-lg shadow-sm">
+              <BedDouble className="text-[#cb6441]" />
+              <p className="text-sm font-semibold">{post.bedRooms} bed</p>
+            </div>
+
+            {/* Bathrooms */}
+            <div className="flex items-center gap-3 bg-white/75 p-2 rounded-lg shadow-sm">
+              <Bath className="text-[#cb6441]" />
+              <p className="text-sm font-semibold">{post.bathroom} bathroom</p>
+            </div>
+          </div>
+
+          {/* Nearby Places Section */}
+          <h3 className="font-bold">Nearby Places</h3>
+          <div className="bg-white/75 p-4 rounded-lg shadow-sm flex flex-col sm:flex-row justify-between gap-5">
+
+            {/* School */}
+            <div className="flex items-center gap-3">
+              <School className="text-[#cb6441]" />
+              <div>
+                <h2 className="font-bold">School</h2>
+                <p className="text-sm">{post.school}</p>
+              </div>
+            </div>
+
+            {/* Bus */}
+            <div className="flex items-center gap-3">
+              <Bus className="text-[#cb6441]" />
+              <div>
+                <h2 className="font-bold">Bus Stop</h2>
+                <p className="text-sm">{post.bus}</p>
+              </div>
+            </div>
+
+            {/* Restaurant */}
+            <div className="flex items-center gap-3">
+              <Building className="text-[#cb6441]" />
+              <div>
+                <h2 className="font-bold">Restaurant</h2>
+                <p className="text-sm">{post.restaurant}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Location Map */}
+          <h3 className="font-bold">Location</h3>
+          <div className="h-48 w-full">
+            <MapWrapper items={[post]} className="rounded-lg shadow-sm" />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-between">
+            <Button className="p-6 bg-white" variant="secondary">
+              <MessageSquareText /> Send a message
+            </Button>
+            <Button className="p-6 bg-white" variant="secondary">
+              <Bookmark /> Save the place
+            </Button>
+          </div>
+        </div>
       </aside>
     </main>
   );

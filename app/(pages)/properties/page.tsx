@@ -5,30 +5,32 @@ import MapWrapper from "@/components/map/map-wrapper";
 
 export default function Properties() {
   return (
-    <main className="flex flex-row flex-1 bg-transparent">
+    <main className="flex flex-row h-[calc(100vh-80px)] px-4">
 
-      {/* Left: Filters + List */}
-      <section className="flex-1 w-full flex flex-col gap-10 pr-2 md:pr-10 overflow-y-scroll max-h-[calc(100vh-100px)] pb-12 scroll-smooth">
-        
-        {/* Filter Component */}
-        <Filter />
+      {/* LEFT: Filters + Property List */}
+      <section className="flex-3 h-full overflow-hidden">
 
-        {/* Property List */}
-        <div className="grid grid-cols-1 gap-8">
-          {listData.map((item) => (
-            <ListCard key={item.id} item={item} />
-          ))}
+        {/* Scrollable Content Wrapper */}
+        <div className="h-full flex flex-col gap-10 pr-4 lg:pr-10 py-5 overflow-y-scroll pb-12">
+
+          {/* Filter Component */}
+          <Filter />
+
+          {/* Properties List */}
+          <div className="grid grid-cols-1 gap-8">
+            {listData.map((item) => (
+              <ListCard key={item.id} item={item} />
+            ))}
+          </div>
+
         </div>
       </section>
 
-      {/* Right: Sidebar Background (Desktop Only) */}
-      <aside className="hidden lg:flex w-md items-center justify-center relative h-calc(100vh-100px)">
-        
-        {/* Soft background panel */}
-        <div className="absolute right-0 h-full w-md bg-[#eac9a8]/50"></div>
+      {/* RIGHT: Map Display (Desktop Only) */}
+      <aside className="hidden lg:block flex-2 h-full bg-[#eac9a8]/50 py-5">
 
-        {/* Map Component */}
-        <MapWrapper items={listData} />
+        {/* Interactive Map */}
+        <MapWrapper items={listData} className="rounded-lg" />
 
       </aside>
     </main>

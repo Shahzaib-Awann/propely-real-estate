@@ -14,7 +14,7 @@ import React from "react";
 const Filter = () => {
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2.5 w-full">
 
       {/* Heading */}
       <h1 className="text-2xl">

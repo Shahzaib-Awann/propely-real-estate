@@ -4,24 +4,24 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="bg-transparent text-black max-w-340 min-h-screen mx-auto px-5 flex flex-col">
+    <div className="bg-transparent text-black max-w-340 min-h-screen mx-auto flex flex-col">
 
       {/* Navbar */}
       <Navbar />
 
       {/* Main Content Section  */}
-      <div className="bg-green-500/0 flex flex-row flex-1">
+      <div className="flex flex-row flex-1 px-4">
 
         {/* Left: Heading + Search + Stats */}
-        <div className="w-1/2 flex-1 flex flex-col justify-center gap-12">
+        <div className="flex-3 flex flex-col justify-center gap-12 pb-12">
 
           {/* Heading */}
-          <h1 className="font-lato font-bold text-6xl">
+          <h1 className="font-lato font-bold text-6xl pr-0 lg:pr-12">
             Find Real Estate & Get Your Dream Place
           </h1>
 
           {/* Description */}
-          <p>
+          <p className="pr-0 lg:pr-12">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Porro reiciendis officia minus error aliquid optio eaque doloremque nobis explicabo in, voluptate, nemo incidunt quaerat. Tempore molestiae placeat accusantium numquam. Provident earum ipsa vitae id corporis.
           </p>
 
@@ -48,35 +48,33 @@ export default function Home() {
         </div>
 
         {/* Right: Background + Image Grid */}
-        <div className="w-1/2 lg:flex hidden items-center justify-center relative">
+        <div className="hidden lg:flex flex-2 justify-end items-center gap-4 lg:bg-[#eac9a8]/50 p-0 h-[calc(100vh-80px)]">
 
-          {/* Soft background orbs + light Background */}
-          <div className="absolute w-md right-0 h-full bg-[#eac9a8]/50 "></div>
-          <div className="absolute top-20 left-10 w-28 h-28 bg-[#cb6441]/30 blur-3xl rounded-full"></div>
-          <div className="absolute bottom-1/2 right-1/2 w-36 h-36 bg-[#eac9a8]/30 blur-2xl rounded-full"></div>
-
-          {/* Image Grid */}
-          <div className="grid grid-cols-2 gap-6 w-full max-w-xl">
-            {[
-              { src: "/images/img-1.jpg", className: "relative w-full lg:w-40 xl:w-full h-52 lg:left-20 xl:left-0 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
-              { src: "/images/img-2.jpg", className: "relative w-full lg:w-52 xl:w-full h-72 mt-6 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
-              { src: "/images/img-3.jpg", className: "relative w-full lg:w-40 xl:w-full h-72 -mt-6 lg:left-20 xl:left-0 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
-              { src: "/images/img-4.jpg", className: "relative w-full lg:w-56 xl:w-full h-52 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
-            ].map((img, idx) => (
-              <div
-                key={idx}
-                className={img.className}
-              >
-                <Image
-                  src={img.src}
-                  fill
-                  alt={`img-${idx + 1}`}
-                  sizes="(max-width: 1000px) 0px, 50vw"
-                  className="object-cover hover:scale-110 transition-all duration-300"
-                  loading="lazy"
-                />
-              </div>
-            ))}
+          {/* Wrapper */}
+          <div className="w-full h-auto px-6 py-5">
+            {/* Image Grid */}
+            <div className="grid grid-cols-2 gap-6 w-full max-w-xl">
+              {[
+                { src: "/images/img-1.jpg", className: "relative w-full xl:w-full h-52 xl:left-0 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
+                { src: "/images/img-2.jpg", className: "relative w-full xl:w-full h-72 mt-6 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
+                { src: "/images/img-3.jpg", className: "relative w-full xl:w-full h-72 -mt-6 xl:left-0 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
+                { src: "/images/img-4.jpg", className: "relative w-full xl:w-full h-52 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
+              ].map((img, idx) => (
+                <div
+                  key={idx}
+                  className={img.className}
+                >
+                  <Image
+                    src={img.src}
+                    fill
+                    alt={`img-${idx + 1}`}
+                    sizes="(max-width: 1000px) 0px, 50vw"
+                    className="object-cover hover:scale-110 transition-all duration-300"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
         </div>

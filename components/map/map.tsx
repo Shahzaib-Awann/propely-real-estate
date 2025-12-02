@@ -29,7 +29,7 @@ const Map = ({ items }: { items: listDataInterface[] }) => {
       center={[51.505, -0.09]}
       zoom={10}
       scrollWheelZoom={false}
-      className="w-full h-full rounded-lg"
+      className="w-full h-full"
     >
 
       {/* Map Tiles (OpenStreetMap Layer) */}

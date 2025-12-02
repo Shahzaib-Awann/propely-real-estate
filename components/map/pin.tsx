@@ -1,11 +1,10 @@
 import { listDataInterface } from '@/lib/dummyData'
 import Image from 'next/image'
 import Link from 'next/link'
-import React from 'react'
 import { Marker, Popup } from 'react-leaflet'
 
 // Pin: Renders one Marker with Popup
-const Pin = ({ item }: { item: listDataInterface }) => {
+const Pin = ({ item }: { item: listDataInterface  }) => {
     return (
         // Marker positioned by item coordinates
         <Marker position={[item.latitude, item.longitude]}>

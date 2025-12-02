@@ -16,7 +16,7 @@ const ListCard = ({ item }: { item: listDataInterface }) => {
   const propertyUrl = `/properties/${item.id}`;
 
   return (
-    <Card className="max-w-full p-4 flex flex-col sm:flex-row rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200">
+    <Card className="max-w-full p-4 m-0 flex flex-col sm:flex-row rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200">
       
       {/* Image Section */}
       <CardContent className="relative w-full h-40 sm:w-40 sm:h-44 md:h-44 sm:flex-2 shrink-0 overflow-hidden rounded-lg shadow-md p-0">

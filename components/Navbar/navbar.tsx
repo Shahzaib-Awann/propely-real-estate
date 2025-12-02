@@ -25,10 +25,10 @@ const links = [
 
 export default function Navbar() {
   return (
-    <nav className="flex items-center justify-between h-20 px-4 md:px-8 w-full bg-trasparent z-50 relative">
+    <nav className="flex items-center justify-between h-20  w-full bg-trasparent z-50 relative p-0 px-4">
       
       {/* Left: Logo + desktop links */}
-      <div className="flex flex-3 items-center gap-10">
+      <div className="flex flex-3 items-center gap-10 ">
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 font-bold text-xl font-geist w-24 h-14 relative">
@@ -49,17 +49,16 @@ export default function Navbar() {
       <MobileSheet />
 
       {/* Desktop sign‑in / sign‑up (hidden on mobile) */}
-      <div className="hidden md:flex flex-2 justify-end items-center gap-4" >
-      
-      {/* background highlight */}
-      <div className="absolute w-md right-0 h-full bg-[#eac9a8]/50 lg:block hidden -z-10"></div>
+      <div className="hidden md:flex flex-2 justify-end items-center gap-4 lg:bg-[#eac9a8]/50 h-full" >
 
+        <div className="px-6 py-5 flex gap-4 h-full">
         <Link href="#" className="px-5 py-2 rounded text-black font-medium hover:text-white hover:bg-[#cb6441] transition-colors font-lato" >
           Sign in
         </Link>
         <Link href="#" className="px-5 py-2 rounded text-white bg-[#cb6441] font-medium hover:bg-[#b55b3c] transition-colors font-lato">
           Sign up
         </Link>
+        </div>
 
       </div>
     </nav>

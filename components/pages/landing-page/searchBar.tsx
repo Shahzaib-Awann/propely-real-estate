@@ -15,7 +15,7 @@ export default function SearchBar() {
   }
 
   return (
-    <div>
+    <div className="pr-0 lg:pr-12">
 
       {/* Top Toggle Buttons (Dynamic) */}
       <div className="border w-fit rounded-tl-xs rounded-tr-xs overflow-hidden">
