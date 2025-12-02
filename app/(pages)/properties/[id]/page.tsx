@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
-export default function Properties() {
+export default function ViewProperty() {
   const user = userData;
   const post = singlePostData;
 
@@ -170,7 +170,17 @@ export default function Properties() {
           {/* Location Map */}
           <h3 className="font-bold">Location</h3>
           <div className="h-48 w-full">
-            <MapWrapper items={[post]} className="rounded-lg shadow-sm" />
+            <MapWrapper items={[{
+              id: post.id,
+              title: post.title,
+              img: post.images[0],
+              bedRooms: post.bedRooms,
+              bathRooms: post.bathroom,
+              price: post.price,
+              address: post.address,
+              latitude: post.latitude,
+              longitude: post.longitude,
+            }]} className="rounded-lg shadow-sm" />
           </div>
 
           {/* Buttons */}
