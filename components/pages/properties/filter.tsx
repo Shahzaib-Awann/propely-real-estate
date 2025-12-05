@@ -49,7 +49,7 @@ const Filter = () => {
               <SelectValue placeholder="Select a type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectGroup className="[&_div:focus]:bg-[#cb6441] [&_div:focus]:text-white">
+              <SelectGroup className="[&_div:focus]:bg-primary [&_div:focus]:text-primary-foreground">
                 <SelectItem value="any">Any</SelectItem>
                 <SelectItem value="buy">Buy</SelectItem>
                 <SelectItem value="rent">Rent</SelectItem>
@@ -68,7 +68,7 @@ const Filter = () => {
               <SelectValue placeholder="Select a Property" />
             </SelectTrigger>
             <SelectContent>
-              <SelectGroup className="[&_div:focus]:bg-[#cb6441] [&_div:focus]:text-white">
+              <SelectGroup className="[&_div:focus]:bg-primary [&_div:focus]:text-primary-foreground">
                 <SelectItem value="any">Any</SelectItem>
                 <SelectItem value="apartment">Apartment</SelectItem>
                 <SelectItem value="house">House</SelectItem>
@@ -127,7 +127,7 @@ const Filter = () => {
 
       {/* Search Button */}
       <div className="flex justify-end mt-2">
-        <Button className="flex-auto max-w-full bg-[#cb6441] h-12 rounded-none border-none flex items-center justify-center">
+        <Button className="flex-auto max-w-full bg-primary h-12 rounded-none border-none flex items-center justify-center">
           <Search className="size-6" />
         </Button>
       </div>

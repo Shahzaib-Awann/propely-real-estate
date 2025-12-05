@@ -20,7 +20,7 @@ const ListCard = ({ item }: { item: listDataInterface }) => {
       
       {/* Image Section */}
       <CardContent className="relative w-full h-40 sm:w-40 sm:h-44 md:h-44 sm:flex-2 shrink-0 overflow-hidden rounded-lg shadow-md p-0">
-        <Link href={propertyUrl} className="block w-full h-full">
+        <Link href={propertyUrl} className="relative block w-full h-full">
           {item.img && (
             <Image
               src={item.img}
@@ -57,7 +57,7 @@ const ListCard = ({ item }: { item: listDataInterface }) => {
 
             {/* Price Badge */}
             <Link href={propertyUrl}>
-              <div className="inline-flex items-center rounded-sm bg-[#eac9a8]/50 px-2.5 py-1 text-sm sm:text-base font-semibold text-[#cb6441]">
+              <div className="inline-flex items-center rounded-sm bg-side-panel px-2.5 py-1 text-sm sm:text-base font-semibold text-primary">
                 ${item.price.toLocaleString()}
               </div>
             </Link>
@@ -84,7 +84,7 @@ const ListCard = ({ item }: { item: listDataInterface }) => {
             ].map((i, idx) => (
               <div
                 key={idx}
-                className="inline-flex items-center gap-1 rounded-sm border bg-muted px-2.5 py-1"
+                className="inline-flex items-center gap-1 rounded border bg-muted/50 px-2.5 py-1"
               >
                 {i.icon}
                 <span className="font-medium">

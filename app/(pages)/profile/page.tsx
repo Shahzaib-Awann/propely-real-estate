@@ -15,7 +15,7 @@ export default function Profile() {
           {/* My List Header */}
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold">My List</h1>
-            <Button className="flex items-center gap-2 px-5 py-3 rounded text-white bg-[#cb6441] font-medium hover:bg-[#b55b3c] transition-colors font-lato">
+            <Button className="flex items-center gap-2 px-5 py-3 rounded text-primary-foreground bg-primary/90 font-medium hover:bg-primary transition-colors font-lato">
               <Plus /> <span className="hidden md:inline">Create New Post</span>
             </Button>
           </div>
@@ -33,14 +33,14 @@ export default function Profile() {
       </section>
 
       {/* RIGHT: User Info Panel (Desktop Only) */}
-      <aside className="flex flex-2 h-full bg-[#eac9a8]/50 pb-5 lg:pb-0 lg:py-5 rounded-lg lg:rounded-none">
+      <aside className="flex flex-2 h-full bg-side-panel pb-5 lg:pb-0 lg:py-5 rounded-lg lg:rounded-none">
 
         <div className="p-4 h-full w-full">
           <div className="flex flex-row justify-between">
             <h1 className="text-xl md:text-2xl">
               User Information
             </h1>
-            <Button className="px-5 py-3 rounded text-white bg-[#cb6441] font-medium hover:bg-[#b55b3c] transition-colors font-lato">
+            <Button className="px-5 py-3 rounded text-white bg-primary/90 font-medium hover:bg-primary transition-colors font-lato">
               <Pencil />
               <span className="hidden md:block">
                 Update Profile

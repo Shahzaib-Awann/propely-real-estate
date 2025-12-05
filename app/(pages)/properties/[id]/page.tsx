@@ -50,22 +50,22 @@ export default function ViewProperty() {
                 <p className="flex items-center gap-1 text-sm">
                   <MapPin className="size-4 text-muted-foreground" /> {post.address}
                 </p>
-                <p className="inline-flex items-center bg-[#eac9a8]/50 w-fit px-2.5 py-1 text-lg sm:text-xl font-semibold text-[#cb6441] rounded-sm">
+                <p className="inline-flex items-center bg-side-panel w-fit px-2.5 py-1 text-lg sm:text-xl font-semibold text-primary rounded-sm">
                   ${post.price}
                 </p>
               </div>
 
               {/* User Card */}
-              <div className="flex flex-row md:flex-col items-center justify-center px-12 py-5 bg-[#eac9a8]/50 rounded-lg gap-5">
+              <div className="flex flex-row md:flex-col items-center justify-center px-12 py-5 bg-side-panel rounded-lg gap-5">
                 <div className="h-12 w-12 rounded-full overflow-hidden relative">
-                  <Image src={user.img} alt="Profile" fill className="object-cover" />
+                  <Image src={user.img} alt="Profile" sizes="100px" fill className="object-cover" />
                 </div>
                 <span className="text-center">{user.name}</span>
               </div>
             </div>
 
             {/* Description */}
-            <div className="mt-12 bg-[#eac9a8]/15 text-sm sm:text-base rounded-lg leading-6 p-4">
+            <div className="mt-12 bg-side-panel/30 text-sm sm:text-base rounded-lg leading-6 p-4">
               {post.description}
             </div>
           </div>
@@ -73,7 +73,7 @@ export default function ViewProperty() {
       </section>
 
       {/* RIGHT: Sidebar */}
-      <aside className="flex-2 max-h-full lg:overflow-y-auto bg-[#eac9a8]/50 rounded-lg lg:rounded-none">
+      <aside className="flex-2 max-h-full lg:overflow-y-auto bg-side-panel rounded-lg lg:rounded-none">
 
         {/* Sidebar Content */}
         <div className="w-full p-5 flex flex-col gap-6">
@@ -84,7 +84,7 @@ export default function ViewProperty() {
 
             {/* Utilities */}
             <div className="flex items-center gap-3">
-              <ToolCase className="text-[#cb6441]" />
+              <ToolCase className="text-primary" />
               <div>
                 <h2 className="font-bold">Utilities</h2>
                 <p className="text-sm">Renter is responsible</p>
@@ -93,7 +93,7 @@ export default function ViewProperty() {
 
             {/* Pet Policy */}
             <div className="flex items-center gap-3">
-              <PawPrint className="text-[#cb6441]" />
+              <PawPrint className="text-primary" />
               <div>
                 <h2 className="font-bold">Pet Policy</h2>
                 <p className="text-sm">Pets Allowed</p>
@@ -102,7 +102,7 @@ export default function ViewProperty() {
 
             {/* Property Fees */}
             <div className="flex items-center gap-3">
-              <CircleDollarSign className="text-[#cb6441]" />
+              <CircleDollarSign className="text-primary" />
               <div>
                 <h2 className="font-bold">Property Fees</h2>
                 <p className="text-sm">Must have 3x the rent in total household income</p>
@@ -116,7 +116,7 @@ export default function ViewProperty() {
 
             {/* Size */}
             <div className="flex items-center gap-3 bg-white/75 p-2 rounded-lg shadow-sm">
-              <Ruler className="text-[#cb6441]" />
+              <Ruler className="text-primary" />
               <p className="text-sm font-semibold">
                 {post.size} sqm ({Math.floor(post.size * 10.7639)} sqft)
               </p>
@@ -124,13 +124,13 @@ export default function ViewProperty() {
 
             {/* Bedrooms */}
             <div className="flex items-center gap-3 bg-white/75 p-2 rounded-lg shadow-sm">
-              <BedDouble className="text-[#cb6441]" />
+              <BedDouble className="text-primary" />
               <p className="text-sm font-semibold">{post.bedRooms} bed</p>
             </div>
 
             {/* Bathrooms */}
             <div className="flex items-center gap-3 bg-white/75 p-2 rounded-lg shadow-sm">
-              <Bath className="text-[#cb6441]" />
+              <Bath className="text-primary" />
               <p className="text-sm font-semibold">{post.bathroom} bathroom</p>
             </div>
           </div>
@@ -141,7 +141,7 @@ export default function ViewProperty() {
 
             {/* School */}
             <div className="flex items-center gap-3">
-              <School className="text-[#cb6441]" />
+              <School className="text-primary" />
               <div>
                 <h2 className="font-bold">School</h2>
                 <p className="text-sm">{post.school}</p>
@@ -150,7 +150,7 @@ export default function ViewProperty() {
 
             {/* Bus */}
             <div className="flex items-center gap-3">
-              <Bus className="text-[#cb6441]" />
+              <Bus className="text-primary" />
               <div>
                 <h2 className="font-bold">Bus Stop</h2>
                 <p className="text-sm">{post.bus}</p>
@@ -159,7 +159,7 @@ export default function ViewProperty() {
 
             {/* Restaurant */}
             <div className="flex items-center gap-3">
-              <Building className="text-[#cb6441]" />
+              <Building className="text-primary" />
               <div>
                 <h2 className="font-bold">Restaurant</h2>
                 <p className="text-sm">{post.restaurant}</p>

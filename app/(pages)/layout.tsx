@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-transparent text-black max-w-340 min-h-screen mx-auto flex flex-col">
+    <div className="bg-background text-foreground max-w-340 min-h-screen mx-auto flex flex-col">
       
       {/* Navbar */}
       <Navbar />

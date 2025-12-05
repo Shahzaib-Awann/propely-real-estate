@@ -15,7 +15,7 @@ const Pin = ({ item }: { item: listDataInterface  }) => {
                 <div className='flex gap-5'>
                     {/* Image */}
                     <div className='w-16 h-12 relative overflow-hidden rounded shrink-0'>
-                        <Image src={item.img} alt="image" fill className='object-cover' loading='lazy' />
+                        <Image src={item.img} sizes='64px' alt="image" fill className='object-cover' loading='lazy' />
                     </div>
 
                     {/* Info container: title (link, truncated), bedrooms, price, */}

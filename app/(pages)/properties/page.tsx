@@ -27,7 +27,7 @@ export default function Properties() {
       </section>
 
       {/* RIGHT: Map Display (Desktop Only) */}
-      <aside className="hidden lg:block flex-2 h-full bg-[#eac9a8]/50 py-5">
+      <aside className="hidden lg:block flex-2 h-full bg-side-panel py-5">
 
         {/* Interactive Map */}
         <MapWrapper items={listData} className="rounded-lg" />

@@ -24,10 +24,10 @@ export default function SearchBar() {
             key={type}
             onClick={() => switchType(type)}
             className={cn(
-              "px-9 py-6 rounded-none hover:text-white transition-colors",
+              "px-9 py-6 rounded-none transition-colors",
               query.type === type
-                ? "bg-[#262626] text-white"
-                : "bg-transparent text-black"
+                ? "bg-foreground text-background"
+                : "bg-transparent text-foreground hover:text-primary-foreground"
             )}
           >
             {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -74,7 +74,7 @@ export default function SearchBar() {
         />
 
         {/* Search Button */}
-        <Button type="submit" size={'icon'} className="max-w-20 w-20 border-none cursor-pointer bg-[#cb6441] flex-1 h-16 rounded-none"><Search className="size-6" /></Button>
+        <Button type="submit" size={'icon'} className="max-w-20 w-20 border-none cursor-pointer bg-primary text-primary-foreground flex-1 h-16 rounded-none"><Search className="size-6" /></Button>
       </form>
     </div>
   )

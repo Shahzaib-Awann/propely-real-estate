@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="bg-transparent text-black max-w-340 min-h-screen mx-auto flex flex-col">
+    <div className="bg-background text-foreground max-w-340 min-h-screen mx-auto flex flex-col">
 
       {/* Navbar */}
       <Navbar />
@@ -48,7 +48,7 @@ export default function Home() {
         </div>
 
         {/* Right: Background + Image Grid */}
-        <div className="hidden lg:flex flex-2 justify-end items-center gap-4 lg:bg-[#eac9a8]/50 p-0 h-[calc(100vh-80px)]">
+        <div className="hidden lg:flex flex-2 justify-end items-center gap-4 lg:bg-side-panel p-0 h-[calc(100vh-80px)]">
 
           {/* Wrapper */}
           <div className="w-full h-auto px-6 py-5">
