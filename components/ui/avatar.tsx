@@ -28,6 +28,7 @@ function AvatarImage({
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
+      sizes="100px"
       className={cn("aspect-square size-full", className)}
       {...props}
     />
