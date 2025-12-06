@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import ChatsCardList from "@/components/pages/profile/chat/chats-card-list";
-import ViewConversation from "@/components/pages/profile/chat/view-conversations";
+import ChatsCardList from "@/components/pages/profile/chats/chats-card-list";
+import ViewConversation from "@/components/pages/profile/chats/view-conversations";
 import { cn } from "@/lib/utils";
 import { chatslist } from "@/lib/dummyData";
 

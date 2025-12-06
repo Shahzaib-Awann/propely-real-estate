@@ -10,7 +10,7 @@ import {
   SheetClose,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Menu, X } from "lucide-react";
+import { Menu, MessageCircleMore, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { userData } from "@/lib/dummyData";
 import { Button } from "../ui/button";
@@ -22,7 +22,7 @@ const links = [
   { title: "Agents", url: "/agents" },
 ];
 
-const user = true;
+const user = false;
 
 export default function Navbar() {
   return (
@@ -73,13 +73,14 @@ export default function Navbar() {
               </Link>
 
               {/* Desktop: show name + profile button */}
-              <div className="hidden md:flex items-center gap-4 font-semibold">
-                <Link href="/profile">
+              <div className="flex items-center gap-4 font-semibold">
+                <Link href="/chats">
                   <Button className="px-5 py-3 rounded-radius bg-primary text-primary-foreground font-medium hover:bg-primary/80 transition-colors font-lato relative">
                     <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs shadow-sm">
                       3
                     </span>
-                    Chats
+                    <MessageCircleMore className="md:hidden block" />
+                    <span className="hidden md:block">Chats</span>
                   </Button>
                 </Link>
               </div>
@@ -87,13 +88,13 @@ export default function Navbar() {
           ) : (
             <div className="hidden md:flex gap-2">
               <Link
-                href="#"
+                href="/sign-in"
                 className="px-5 h-10 rounded-radius font-medium text-foreground hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors font-lato"
               >
                 Sign in
               </Link>
               <Link
-                href="#"
+                href="/sign-up"
                 className="px-5 h-10 rounded-radius bg-primary text-primary-foreground hover:bg-primary/80 flex items-center justify-center font-medium transition-colors font-lato"
               >
                 Sign up
@@ -116,7 +117,7 @@ const MobileSheet = () => {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button size="icon" className="rounded-radius focus:outline-none focus:ring-0 hover:bg-card-foreground hover:text-primary-foreground/75 transition-all duration-300">
+        <Button size="icon" className="rounded-radius bg-transparent text-foreground focus:outline-none focus:ring-0 hover:bg-card-foreground hover:text-primary-foreground/75 transition-all duration-300">
           <Menu className="size-5" />
         </Button>
       </SheetTrigger>
@@ -148,14 +149,14 @@ const MobileSheet = () => {
           {!user && (
             <>
               <Link
-                href="#"
-                className="text-lg text-foreground hover:text-primary hover:underline transition-colors"
+                href="/sign-in"
+                className="text-lg text-primary-foreground hover:text-primary hover:underline transition-colors"
               >
                 Sign in
               </Link>
               <Link
-                href="#"
-                className="text-lg text-foreground hover:text-primary hover:underline transition-colors"
+                href="/sign-up"
+                className="text-lg text-primary-foreground hover:text-primary hover:underline transition-colors"
               >
                 Sign up
               </Link>
