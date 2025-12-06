@@ -21,8 +21,9 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SignInFormSchema } from "@/lib/zod/schema";
+import { SignInFormSchema } from "@/lib/zod/schema.zod";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export default function SignInForm() {
   const [loading, setLoading] = useState(false);
@@ -37,6 +38,7 @@ export default function SignInForm() {
     await new Promise((r) => setTimeout(r, 1500));
     setLoading(false);
     console.log(values);
+    toast.success("Login Success")
   }
 
   return (

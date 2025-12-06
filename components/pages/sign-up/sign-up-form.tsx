@@ -21,8 +21,9 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SignUpFormSchema } from "@/lib/zod/schema";
+import { SignUpFormSchema } from "@/lib/zod/schema.zod";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export default function SignUpForm() {
   const [loading, setLoading] = useState(false);
@@ -37,6 +38,7 @@ export default function SignUpForm() {
     await new Promise((r) => setTimeout(r, 1500));
     setLoading(false);
     console.log(values);
+    toast.success("Login Success")
   }
 
   return (
@@ -120,7 +122,7 @@ export default function SignUpForm() {
 
             {/* SUBMIT */}
             <Field orientation="horizontal">
-              <Button disabled={loading} type="submit" className="w-full h-14 text-base">
+              <Button disabled={loading} type="submit" className="w-full h-14 text-base rounded-sm">
                 {loading ? "Submitting…" : "Submit"}
               </Button>
             </Field>

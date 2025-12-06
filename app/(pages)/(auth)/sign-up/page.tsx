@@ -2,6 +2,7 @@ import SignUpForm from "@/components/pages/sign-up/sign-up-form";
 import Image from "next/image";
 
 export default function SignIn() {
+  
   return (
     <div className="bg-background text-foreground max-w-340 min-h-[calc(100vh-80px)] mx-auto flex flex-col">
 
@@ -11,7 +12,7 @@ export default function SignIn() {
         {/* Left: Heading + Search + Stats */}
         <div className="flex-3 flex flex-col justify-center gap-10">
 
-          <h1 className="text-2xl text-center font-medium">Sign Up</h1>
+          <h1 className="text-3xl text-center font-medium">Sign Up</h1>
           <SignUpForm />
 
         </div>

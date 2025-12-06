@@ -11,7 +11,7 @@ export default function SignIn() {
         {/* Left: Heading + Search + Stats */}
         <div className="flex-3 flex flex-col justify-center gap-10">
 
-          <h1 className="text-2xl text-center font-medium">Sign In</h1>
+          <h1 className="text-3xl text-center font-medium">Sign In</h1>
           <SignInForm />
 
         </div>

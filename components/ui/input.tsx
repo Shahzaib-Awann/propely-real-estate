@@ -22,7 +22,7 @@ function Input({ className, type, variant = "default", ...props }: InputProps) {
   const primaryStyles = cn(
     baseStyles,
     "border-input",
-    "focus-visible:border-primary",
+    "focus-visible:border-primary rounded-sm",
     "focus-visible:ring-0",
     "focus-visible:outline-none",
     className
