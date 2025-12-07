@@ -2,7 +2,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 interface InputProps extends React.ComponentProps<"input"> {
-  variant?: "default" | "simple" | "primary"
+  variant?: "default" | "simple" | "primary" | "unstyled"
 }
 
 function Input({ className, type, variant = "default", ...props }: InputProps) {
@@ -28,12 +28,20 @@ function Input({ className, type, variant = "default", ...props }: InputProps) {
     className
   )
 
+  // --- NEW VARIANT: UNSTYLED ---
+  const unstyledStyles = cn(
+    "bg-transparent border-0 outline-none shadow-none p-0 m-0 focus-visible:outline-none focus-visible:ring-0",
+    className
+  )
+
   return (
     <input
       type={type}
       data-slot="input"
       className={
-        variant === "simple"
+        variant === "unstyled"
+          ? unstyledStyles
+          : variant === "simple"
           ? simpleStyles
           : variant === "primary"
           ? primaryStyles

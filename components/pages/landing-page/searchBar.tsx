@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { useState } from "react";
@@ -39,8 +40,9 @@ export default function SearchBar() {
       <form action="" className="sm:border py-1 sm:py-0 -mt-px grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-1 rounded-bl-xs rounded-tl-none overflow-hidden rounded-tr-xs rounded-br-xs">
 
         {/* Location */}
-        <input
+        <Input
           type="text"
+          variant="unstyled"
           name="city"
           onChange={(e) =>
             setQuery((prev) => ({ ...prev, location: e.target.value }))
@@ -50,8 +52,9 @@ export default function SearchBar() {
         />
 
         {/* Min Price */}
-        <input
+        <Input
           type="number"
+          variant="unstyled"
           min={0}
           name="min-price"
           onChange={(e) =>
@@ -62,8 +65,9 @@ export default function SearchBar() {
         />
 
         {/* Max Price */}
-        <input
+        <Input
           type="number"
+          variant="unstyled"
           min={0}
           name="max-price"
           onChange={(e) =>

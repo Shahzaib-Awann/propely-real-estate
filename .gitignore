@@ -34,10 +34,8 @@ yarn-error.log*
 
 # Env files
 .env*
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+*.env
+*.env.*
 
 # VS Code settings
 .vscode/
@@ -48,3 +46,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Drizzle
+/lib/db/migrations
