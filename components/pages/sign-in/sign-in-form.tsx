@@ -99,7 +99,7 @@ export default function SignInForm() {
 
             {/* SUBMIT */}
             <Field orientation="horizontal">
-              <Button disabled={loading} type="submit" className="w-full h-14 text-base">
+              <Button disabled={loading} type="submit" className="w-full h-14 text-base rounded-none">
                 {loading ? "Submitting…" : "Submit"}
               </Button>
             </Field>

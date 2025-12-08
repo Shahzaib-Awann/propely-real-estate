@@ -6,12 +6,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
-  Form,
-  FormField,
-  FormControl,
-} from "@/components/ui/form";
-
-import {
   Field,
   FieldGroup,
   FieldSet,
@@ -28,7 +22,11 @@ import toast from "react-hot-toast";
 export default function SignUpForm() {
   const [loading, setLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof SignUpFormSchema>>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<z.infer<typeof SignUpFormSchema>>({
     resolver: zodResolver(SignUpFormSchema),
     defaultValues: { name: "", email: "", password: "" },
   });
@@ -38,100 +36,93 @@ export default function SignUpForm() {
     await new Promise((r) => setTimeout(r, 1500));
     setLoading(false);
     console.log(values);
-    toast.success("Login Success")
+    toast.success("Login Success");
   }
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="max-w-80 w-full mx-auto"
-      >
-        <FieldSet>
-          <FieldGroup>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="max-w-80 w-full mx-auto"
+    >
+      <FieldSet>
+        <FieldGroup>
 
-            {/* Name */}
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={!!fieldState.error}>
-                  <FieldLabel htmlFor="name">Name</FieldLabel>
+          {/* NAME */}
+          <Field data-invalid={!!errors.name}>
+            <FieldLabel htmlFor="name">Name</FieldLabel>
 
-                  <FormControl>
-                    <Input
-                      id="name"
-                      placeholder="jhon Doe"
-                      variant="primary"
-                      className="h-14"
-                      {...field}
-                    />
-                  </FormControl>
-
-                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                </Field>
-              )}
+            <Input
+              id="name"
+              placeholder="John Doe"
+              variant="primary"
+              className="h-14"
+              {...register("name")}
             />
+
             
-            {/* EMAIL */}
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={!!fieldState.error}>
-                  <FieldLabel htmlFor="email">Email</FieldLabel>
+              <FieldError errors={[errors.name]} />
+          </Field>
 
-                  <FormControl>
-                    <Input
-                      id="email"
-                      placeholder="example123@xyz.com"
-                      variant="primary"
-                      className="h-14"
-                      {...field}
-                    />
-                  </FormControl>
+          {/* EMAIL */}
+          <Field data-invalid={!!errors.email}>
+            <FieldLabel htmlFor="email">Email</FieldLabel>
 
-                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                </Field>
-              )}
+            <Input
+              id="email"
+              placeholder="example123@xyz.com"
+              variant="primary"
+              className="h-14"
+              {...register("email")}
             />
 
-            {/* PASSWORD */}
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={!!fieldState.error}>
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
+            {errors.email && (
+              <FieldError>{errors.email.message}</FieldError>
+            )}
+          </Field>
 
-                  <FormControl>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••"
-                      variant="primary"
-                      className="h-14"
-                      {...field}
-                    />
-                  </FormControl>
+          {/* PASSWORD */}
+          <Field data-invalid={!!errors.password}>
+            <FieldLabel htmlFor="password">Password</FieldLabel>
 
-                  <FieldError errors={fieldState.error ? [fieldState.error] : []} />
-                </Field>
-              )}
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••"
+              variant="primary"
+              className="h-14"
+              {...register("password")}
             />
 
-            {/* SUBMIT */}
-            <Field orientation="horizontal">
-              <Button disabled={loading} type="submit" className="w-full h-14 text-base rounded-sm">
-                {loading ? "Submitting…" : "Submit"}
-              </Button>
-            </Field>
+            {errors.password && (
+              <FieldError>{errors.password.message}</FieldError>
+            )}
+          </Field>
 
-            <p className="text-sm text-center">Already have an <Link href="/sign-in" className="text-primary hover:underline">account?</Link></p>
+          {/* SUBMIT BUTTON */}
+          <Field orientation="horizontal">
+            <Button
+              disabled={loading}
+              type="submit"
+              className="w-full h-14 text-base rounded-none"
+            >
+              {loading ? "Submitting…" : "Submit"}
+            </Button>
+          </Field>
 
-          </FieldGroup>
-        </FieldSet>
-      </form>
-    </Form>
+          {/* SIGN-IN LINK */}
+          <p className="text-sm text-center">
+            Already have an{" "}
+            <Link
+              href="/sign-in"
+              className="text-primary hover:underline"
+            >
+              account?
+            </Link>
+            ?
+          </p>
+
+        </FieldGroup>
+      </FieldSet>
+    </form>
   );
 }
