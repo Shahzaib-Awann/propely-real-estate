@@ -14,13 +14,13 @@ import { usersTable } from "../db/schema";
  * @returns A user object with role info, or null if no match.
  * @error If a database error occurs during sign-in.
  */
-export const getUserForSignin = async (email: string, password: string) => {
+export const getUserForSignin = async (email: string) => {
     try {
         // === Query: Match user by email and password ===
         const [row] = await db
             .select()
             .from(usersTable)
-            .where(and(eq(usersTable.email, email), eq(usersTable.password, password)))
+            .where(eq(usersTable.email, email))
             .limit(1);
 
         // === If no match found, return null ===
@@ -34,6 +34,7 @@ export const getUserForSignin = async (email: string, password: string) => {
             avatar: row.avatar,
             name: row.name,
             email: row.email,
+            password: row.password,
             role: row.role,
             updatedAt: row.updatedAt,
             createdAt: row.createdAt,

@@ -7,6 +7,7 @@ import type { JWT } from "next-auth/jwt";
 import type { Session, User } from "next-auth";
 import { SignInFormSchema } from './lib/zod/schema.zod';
 import { getUserForSignin } from './lib/actions/user.action';
+import { verifyPassword } from './lib/utils/passwordHasher';
 
 
 
@@ -44,11 +45,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const { email, password } = parsed
 
         if (email && password) {
-          const user = await getUserForSignin(email, password);
+
+          // Fetch user by email
+          const user = await getUserForSignin(email);
 
           if (!user) return null;
 
-          return user;
+          // Compare input password with hashed password
+          const isValid = await verifyPassword(password, user.password);
+          if (!isValid) return null;
+
+          // Return user without password
+          const { password: _, ...safeUser } = user;  // eslint-disable-line
+
+          return safeUser;
         }
 
         return null;
