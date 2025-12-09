@@ -19,10 +19,13 @@ import { SignInFormSchema } from "@/lib/zod/schema.zod";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation";
 
 export default function SignInForm() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -34,11 +37,39 @@ export default function SignInForm() {
   });
 
   async function onSubmit(values: z.infer<typeof SignInFormSchema>) {
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setLoading(false);
-    console.log(values);
-    toast.success("Login Success");
+    try {
+      setLoading(true)
+      toast.loading("Logging in...", {
+        id: "login-loading",
+      })
+
+      const result = await signIn('credentials', {
+        email: values.email,
+        password: values.password,
+        redirect: false,
+        callbackUrl: "/",
+      });
+
+      // === Handle sign-in result ===
+      if (result?.error) {
+        if (result.error === 'CredentialsSignin') {
+          toast.error("Oops! We couldn't log you in. Double-check your email and password.");
+
+        } else {
+          toast.error(`We're having trouble: ${result.error}. Check logs or try again.`);
+        }
+      } else if (result?.ok) {
+        toast.success(`Successfully logged in. Welcome back!`);
+        router.push(result.url || '/');
+        window.location.href = '/';
+      }
+
+    } catch (e) {
+      console.log("Error from login page: ", e)
+    } finally {
+      setLoading(false)
+      toast.dismiss("login-loading")
+    }
   }
 
   return (

@@ -38,11 +38,17 @@ export default function SignUpForm() {
   });
 
   async function onSubmit(values: z.infer<typeof SignUpFormSchema>) {
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setLoading(false);
-    console.log(values);
+    try{
+      console.log(values);
+      setLoading(true);
+      await new Promise((r) => setTimeout(r, 1500));
+    
     toast.success("Login Success");
+    } catch(e) {
+      console.log(e)
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
