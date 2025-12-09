@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/sheet";
 import { Menu, MessageCircleMore, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { userData } from "@/lib/dummyData";
 import { Button } from "../ui/button";
+import { auth } from "@/auth";
+import { getAvatarFallback } from "@/lib/utils";
 
 const links = [
   { title: "Home", url: "/" },
@@ -22,9 +23,11 @@ const links = [
   { title: "Agents", url: "/agents" },
 ];
 
-const user = false;
+export default async function Navbar() {
 
-export default function Navbar() {
+  const session = await auth();
+  const user = session?.user;
+
   return (
     <nav className="flex items-center justify-between h-20 w-full bg-transparent z-50 relative p-0 px-4">
 
@@ -66,10 +69,10 @@ export default function Navbar() {
 
               <Link href="/profile" className="flex flex-row gap-2 items-center">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={userData.img} alt={userData.name} />
-                  <AvatarFallback>CN</AvatarFallback>
+                  <AvatarImage src={user.avatar ?? undefined} alt={user.name} />
+                  <AvatarFallback>{getAvatarFallback(user.name)}</AvatarFallback>
                 </Avatar>
-                <span className="lg:block hidden text-foreground">{userData.name}</span>
+                <span className="lg:block hidden text-foreground">{user.name}</span>
               </Link>
 
               {/* Desktop: show name + profile button */}
@@ -104,7 +107,7 @@ export default function Navbar() {
 
           {/* Mobile Menu */}
           <div className="md:hidden flex items-center">
-            <MobileSheet />
+            <MobileSheet user={!!user} />
           </div>
         </div>
       </div>
@@ -113,7 +116,7 @@ export default function Navbar() {
 }
 
 // === MOBILE SHEET MENU ===
-const MobileSheet = () => {
+const MobileSheet = ({ user }: { user: boolean }) => {
   return (
     <Sheet>
       <SheetTrigger asChild>
