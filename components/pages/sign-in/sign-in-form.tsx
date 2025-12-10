@@ -46,9 +46,9 @@ export default function SignInForm({ callbackUrl, email }: { callbackUrl: string
     try {
 
       setLoading(true)
-      toast.loading("Logging in...", {
-        id: "login-loading",
-      })
+      toast.loading("Signing you in...", {
+        id: "signin-loading",
+      });
 
       const result = await signIn('credentials', {
         email: values.email,
@@ -74,7 +74,7 @@ export default function SignInForm({ callbackUrl, email }: { callbackUrl: string
       console.log("Error from login page: ", e)
     } finally {
       setLoading(false)
-      toast.dismiss("login-loading")
+      toast.dismiss("signin-loading")
     }
   }
 
@@ -146,7 +146,7 @@ export default function SignInForm({ callbackUrl, email }: { callbackUrl: string
               type="submit"
               className="w-full h-14 text-base rounded-none"
             >
-              {loading ? "Submitting…" : "Submit"}
+              Sign In
             </Button>
           </Field>
 

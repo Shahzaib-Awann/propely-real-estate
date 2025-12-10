@@ -46,7 +46,12 @@ export default function SignUpForm() {
   /* === Submit Handler === */
   async function onSubmit(values: z.infer<typeof SignUpFormSchema>) {
     try {
-      
+
+      setLoading(true)
+      toast.loading("Creating your account...", {
+        id: "signup-loading",
+      });
+
       const res = await fetch("/api/auth/sign-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,6 +82,7 @@ export default function SignUpForm() {
       toast.error("Unexpected error");
     } finally {
       setLoading(false);
+      toast.dismiss("signup-loading")
     }
   }
   
@@ -171,7 +177,7 @@ export default function SignUpForm() {
               type="submit"
               className="w-full h-14 text-base rounded-none"
             >
-              {loading ? "Submitting…" : "Submit"}
+              Sign Up
             </Button>
           </Field>
 
