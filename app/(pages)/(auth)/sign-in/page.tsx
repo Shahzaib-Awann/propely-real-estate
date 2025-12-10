@@ -1,7 +1,17 @@
 import SignInForm from "@/components/pages/sign-in/sign-in-form";
+import SignInFormSkeleton from "@/components/skeletons";
 import Image from "next/image";
+import { Suspense } from "react";
 
-export default function SignIn() {
+export default async function SignIn(props: {
+  searchParams?: Promise<{
+    callbackUrl?: string;
+  }>;
+}) {
+
+  const searchParams = await props.searchParams;
+  const callbackUrl = searchParams?.callbackUrl || '/';
+
   return (
     <div className="bg-background text-foreground max-w-340 min-h-[calc(100vh-80px)] mx-auto flex flex-col">
 
@@ -12,7 +22,10 @@ export default function SignIn() {
         <div className="flex-3 flex flex-col justify-center gap-10">
 
           <h1 className="text-3xl text-center font-medium">Sign In</h1>
-          <SignInForm />
+          
+          <Suspense key={callbackUrl} fallback={<SignInFormSkeleton />}>
+            <SignInForm callbackUrl={callbackUrl} />
+          </Suspense>
 
         </div>
 

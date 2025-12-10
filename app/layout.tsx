@@ -34,11 +34,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${lato.variable} antialiased`}
       >
-            {children}
-            <Toaster
-  position="top-right"
-  reverseOrder={false}
-/>
+        {children}
+        <Toaster
+          position="top-right"
+          reverseOrder={false}
+        />
       </body>
     </html>
   );

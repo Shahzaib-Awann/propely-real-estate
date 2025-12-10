@@ -14,35 +14,42 @@ export const authConfig = {
   pages: {
     signIn: '/sign-in', // <- Custom sign-in page
   },
+
   callbacks: {
 
     /**
-     * Authorization callback to control access based on session and request path.
+     * Controls access to protected routes and redirect behavior.
      */
     authorized({ auth, request }: { auth: Session | null; request: NextRequest }) {
       const isLoggedIn = !!auth?.user;
+      const pathname = request.nextUrl.pathname;
 
       // Routes that require authentication
-      const protectedRoutes = ['/chats'];
-      const isProtected = protectedRoutes.some(path =>
-        request.nextUrl.pathname.startsWith(path)
+      const protectedRoutes = ["/chats"];
+      const isProtected = protectedRoutes.some((route) =>
+        pathname.startsWith(route)
       );
 
-      const isOnLoginPage = request.nextUrl.pathname === '/sign-in' || request.nextUrl.pathname === '/sign-up';
-
-      // If route is protected, allow only if logged in
-      if (isProtected) {
-        return isLoggedIn;
+      // Redirect unauthenticated users trying to access protected pages
+      if (isProtected && !isLoggedIn) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/sign-in";
+        url.searchParams.set("callbackUrl", pathname);
+        return Response.redirect(url);
       }
 
-      // Redirect logged-in users away from the login page
-      if (isLoggedIn && isOnLoginPage) {
-        return Response.redirect(new URL('/properties', request.nextUrl));
+      // Logged in user visits sign-in or sign-up → redirect home
+      const isAuthPage = pathname === "/sign-in" || pathname === "/sign-up";
+      if (isLoggedIn && isAuthPage) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/";
+        url.search = "";
+        return Response.redirect(url);
       }
 
-      // Allow access by default
       return true;
     },
   },
+  
   providers: [],
 };

@@ -22,7 +22,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation";
 
-export default function SignInForm() {
+export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
@@ -47,7 +47,7 @@ export default function SignInForm() {
         email: values.email,
         password: values.password,
         redirect: false,
-        callbackUrl: "/",
+        callbackUrl,
       });
 
       // === Handle sign-in result ===
@@ -60,8 +60,8 @@ export default function SignInForm() {
         }
       } else if (result?.ok) {
         toast.success(`Successfully logged in. Welcome back!`);
-        router.push(result.url || '/');
-        window.location.href = '/';
+        router.push(result.url || callbackUrl || "/");
+        window.location.href = result.url || callbackUrl || "/";
       }
 
     } catch (e) {
