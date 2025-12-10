@@ -21,6 +21,14 @@ import { verifyPassword } from './lib/utils/passwordHasher';
  */
 export const { handlers, signIn, signOut, auth } = NextAuth({
 
+  /**
+  * === Pages ===
+  *
+  * Custom Auth Pages
+  */
+  pages: {
+    signIn: '/sign-in',
+  },
 
   /**
    * === Providers ===

@@ -1,55 +1,58 @@
 // @/auth.config.ts
 
-import type { NextRequest } from 'next/server';
-import type { Session } from 'next-auth';
-
-
+import type { NextRequest } from "next/server";
+import type { Session } from "next-auth";
+import { NextResponse } from "next/server";
 
 /**
- * === Authentication Configuration for NextAuth ===
- * 
- * Defines custom sign-in page, authorization logic, and providers.
+ * === Request Authorization Utility ===
+ *
+ * Handles route protection logic based on user session state.
+ * Redirects unauthenticated users attempting to access protected routes.
  */
-export const authConfig = {
-  pages: {
-    signIn: '/sign-in', // <- Custom sign-in page
-  },
+export function authorizeRequest(
+  request: NextRequest,
+  session: Session | null
+) {
 
-  callbacks: {
+  /**
+   * === Extract Path & Session Info ===
+   *
+   * - `pathname`: Current request path.
+   * - `isLoggedIn`: Boolean indicating whether user is authenticated.
+   */
+  const pathname = request.nextUrl.pathname;
+  const isLoggedIn = !!session?.user;
 
-    /**
-     * Controls access to protected routes and redirect behavior.
-     */
-    authorized({ auth, request }: { auth: Session | null; request: NextRequest }) {
-      const isLoggedIn = !!auth?.user;
-      const pathname = request.nextUrl.pathname;
+  /**
+   * === Protected Routes Configuration ===
+   *
+   * - Define routes that require user authentication.
+   */
+  const protectedRoutes = ["/chats"];
+  const isProtected = protectedRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
 
-      // Routes that require authentication
-      const protectedRoutes = ["/chats"];
-      const isProtected = protectedRoutes.some((route) =>
-        pathname.startsWith(route)
-      );
+  /**
+   * === Unauthorized Access Handling ===
+   *
+   * - If user is not logged in and route is protected:
+   *   - Redirect to `/sign-in`.
+   *   - Attach `callbackUrl` to continue after login.
+   */
+  if (isProtected && !isLoggedIn) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/sign-in";
+    url.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(url);
+  }
 
-      // Redirect unauthenticated users trying to access protected pages
-      if (isProtected && !isLoggedIn) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/sign-in";
-        url.searchParams.set("callbackUrl", pathname);
-        return Response.redirect(url);
-      }
-
-      // Logged in user visits sign-in or sign-up → redirect home
-      const isAuthPage = pathname === "/sign-in" || pathname === "/sign-up";
-      if (isLoggedIn && isAuthPage) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/";
-        url.search = "";
-        return Response.redirect(url);
-      }
-
-      return true;
-    },
-  },
-  
-  providers: [],
-};
+  /**
+   * === Allow Request ===
+   *
+   * - If no protection applies or user is authenticated,
+   *   continue request without modification.
+   */
+  return null;
+}
