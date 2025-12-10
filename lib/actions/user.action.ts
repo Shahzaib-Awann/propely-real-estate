@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/connection";
 import { usersTable } from "../db/schema";
+import { hashPassword } from "../utils/passwordHasher";
 
 
 
@@ -44,4 +45,37 @@ export const getUserForSignin = async (email: string) => {
         console.error("Signin error:", error);
         return null
     }
+};
+
+
+
+/**
+ * === Create New User For Sign-Up ===
+ *
+ * - Creates a new user with hashed password; errors if email exists.
+ *
+ * @param name - Full name of the user.
+ * @param email - Unique email address.
+ * @param password - Plaintext password to hash and store.
+ * @throws "EMAIL_ALREADY_EXISTS" if email is already in use.
+ * @returns Resolves when user is successfully created.
+ */
+export const createUserForSignUp = async (name: string, email: string, password: string) => {
+
+    // === Check existing user ===
+    const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+
+    // === Error if email already exists ===
+    if (existing.length > 0) {
+        throw new Error("EMAIL_ALREADY_EXISTS");
+    }
+
+    const hashedPassword = await hashPassword(password)
+
+    // === Insert new user record ===
+    await db.insert(usersTable).values({
+        name,
+        email,
+        password: hashedPassword,
+    });
 };

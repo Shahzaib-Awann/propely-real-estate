@@ -19,15 +19,21 @@ import { SignUpFormSchema } from "@/lib/zod/schema.zod";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function SignUpForm() {
+
+  /* === Local State === */
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter()
 
+  /* Toggle password visibility */
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
+  /* === React Hook Form Setup === */
   const form = useForm<z.infer<typeof SignUpFormSchema>>({
     resolver: zodResolver(SignUpFormSchema),
     defaultValues: {
@@ -37,19 +43,43 @@ export default function SignUpForm() {
     },
   });
 
+  /* === Submit Handler === */
   async function onSubmit(values: z.infer<typeof SignUpFormSchema>) {
-    try{
-      console.log(values);
-      setLoading(true);
-      await new Promise((r) => setTimeout(r, 1500));
-    
-    toast.success("Login Success");
-    } catch(e) {
-      console.log(e)
+    try {
+      
+      const res = await fetch("/api/auth/sign-up", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+  
+      const result = await res.json();
+  
+      /* Handle auto-login failure */
+      if (result?.error === "AUTO_LOGIN_FAILED") {
+        toast.error("Your account is created, but please sign in manually.");
+        router.push(`/sign-in?email=${values.email}`);
+        return;
+      }
+  
+      /** Handle submission errors */
+      if (!res.ok) {
+        toast.error(result.error || "Sign-up failed");
+        return;
+      }
+  
+      /** Success handling */
+      toast.success("Account created and logged in!");
+      window.location.href = "/properties";
+  
+    } catch (e) {
+      console.error(e);
+      toast.error("Unexpected error");
     } finally {
       setLoading(false);
     }
   }
+  
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-80 w-full mx-auto">

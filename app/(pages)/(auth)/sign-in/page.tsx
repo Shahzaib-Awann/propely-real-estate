@@ -6,11 +6,13 @@ import { Suspense } from "react";
 export default async function SignIn(props: {
   searchParams?: Promise<{
     callbackUrl?: string;
+    email?: string;
   }>;
 }) {
 
   const searchParams = await props.searchParams;
   const callbackUrl = searchParams?.callbackUrl || '/';
+  const email = searchParams?.email ?? undefined;
 
   return (
     <div className="bg-background text-foreground max-w-340 min-h-[calc(100vh-80px)] mx-auto flex flex-col">
@@ -18,13 +20,13 @@ export default async function SignIn(props: {
       {/* Main Content Section  */}
       <div className="flex flex-row flex-1 px-4">
 
-        {/* Left: Heading + Search + Stats */}
+        {/* Left: Heading + Sign-in Form*/}
         <div className="flex-3 flex flex-col justify-center gap-10">
 
           <h1 className="text-3xl text-center font-medium">Sign In</h1>
           
           <Suspense key={callbackUrl} fallback={<SignInFormSkeleton />}>
-            <SignInForm callbackUrl={callbackUrl} />
+            <SignInForm callbackUrl={callbackUrl} email={email} />
           </Suspense>
 
         </div>

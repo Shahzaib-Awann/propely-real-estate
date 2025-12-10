@@ -9,7 +9,7 @@ export default function SignIn() {
       {/* Main Content Section  */}
       <div className="flex flex-row flex-1 px-4">
 
-        {/* Left: Heading + Search + Stats */}
+        {/* Left: Heading + Sign-Up Form */}
         <div className="flex-3 flex flex-col justify-center gap-10">
 
           <h1 className="text-3xl text-center font-medium">Sign Up</h1>
