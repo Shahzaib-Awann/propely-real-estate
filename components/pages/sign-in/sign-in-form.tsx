@@ -59,14 +59,12 @@ export default function SignInForm({ callbackUrl, email }: { callbackUrl: string
 
       /* Handle sign-in result */
       if (result?.error) {
-        if (result.error === 'CredentialsSignin') {
-          toast.error("Oops! We couldn't log you in. Double-check your email and password.");
-
-        } else {
-          toast.error(`We're having trouble: ${result.error}. Check logs or try again.`);
-        }
+        const message = result.error === "CredentialsSignin"
+            ? "Login failed. Check your email and password."
+            : `Error: ${result.error}. Try again.`;
+        toast.error(message);
       } else if (result?.ok) {
-        toast.success(`Successfully logged in. Welcome back!`);
+        toast.success("Logged in successfully! Welcome back.");
         window.location.href = result.url || callbackUrl || "/";
       }
 

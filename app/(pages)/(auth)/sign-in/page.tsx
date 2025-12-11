@@ -1,5 +1,5 @@
 import SignInForm from "@/components/pages/sign-in/sign-in-form";
-import SignInFormSkeleton from "@/components/skeletons";
+import { SignInFormSkeleton } from "@/components/skeletons";
 import Image from "next/image";
 import { Suspense } from "react";
 

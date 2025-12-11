@@ -62,7 +62,7 @@ export default function SignUpForm() {
   
       /* Handle auto-login failure */
       if (result?.error === "AUTO_LOGIN_FAILED") {
-        toast.error("Your account is created, but please sign in manually.");
+        toast.error("Account created. Please sign in.");
         router.push(`/sign-in?email=${values.email}`);
         return;
       }

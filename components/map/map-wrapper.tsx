@@ -4,6 +4,7 @@ import { listDataInterface } from '@/lib/dummyData';
 import { cn } from '@/lib/utils';
 import dynamic from 'next/dynamic'
 import { useMemo } from 'react'
+import { MapSkeleton } from '../skeletons';
 
 const MapWrapper = ({ items, className }: { items: listDataInterface[], className?: string }) => {
 
@@ -11,14 +12,15 @@ const MapWrapper = ({ items, className }: { items: listDataInterface[], classNam
   const Map = useMemo(() => dynamic(
     () => import('@/components/map/map'),
     {
-      loading: () => <p>Map is loading</p>, // <- loading text
+      loading: () => <MapSkeleton />, // <- loading text
       ssr: false  // <- Disable server-side rendering
     }
   ), [])
 
-  return <div className={cn("w-full h-full overflow-hidden", className)}>
-    <Map items={items} />
-  </div>
+  return  <div className={cn("w-full h-full overflow-hidden", className)}>
+            <Map items={items} />
+          </div>
+
 }
 
 export default MapWrapper
