@@ -2,8 +2,15 @@ import ListCard from "@/components/pages/properties/list-card";
 import Filter from "@/components/pages/properties/filter";
 import { listData } from "@/lib/dummyData";
 import MapWrapper from "@/components/map/map-wrapper";
+import { PropertiesQueryParamsInterface } from "@/lib/types/propely.type";
 
-export default function Properties() {
+
+export default async function Properties({ searchParams }: {
+  searchParams: Promise<PropertiesQueryParamsInterface>;
+}) {
+
+  const params = await searchParams;
+
   return (
     <main className="flex flex-row h-[calc(100vh-80px)] px-4">
 
@@ -14,7 +21,7 @@ export default function Properties() {
         <div className="h-full flex flex-col gap-10 pr-4 lg:pr-10 py-5 overflow-y-scroll pb-12">
 
           {/* Filter Component */}
-          <Filter />
+          <Filter params={params} />
 
           {/* Properties List */}
           <div className="grid grid-cols-1 gap-8">

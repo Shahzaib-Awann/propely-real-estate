@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -8,13 +10,53 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PropertiesQueryParamsInterface } from "@/lib/types/propely.type";
 import { Search } from "lucide-react";
-import React from "react";
+import { useRouter } from "next/navigation";
+import React, { useCallback, useState } from "react";
 
-const Filter = () => {
+const Filter = ({ params }: {
+  params: PropertiesQueryParamsInterface;
+}) => {
+
+  // === Local States ===
+  const router = useRouter()
+  const [query, setQuery] = useState({
+    type: params?.type ?? "any",
+    location: params?.location ?? "",
+    minPrice: params?.minPrice ?? "0",
+    maxPrice: params?.maxPrice ?? "0",
+    property: params?.property ?? "any",
+    bedroom: params?.bedroom ?? "0",
+  });
+
+  // === Generic handler for input fields ===
+  const handleChange = useCallback(
+    (key: keyof typeof query, value: string) =>
+      setQuery((prev) => ({ ...prev, [key]: value })),
+    []
+  );
+
+  // === Build search params & update URL without page reload ===
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const search = new URLSearchParams();
+
+    // Build URL only with non-empty values
+    if (query.type !== "any") search.set("type", query.type);
+    if (query.location.trim()) search.set("location", query.location);
+    if (query.minPrice && Number(query.minPrice) > 0) search.set("minPrice", query.minPrice);
+    if (query.maxPrice && Number(query.maxPrice) > 0) search.set("maxPrice", query.maxPrice);
+    if (query.property !== "any") search.set("property", query.property);
+    if (query.bedroom && Number(query.bedroom) > 0) search.set("bedroom", query.bedroom);
+
+    // Update URL
+    router.replace(`?${search.toString()}`, { scroll: false });
+  };
 
   return (
-    <div className="flex flex-col gap-2.5 w-full">
+    <form onSubmit={onSubmit} className="flex flex-col gap-2.5 w-full">
 
       {/* Heading */}
       <h1 className="text-2xl">
@@ -23,16 +65,15 @@ const Filter = () => {
 
       {/* Location Input */}
       <div className="flex flex-col">
-        <label htmlFor="city" className="text-xs">
-          Location
-        </label>
+        <label htmlFor="city" className="text-xs">Location</label>
         <Input
+          id="city"
           type="text"
           variant="simple"
           placeholder="City Location"
-          name="city"
-          id="city"
           className="rounded-xs ring-0"
+          value={query.location}
+          onChange={(e) => handleChange("location", e.target.value)}
         />
       </div>
 
@@ -44,15 +85,20 @@ const Filter = () => {
           <label htmlFor="type" className="text-xs">
             Type
           </label>
-          <Select defaultValue="any" name="type">
+          <Select
+            value={query.type}
+            onValueChange={(val) => handleChange("type", val)}
+            defaultValue="any">
             <SelectTrigger id="type" className="w-24 shrink-0 rounded-xs border shadow">
               <SelectValue placeholder="Select a type" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup className="[&_div:focus]:bg-primary [&_div:focus]:text-primary-foreground">
-                <SelectItem value="any">Any</SelectItem>
-                <SelectItem value="buy">Buy</SelectItem>
-                <SelectItem value="rent">Rent</SelectItem>
+                {["any", "buy", "rent"].map((opt) => (
+                  <SelectItem key={opt} value={opt}>
+                    {opt[0].toUpperCase() + opt.slice(1)}
+                  </SelectItem>
+                ))}
               </SelectGroup>
             </SelectContent>
           </Select>
@@ -63,17 +109,20 @@ const Filter = () => {
           <label htmlFor="property" className="text-xs">
             Property
           </label>
-          <Select defaultValue="any" name="property">
+          <Select
+            value={query.property}
+            onValueChange={(val) => handleChange("property", val)}
+            defaultValue="any">
             <SelectTrigger id="property" className="w-24 shrink-0 rounded-xs border shadow">
               <SelectValue placeholder="Select a Property" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup className="[&_div:focus]:bg-primary [&_div:focus]:text-primary-foreground">
-                <SelectItem value="any">Any</SelectItem>
-                <SelectItem value="apartment">Apartment</SelectItem>
-                <SelectItem value="house">House</SelectItem>
-                <SelectItem value="condo">Condo</SelectItem>
-                <SelectItem value="land">Land</SelectItem>
+                {["any", "apartment", "house", "condo", "land"].map((opt) => (
+                  <SelectItem key={opt} value={opt}>
+                    {opt[0].toUpperCase() + opt.slice(1)}
+                  </SelectItem>
+                ))}
               </SelectGroup>
             </SelectContent>
           </Select>
@@ -85,12 +134,15 @@ const Filter = () => {
             Min Price
           </label>
           <Input
+            id="minPrice"
             type="number"
             variant="simple"
             placeholder="Price"
             className="w-24 rounded-xs"
-            name="minPrice"
-            id="minPrice"
+            min={0}
+            step={100}
+            value={query.minPrice}
+            onChange={(e) => handleChange("minPrice", e.target.value)}
           />
         </div>
 
@@ -100,12 +152,15 @@ const Filter = () => {
             Max Price
           </label>
           <Input
+            id="maxPrice"
             type="number"
             variant="simple"
             placeholder="Price"
             className="w-24 rounded-xs"
-            name="maxPrice"
-            id="maxPrice"
+            min={0}
+            step={100}
+            value={query.maxPrice}
+            onChange={(e) => handleChange("maxPrice", e.target.value)}
           />
         </div>
 
@@ -115,23 +170,25 @@ const Filter = () => {
             Bedroom
           </label>
           <Input
+            id="bedroom"
             type="number"
             variant="simple"
             placeholder="XX"
             className="w-24 rounded-xs"
-            name="bedroom"
-            id="bedroom"
+            min={0}
+            value={query.bedroom}
+            onChange={(e) => handleChange("bedroom", e.target.value)}
           />
         </div>
       </div>
 
       {/* Search Button */}
       <div className="flex justify-end mt-2">
-        <Button className="flex-auto max-w-full bg-primary h-12 rounded-none border-none flex items-center justify-center">
+        <Button type="submit" className="flex-auto max-w-full bg-primary h-12 rounded-none border-none flex items-center justify-center">
           <Search className="size-6" />
         </Button>
       </div>
-    </div>
+    </form>
   );
 };
 
