@@ -4,16 +4,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function SearchBar() {
+
   // === Local States ===
   const [query, setQuery] = useState({ type: "buy", location: "", minPrice: 0, maxPrice: 0 });
+  const router = useRouter();
 
   // === Toggle between "buy" and "rent" ===
   const switchType = (value: string) => {
     setQuery((prev) => ({ ...prev, type: value }))
   }
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const params = new URLSearchParams();
+
+    // Build URL only with non-empty values
+    if (query.type) params.set("type", query.type);
+    if (query.location.trim().length > 0) params.set("location", query.location);
+    if (query.minPrice) params.set("minPrice", String(query.minPrice));
+    if (query.maxPrice) params.set("maxPrice", String(query.maxPrice));
+
+    // Navigate with query params
+    router.push(`/properties?${params.toString()}`);
+  };
 
   return (
     <div className="pr-0 lg:pr-12">
@@ -37,7 +55,7 @@ export default function SearchBar() {
       </div>
 
       {/* Form Section */}
-      <form action="" className="sm:border py-1 sm:py-0 -mt-px grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-1 rounded-bl-xs rounded-tl-none overflow-hidden rounded-tr-xs rounded-br-xs">
+      <form onSubmit={onSubmit} className="sm:border py-1 sm:py-0 -mt-px grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-1 rounded-bl-xs rounded-tl-none overflow-hidden rounded-tr-xs rounded-br-xs">
 
         {/* Location */}
         <Input
