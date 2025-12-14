@@ -39,3 +39,22 @@ export function getAvatarFallback(name: string): string {
 
   return initials;
 }
+
+
+/**
+ * === Build URLSearchParams from an object, ignoring undefined or empty values. ===
+ *
+ * Converts the provided object's entries into URLSearchParams, filtering out
+ * any keys with `undefined` or empty string values and converting all values to strings.
+ *
+ * @template T - Object type containing query parameters.
+ * @param {T} params - Object of key-value pairs to convert into search params.
+ * @returns - URLSearchParams instance ready for use in URLs.
+ */
+export function buildSearchParams<T extends object>(params: T) {
+  return new URLSearchParams(
+    Object.entries(params as Record<string, unknown>)
+      .filter(([, value]) => value !== undefined && value !== "")
+      .map(([key, value]) => [key, String(value)])
+  );
+}

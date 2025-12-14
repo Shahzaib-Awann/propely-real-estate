@@ -1,12 +1,12 @@
 "use client";
 
-import { listDataInterface } from '@/lib/dummyData';
 import { cn } from '@/lib/utils';
 import dynamic from 'next/dynamic'
 import { useMemo } from 'react'
 import { MapSkeleton } from '../skeletons';
+import { ListPropertyInterface } from '@/lib/types/propely.type';
 
-const MapWrapper = ({ items, className }: { items: listDataInterface[], className?: string }) => {
+const MapWrapper = ({ items, className }: { items: ListPropertyInterface[] , className?: string }) => {
 
   // Dynamically import Map with no SSR and custom loading message
   const Map = useMemo(() => dynamic(

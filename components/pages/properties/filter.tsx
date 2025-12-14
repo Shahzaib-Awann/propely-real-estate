@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PropertiesQueryParamsInterface } from "@/lib/types/propely.type";
+import { buildSearchParams } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useState } from "react";
@@ -41,22 +42,41 @@ const Filter = ({ params }: {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const search = new URLSearchParams();
+    // Normalize filter values (remove "any" / "0")
+    const normalizedParams = {
+      type: query.type !== "any" ? query.type : undefined,
+      location: query.location.trim() || undefined,
+      minPrice:
+        query.minPrice && Number(query.minPrice) > 0
+          ? query.minPrice
+          : undefined,
+      maxPrice:
+        query.maxPrice && Number(query.maxPrice) > 0
+          ? query.maxPrice
+          : undefined,
+      property: query.property !== "any" ? query.property : undefined,
+      bedroom:
+        query.bedroom && Number(query.bedroom) > 0
+          ? query.bedroom
+          : undefined,
 
-    // Build URL only with non-empty values
-    if (query.type !== "any") search.set("type", query.type);
-    if (query.location.trim()) search.set("location", query.location);
-    if (query.minPrice && Number(query.minPrice) > 0) search.set("minPrice", query.minPrice);
-    if (query.maxPrice && Number(query.maxPrice) > 0) search.set("maxPrice", query.maxPrice);
-    if (query.property !== "any") search.set("property", query.property);
-    if (query.bedroom && Number(query.bedroom) > 0) search.set("bedroom", query.bedroom);
+      // Pagination
+      limit:
+        params.limit && Number(params.limit) > 0
+          ? params.limit
+          : "5",
+      page: "1",
+    };
+
+    // Build query params
+    const searchParams = buildSearchParams(normalizedParams);
 
     // Update URL
-    router.replace(`?${search.toString()}`, { scroll: false });
+    router.replace(`?${searchParams.toString()}`, { scroll: false });
   };
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-2.5 w-full">
+    <form onSubmit={onSubmit} className="flex flex-col gap-2.5 w-full p-1">
 
       {/* Heading */}
       <h1 className="text-2xl">
@@ -81,7 +101,7 @@ const Filter = ({ params }: {
       <div className="flex flex-wrap gap-2 w-full justify-between">
 
         {/* Type Selector */}
-        <div className="flex flex-col">
+        <div className="flex-1 flex flex-col min-w-32">
           <label htmlFor="type" className="text-xs">
             Type
           </label>
@@ -89,7 +109,7 @@ const Filter = ({ params }: {
             value={query.type}
             onValueChange={(val) => handleChange("type", val)}
             defaultValue="any">
-            <SelectTrigger id="type" className="w-24 shrink-0 rounded-xs border shadow">
+            <SelectTrigger id="type" className="w-full shrink-0 rounded-xs border shadow">
               <SelectValue placeholder="Select a type" />
             </SelectTrigger>
             <SelectContent>
@@ -105,7 +125,7 @@ const Filter = ({ params }: {
         </div>
 
         {/* Property Selector */}
-        <div className="flex flex-col">
+        <div className="flex-1 flex flex-col min-w-32">
           <label htmlFor="property" className="text-xs">
             Property
           </label>
@@ -113,7 +133,7 @@ const Filter = ({ params }: {
             value={query.property}
             onValueChange={(val) => handleChange("property", val)}
             defaultValue="any">
-            <SelectTrigger id="property" className="w-24 shrink-0 rounded-xs border shadow">
+            <SelectTrigger id="property" className="w-full shrink-0 rounded-xs border shadow">
               <SelectValue placeholder="Select a Property" />
             </SelectTrigger>
             <SelectContent>
@@ -129,7 +149,7 @@ const Filter = ({ params }: {
         </div>
 
         {/* Min Price */}
-        <div className="flex flex-col">
+        <div className="flex-1 flex flex-col min-w-24">
           <label htmlFor="minPrice" className="text-xs">
             Min Price
           </label>
@@ -138,7 +158,7 @@ const Filter = ({ params }: {
             type="number"
             variant="simple"
             placeholder="Price"
-            className="w-24 rounded-xs"
+            className="rounded-xs"
             min={0}
             step={100}
             value={query.minPrice}
@@ -147,7 +167,7 @@ const Filter = ({ params }: {
         </div>
 
         {/* Max Price */}
-        <div className="flex flex-col">
+        <div className="flex-1 flex flex-col min-w-24">
           <label htmlFor="maxPrice" className="text-xs">
             Max Price
           </label>
@@ -156,7 +176,7 @@ const Filter = ({ params }: {
             type="number"
             variant="simple"
             placeholder="Price"
-            className="w-24 rounded-xs"
+            className="rounded-xs"
             min={0}
             step={100}
             value={query.maxPrice}
@@ -165,7 +185,7 @@ const Filter = ({ params }: {
         </div>
 
         {/* Bedrooms */}
-        <div className="flex flex-col">
+        <div className="flex-1 flex flex-col min-w-24">
           <label htmlFor="bedroom" className="text-xs">
             Bedroom
           </label>
@@ -174,20 +194,22 @@ const Filter = ({ params }: {
             type="number"
             variant="simple"
             placeholder="XX"
-            className="w-24 rounded-xs"
+            className="rounded-xs"
             min={0}
             value={query.bedroom}
             onChange={(e) => handleChange("bedroom", e.target.value)}
           />
         </div>
+
+        {/* Search Button */}
+        <div className="flex-1 flex justify-end mt-1">
+          <Button type="submit" className="flex-auto max-w-full bg-primary h-12 rounded-none border-none flex items-center justify-center">
+            <Search className="size-6" />
+          </Button>
+        </div>
       </div>
 
-      {/* Search Button */}
-      <div className="flex justify-end mt-2">
-        <Button type="submit" className="flex-auto max-w-full bg-primary h-12 rounded-none border-none flex items-center justify-center">
-          <Search className="size-6" />
-        </Button>
-      </div>
+
     </form>
   );
 };

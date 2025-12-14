@@ -9,7 +9,7 @@ import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
 import Pin from "./pin";
-import { listDataInterface } from "@/lib/dummyData";
+import { ListPropertyInterface } from '@/lib/types/propely.type';
 
 // Prevent default Leaflet icon lookup
 delete L.Icon.Default.prototype._getIconUrl;
@@ -23,7 +23,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // Main Map Component
-const Map = ({ items }: { items: listDataInterface[] }) => {
+const Map = ({ items }: { items: ListPropertyInterface[] }) => {
   return (
     <MapContainer
       center={[51.505, -0.09]}

@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <div className="bg-background text-foreground max-w-340 min-h-screen mx-auto flex flex-col">
-      
+
       {/* Navbar */}
       <Navbar />
 

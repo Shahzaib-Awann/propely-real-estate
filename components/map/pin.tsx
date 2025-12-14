@@ -1,13 +1,13 @@
-import { listDataInterface } from '@/lib/dummyData'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Marker, Popup } from 'react-leaflet'
+import { ListPropertyInterface } from '@/lib/types/propely.type';
 
 // Pin: Renders one Marker with Popup
-const Pin = ({ item }: { item: listDataInterface  }) => {
+const Pin = ({ item }: { item: ListPropertyInterface }) => {
     return (
         // Marker positioned by item coordinates
-        <Marker position={[item.latitude, item.longitude]}>
+        <Marker position={[Number(item.latitude), Number(item.longitude)]}>
 
             {/* Popup opens on marker click */}
             <Popup>
@@ -15,7 +15,13 @@ const Pin = ({ item }: { item: listDataInterface  }) => {
                 <div className='flex gap-5'>
                     {/* Image */}
                     <div className='w-16 h-12 relative overflow-hidden rounded shrink-0'>
-                        <Image src={item.img} sizes='64px' alt="image" fill className='object-cover' loading='lazy' />
+                        <Image src={item.img || '/images/default-fallback-image.png'}
+                            sizes='64px'
+                            alt="image"
+                            fill
+                            className='object-cover'
+                            loading='lazy'
+                        />
                     </div>
 
                     {/* Info container: title (link, truncated), bedrooms, price, */}

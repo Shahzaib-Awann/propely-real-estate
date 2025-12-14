@@ -1,45 +1,86 @@
-import ListCard from "@/components/pages/properties/list-card";
-import Filter from "@/components/pages/properties/filter";
-import { listData } from "@/lib/dummyData";
-import MapWrapper from "@/components/map/map-wrapper";
+export const dynamic = "force-dynamic";
+
+
+
 import { PropertiesQueryParamsInterface } from "@/lib/types/propely.type";
+import { getProperties } from "@/lib/actions/properties.action";
+import PropertiesClient from "@/components/pages/properties/properties-client-page";
+import { Metadata } from "next";
 
 
-export default async function Properties({ searchParams }: {
+
+/**
+ * Generate SEO metadata dynamically based on search filters
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
   searchParams: Promise<PropertiesQueryParamsInterface>;
-}) {
+}): Promise<Metadata> {
+  const queryParams = await searchParams;
 
-  const params = await searchParams;
+  // Used to build dynamic page title
+  const titleSegments: string[] = [];
+
+  // Buy / Rent
+  if (queryParams.type) {
+    titleSegments.push(queryParams.type.charAt(0).toUpperCase() + queryParams.type.slice(1));
+  }
+
+  // Property type (house, apartment, etc.)
+  if (queryParams.property) {
+    titleSegments.push(queryParams.property.charAt(0).toUpperCase() + queryParams.property.slice(1));
+  } else {
+    titleSegments.push("Properties");
+  }
+
+  // Location
+  if (queryParams.location) {
+    titleSegments.push(`in ${queryParams.location}`);
+  }
+
+  const title = `${titleSegments.join(" ")} | Real Estate`;
+
+  const description = queryParams.location
+    ? `Browse ${titleSegments.join(" ").toLowerCase()} with latest listings, prices, and locations.`
+    : "Browse properties with latest listings, prices, and locations.";
+
+  return {
+    title,
+    description,
+  };
+}
+
+
+
+/**
+ * Properties Page (Server Component)
+ */
+export default async function Properties({ searchParams }: { searchParams: Promise<PropertiesQueryParamsInterface>; }){
+
+  const queryParams = await searchParams;
+
+  // === Fetch properties from server ===
+  const propertiesResponse = await getProperties(
+    queryParams.search || undefined,
+    Number(queryParams.page ?? 1),
+    Number(queryParams.limit ?? 5),
+    queryParams.type || undefined,
+    queryParams.location || undefined,
+    queryParams.minPrice || undefined,
+    queryParams.maxPrice || undefined,
+    queryParams.property || undefined,
+    queryParams.bedroom ? Number(queryParams.bedroom) : undefined
+  );
 
   return (
     <main className="flex flex-row h-[calc(100vh-80px)] px-4">
-
-      {/* LEFT: Filters + Property List */}
-      <section className="flex-3 h-full overflow-hidden">
-
-        {/* Scrollable Content Wrapper */}
-        <div className="h-full flex flex-col gap-10 pr-4 lg:pr-10 py-5 overflow-y-scroll pb-12">
-
-          {/* Filter Component */}
-          <Filter params={params} />
-
-          {/* Properties List */}
-          <div className="grid grid-cols-1 gap-8">
-            {listData.map((item) => (
-              <ListCard key={item.id} item={item} />
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-      {/* RIGHT: Map Display (Desktop Only) */}
-      <aside className="hidden lg:block flex-2 h-full bg-side-panel py-5">
-
-        {/* Interactive Map */}
-        <MapWrapper items={listData} className="rounded-lg" />
-
-      </aside>
+      <PropertiesClient
+        key={JSON.stringify(queryParams)}
+        initialItems={propertiesResponse.items}
+        meta={propertiesResponse.meta}
+        searchParams={queryParams}
+      />
     </main>
   );
 }

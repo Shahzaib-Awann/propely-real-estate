@@ -6,33 +6,31 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { listDataInterface } from "@/lib/dummyData";
 import Image from "next/image";
 import Link from "next/link";
 import { Bath, BedDouble, MapPin, Bookmark } from "lucide-react";
+import { ListPropertyInterface } from '@/lib/types/propely.type';
 
-const ListCard = ({ item }: { item: listDataInterface }) => {
+const ListCard = ({ item }: { item: ListPropertyInterface }) => {
   
   const propertyUrl = `/properties/${item.id}`;
 
   return (
     <Card className="max-w-full p-4 m-0 flex flex-col sm:flex-row rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200">
       
-      {/* Image Section */}
-      <CardContent className="relative w-full h-40 sm:w-40 sm:h-44 md:h-44 sm:flex-2 shrink-0 overflow-hidden rounded-lg shadow-md p-0">
-        <Link href={propertyUrl} className="relative block w-full h-full">
-          {item.img && (
-            <Image
-              src={item.img}
-              alt={item.title}
-              fill
-              sizes="(max-width: 640px) 100vw, 160px"
-              className="object-cover"
-              loading="lazy"
-            />
-          )}
-        </Link>
-      </CardContent>
+        {/* Image Section */}
+        <CardContent className="relative w-full h-40 sm:w-40 sm:h-44 md:h-44 sm:flex-2 shrink-0 overflow-hidden rounded-lg shadow-md p-0">
+          <Link href={propertyUrl} className="relative block w-full h-full">
+              <Image
+                src={item.img || '/images/default-fallback-image.png'}
+                alt={item.title}
+                fill
+                sizes="(max-width: 640px) 100vw, 160px"
+                className="object-cover"
+                loading="lazy"
+              />
+          </Link>
+        </CardContent>
 
       {/* Content Section */}
       <div className="flex flex-col flex-3 justify-between gap-4">
