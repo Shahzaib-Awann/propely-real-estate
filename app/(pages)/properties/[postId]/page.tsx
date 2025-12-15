@@ -1,8 +1,9 @@
 import MapWrapper from "@/components/map/map-wrapper";
 import ImageSlider from "@/components/pages/view-property/image-slider";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { getPostDetailsById } from "@/lib/actions/properties.action";
-import { singlePostData, userData } from "@/lib/dummyData";
+import { getAvatarFallback } from "@/lib/utils";
 import {
   Bath,
   BedDouble,
@@ -17,28 +18,81 @@ import {
   School,
   ToolCase,
 } from "lucide-react";
-import Image from "next/image";
+import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-export default async function ViewProperty({ params }: { params: Promise<{ postId: string }>}) {
+
+
+/**
+ * Generate SEO metadata dynamically based on search filters
+ */
+export async function generateMetadata({ params }: { params: Promise<{ postId: string }> }): Promise<Metadata> {
+  
+  const { postId } = await params;
+
+  // Fallback metadata if postId is invalid
+  if (!postId || isNaN(Number(postId))) {
+    return {
+      title: "Property Not Found",
+      description: "The property you are looking for does not exist.",
+    };
+  }
+
+  const post = await getPostDetailsById(Number(postId));
+
+  // Fallback if post not found
+  if (!post) {
+    return {
+      title: "Property Not Found",
+      description: "The property you are looking for does not exist.",
+    };
+  }
+
+  const { title, description, city, images } = post;
+
+  return {
+    title: `${title} in ${city} | Real Estate Listing`,
+    description: description.slice(0, 150) + "...",
+    openGraph: {
+      title: `${title} in ${city} | Real Estate Listing`,
+      description: description.slice(0, 150) + "...",
+      siteName: "Propely Real Estate",
+      images: images && images.length > 0 ? [{ url: images[0], width: 1200, height: 630 }] : [],
+      locale: "en_US",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} in ${city}`,
+      description: description.slice(0, 150) + "...",
+      images: images && images.length > 0 ? [images[0]] : [],
+    },
+  };
+}
+
+
+
+/**
+ * View Single Property Page (Server Component)
+ */
+export default async function ViewProperty({ params }: { params: Promise<{ postId: string }> }) {
 
   const { postId } = await params;
-  const user = userData;
-  const viewPost = singlePostData;
 
-  // Redirect if postId is missing or not a valid number
-  if(!postId || isNaN(Number(postId))){
-    redirect('/properties')
+  // 404 if post not found
+  if (!postId || isNaN(Number(postId))) {
+    redirect('/properties');
   }
 
   const post = await getPostDetailsById(Number(postId))
 
-  if(!post) {
-    redirect('/properties')
+  // 404 if post not found
+  if (!post) {
+    return <div>Not Found</div>
   }
 
-  console.log(JSON.stringify(post, null, 2))
-
+  // Convert sqm to sqft
+  const sizeSqft = Math.floor(post.size * 10.7639);
 
   return (
     <main className="flex flex-col lg:flex-row flex-1 px-4 pb-20 lg:pb-0 max-h-[calc(100vh-80px)] bg-transparent overflow-y-scroll lg:overflow-y-hidden scroll-smooth">
@@ -60,7 +114,7 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
             {/* Top Section: Title + User Info */}
             <div className="flex flex-col md:flex-row justify-between gap-10">
 
-              {/* Property Text Info */}
+              {/* Property Info */}
               <div className="flex flex-col gap-3">
                 <h1 className="text-xl sm:text-2xl xl:text-3xl font-semibold">
                   {post.title}
@@ -73,14 +127,38 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
                 </p>
               </div>
 
-              {/* User Card */}
+              {/* Seller Card */}
               <div className="flex flex-row md:flex-col items-center justify-center px-12 py-5 bg-side-panel rounded-lg gap-5">
-                <div className="h-12 w-12 rounded-full overflow-hidden relative">
-                  <Image src={user.img} alt="Profile" sizes="100px" fill className="object-cover" />
-                </div>
-                <span className="text-center">{user.name}</span>
+
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={post.sellerInfo?.avatar ?? undefined} alt={post.sellerInfo?.name ?? "user avatar"} />
+                  <AvatarFallback>{getAvatarFallback(post.sellerInfo?.name ?? "")}</AvatarFallback>
+                </Avatar>
+
+                <span className="text-center">{post.sellerInfo?.name}</span>
               </div>
             </div>
+
+            {/* Extra Features */}
+            {post.features && post.features.length > 0 && (
+              <div className="mt-6">
+                <h1 className="text-2xl font-semibold mb-4 border-b pb-2">Features</h1>
+                <div className="flex flex-wrap gap-2 w-full">
+                  {post.features.map((feature, idx) => (
+                    <div
+                      key={`${feature.title}-${idx}`}
+                      className="flex items-center gap-3 bg-white px-5 py-4 rounded-lg flex-1 shadow-sm min-w-56"
+                    >
+                      <div className="shrink-0 size-4 rounded-full bg-transparent border-2 border-primary" />
+                      <div>
+                        <h2 className="font-bold text-sm md:text-base">{feature.title}</h2>
+                        <p className="text-xs md:text-sm">{feature.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Description */}
             <div className="mt-12 bg-side-panel/30 text-sm sm:text-base rounded-lg leading-6 p-4">
@@ -96,7 +174,7 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
         {/* Sidebar Content */}
         <div className="w-full p-5 flex flex-col gap-6">
 
-          {/* General Section */}
+          {/* General Info */}
           <h3 className="font-bold">General</h3>
           <div className="bg-white/75 p-4 rounded-lg space-y-4 shadow-sm">
 
@@ -132,11 +210,11 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
           <h3 className="font-bold">Sizes</h3>
           <div className="w-full flex flex-wrap gap-4">
 
-            {/* Size */}
+            {/* Area */}
             <div className="flex items-center gap-3 bg-white/75 p-2 rounded-lg shadow-sm">
               <Ruler className="text-primary" />
               <p className="text-sm font-semibold">
-                {post.size} sqm ({Math.floor(viewPost.size * 10.7639)} sqft)
+                {post.size} sqm ({sizeSqft} sqft)
               </p>
             </div>
 
@@ -204,7 +282,7 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
             }]} className="rounded-lg shadow-sm" />
           </div>
 
-          {/* Buttons */}
+          {/* Action Buttons */}
           <div className="flex justify-between">
             <Button className="p-6 bg-white" variant="secondary">
               <MessageSquareText /> Send a message
@@ -213,6 +291,7 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
               <Bookmark /> Save the place
             </Button>
           </div>
+
         </div>
       </aside>
     </main>

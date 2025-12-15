@@ -62,40 +62,61 @@ export interface PropertiesResponse {
 
 
 
-// Interface for individual post feature
+/**
+ * Feature attached to a property
+ */
 interface PostFeature {
   title: string;
   description: string;
 }
 
-// Main post interface
+
+
+/**
+ * Seller / owner information
+ */
+interface PostSelletInfo {
+  id: number;
+  avatar: string | null;
+  name: string;
+  email: string;
+}
+
+
+
+/**
+ * Full Single property details response
+ */
 export interface SinglePostDetails {
   id: number;
   title: string;
   description: string;
 
   price: string;
-  size: number | null;
+  size: number;
 
-  images: string[]; // At least the main image is always included
+  images: string[];
 
   bedRooms: number;
   bathroom: number;
   features: PostFeature[];
 
+  utilities: string;
+  petPolicy: string;
+  incomePolicy: string;
+
   address: string;
   city: string;
   latitude: string;
   longitude: string;
-  utilities: string;
-  petPolicy: string;
   ptype: string;
   ltype: string;
-  incomePolicy: string;
   school: string | null;
   bus: string | null;
   restaurant: string | null;
 
+  sellerInfo: PostSelletInfo | null
+  
   createdAt: string;
   updatedAt: string | null;
 }

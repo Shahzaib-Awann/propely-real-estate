@@ -1,5 +1,5 @@
 
-import { postsTable, postDetailsTable, postFeaturesTable, postImagesTable } from "@/lib/db/schema";
+import { postsTable, postDetailsTable, postFeaturesTable, postImagesTable, usersTable } from "@/lib/db/schema";
 import { and, eq, gte, lte, like, sql, desc } from "drizzle-orm";
 import { db } from "../db/connection";
 import { PropertiesResponse, SinglePostDetails } from "../types/propely.type";
@@ -136,10 +136,21 @@ export const getProperties = async (
 
 
 
+/**
+ * === Fetch single post (property) details by post ID. ===
+ *
+ * Retrieves base post data, images, features, and seller information,
+ * then normalizes everything into a single response object.
+ *
+ * @param postId - ID of the post to retrieve.
+ * @returns {Promise<SinglePostDetails | null>} Normalized post details or `null` if not found.
+ */
 export const getPostDetailsById = async (postId: number): Promise<SinglePostDetails | null> => {
 
+  // Fetch base post + details
   const [post] = await db.select({
     id: postsTable.id,
+    sellerId: postsTable.sellerId,
     title: postsTable.title,
     image: postsTable.image,
     price: postsTable.price,
@@ -166,9 +177,11 @@ export const getPostDetailsById = async (postId: number): Promise<SinglePostDeta
     .where(eq(postsTable.id, postId))
     .leftJoin(postDetailsTable, eq(postDetailsTable.postId, postId));
 
+  // Return null if post not found
   if (!post) return null;
 
-  const [postImages, postFeatures] = await Promise.all([
+  // Fetch related data [Post Images, Post Features, Seller Info] in parallel
+  const [postImages, postFeatures, sellerInfo] = await Promise.all([
     db.select({ images: postImagesTable.imageUrl })
       .from(postImagesTable)
       .where(eq(postImagesTable.postId, postId)),
@@ -178,35 +191,53 @@ export const getPostDetailsById = async (postId: number): Promise<SinglePostDeta
     })
       .from(postFeaturesTable)
       .where(eq(postFeaturesTable.postId, postId)),
+    db.select({
+      id: usersTable.id,
+      avatar: usersTable.avatar,
+      name: usersTable.name,
+      email: usersTable.email,
+    })
+      .from(usersTable)
+      .where(eq(usersTable.id, post.sellerId)),
   ]);
 
+  // Normalize image list (cover + gallery)
   const imagesArray: string[] = [
     post.image ?? defaultAppSettings.placeholderPostImage,
     ...((postImages ?? []).map((img) => img.images)),
   ].filter((img): img is string => !!img);  
-
+   
+  // Normalize the return output
   const normalize = {
     id: post.id,
     title: post.title,
     description: post.description ?? "-",
+
     price: post.price,
-    size: post.size,
+    size: post.size ?? 0,
+
     images: imagesArray,
+
     bedRooms: post.bedRooms,
     bathroom: post.bathroom,
     features: postFeatures ?? [],
+    
+    utilities: post.utilities ?? "none",
+    petPolicy: post.petPolicy ?? "none",
+    incomePolicy: post.incomePolicy ?? "none",
+
     address: post.address,
     city: post.city,
     latitude: post.latitude,
     longitude: post.longitude,
     ptype: post.ptype,
     ltype: post.ltype,
-    utilities: post.utilities ?? "none",
-    petPolicy: post.petPolicy ?? "none",
-    incomePolicy: post.incomePolicy ?? "none",
     school: post.school,
     bus: post.bus,
     restaurant: post.restaurant,
+
+    sellerInfo: sellerInfo[0] ?? null,
+
     createdAt: post.createdAt,
     updatedAt: post.updatedAt,
   }

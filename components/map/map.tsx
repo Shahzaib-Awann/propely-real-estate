@@ -24,10 +24,16 @@ L.Icon.Default.mergeOptions({
 
 // Main Map Component
 const Map = ({ items }: { items: ListPropertyInterface[] }) => {
+
+  // first item's coordinates or default [51.505, -0.09] (London)
+  const initialPosition: [number, number] = items.length
+    ? [Number(items[0].latitude), Number(items[0].longitude)]
+    : [51.505, -0.09];
+
   return (
     <MapContainer
-      center={[51.505, -0.09]}
-      zoom={10}
+      center={initialPosition}
+      zoom={13}
       scrollWheelZoom={false}
       className="w-full h-full"
     >

@@ -29,7 +29,7 @@ export function cn(...inputs: ClassValue[]) {
  * @returns {string} - Uppercase initials (e.g., "JD") or "??" if empty.
  */
 export function getAvatarFallback(name: string): string {
-  if (!name) return "??"; // fallback if name is empty
+  if (!name || name?.trim() === "") return "??"; // fallback if name is empty
 
   // Split name by spaces and filter out empty strings
   const words = name.trim().split(/\s+/);
