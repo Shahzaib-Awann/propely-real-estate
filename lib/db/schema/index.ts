@@ -1,5 +1,7 @@
 import { int, mysqlTable, varchar, text, mysqlEnum, timestamp, decimal } from 'drizzle-orm/mysql-core';
 
+
+
 // Users Table
 export const usersTable = mysqlTable('users', {
   id: int().autoincrement().primaryKey(),
@@ -13,8 +15,8 @@ export const usersTable = mysqlTable('users', {
 });
 
 
-// Posts Table
 
+// Posts Table
 export const postsTable = mysqlTable('posts', {
   id: int().autoincrement().primaryKey(),
 
@@ -38,4 +40,50 @@ export const postsTable = mysqlTable('posts', {
 
   updatedAt: timestamp({ mode: 'string' }),
   createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
+});
+
+
+
+// Post Details Table
+export const postDetailsTable = mysqlTable('post_details', {
+    id: int('id').primaryKey().autoincrement(),
+
+    postId: int('post_id').notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
+
+    description: text('description').notNull(),
+    state: varchar('state', { length: 100 }).notNull(),
+
+    areaSqft: int('area_sqft').notNull(),
+
+    utilitiesPolicy: text('utilities_policy').default("none").notNull(),
+
+    schoolDistance: varchar('school_distance', { length: 15 }),
+    busDistance: varchar('bus_distance', { length: 15 }),
+    restaurantDistance: varchar('restaurant_distance', { length: 15 }),
+
+    petPolicy: text('pet_policy'),
+    incomePolicy: text('income_policy').notNull(),
+});
+
+
+
+// Post Images Table
+export const postImagesTable = mysqlTable('post_images', {
+  id: int('id').primaryKey().autoincrement(),
+  
+  postId: int('post_id').notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
+
+  imageUrl: text('image_url'),
+});
+
+
+
+// Post Extra Features Table
+export const postFeaturesTable = mysqlTable('post_features', {
+  id: int('id').primaryKey().autoincrement(),
+
+  postId: int('post_id').notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
+
+  title: varchar('title', { length: 50 }).notNull(),
+  description: varchar('description', { length: 50 }).notNull(),
 });
