@@ -59,3 +59,43 @@ export interface PropertiesResponse {
   meta: ListPropertiesMeta;
   items: ListPropertyInterface[];
 }
+
+
+
+// Interface for individual post feature
+interface PostFeature {
+  title: string;
+  description: string;
+}
+
+// Main post interface
+export interface SinglePostDetails {
+  id: number;
+  title: string;
+  description: string;
+
+  price: string;
+  size: number | null;
+
+  images: string[]; // At least the main image is always included
+
+  bedRooms: number;
+  bathroom: number;
+  features: PostFeature[];
+
+  address: string;
+  city: string;
+  latitude: string;
+  longitude: string;
+  utilities: string;
+  petPolicy: string;
+  ptype: string;
+  ltype: string;
+  incomePolicy: string;
+  school: string | null;
+  bus: string | null;
+  restaurant: string | null;
+
+  createdAt: string;
+  updatedAt: string | null;
+}

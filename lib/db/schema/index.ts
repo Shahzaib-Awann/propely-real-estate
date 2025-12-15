@@ -61,8 +61,8 @@ export const postDetailsTable = mysqlTable('post_details', {
     busDistance: varchar('bus_distance', { length: 15 }),
     restaurantDistance: varchar('restaurant_distance', { length: 15 }),
 
-    petPolicy: text('pet_policy'),
-    incomePolicy: text('income_policy').notNull(),
+    petPolicy: text('pet_policy').default("none"),
+    incomePolicy: text('income_policy').default("none").notNull(),
 });
 
 

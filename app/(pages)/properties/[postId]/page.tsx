@@ -1,6 +1,7 @@
 import MapWrapper from "@/components/map/map-wrapper";
 import ImageSlider from "@/components/pages/view-property/image-slider";
 import { Button } from "@/components/ui/button";
+import { getPostDetailsById } from "@/lib/actions/properties.action";
 import { singlePostData, userData } from "@/lib/dummyData";
 import {
   Bath,
@@ -17,10 +18,27 @@ import {
   ToolCase,
 } from "lucide-react";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 
-export default function ViewProperty() {
+export default async function ViewProperty({ params }: { params: Promise<{ postId: string }>}) {
+
+  const { postId } = await params;
   const user = userData;
-  const post = singlePostData;
+  const viewPost = singlePostData;
+
+  // Redirect if postId is missing or not a valid number
+  if(!postId || isNaN(Number(postId))){
+    redirect('/properties')
+  }
+
+  const post = await getPostDetailsById(Number(postId))
+
+  if(!post) {
+    redirect('/properties')
+  }
+
+  console.log(JSON.stringify(post, null, 2))
+
 
   return (
     <main className="flex flex-col lg:flex-row flex-1 px-4 pb-20 lg:pb-0 max-h-[calc(100vh-80px)] bg-transparent overflow-y-scroll lg:overflow-y-hidden scroll-smooth">
@@ -45,7 +63,7 @@ export default function ViewProperty() {
               {/* Property Text Info */}
               <div className="flex flex-col gap-3">
                 <h1 className="text-xl sm:text-2xl xl:text-3xl font-semibold">
-                  {post.title} Lorem ipsum dolor sit amet consectetur adipisicing elit. Quod, ab.
+                  {post.title}
                 </h1>
                 <p className="flex items-center gap-1 text-sm">
                   <MapPin className="size-4 text-muted-foreground" /> {post.address}
@@ -87,7 +105,7 @@ export default function ViewProperty() {
               <ToolCase className="text-primary" />
               <div>
                 <h2 className="font-bold">Utilities</h2>
-                <p className="text-sm">Renter is responsible</p>
+                <p className="text-sm">{post.utilities}</p>
               </div>
             </div>
 
@@ -96,7 +114,7 @@ export default function ViewProperty() {
               <PawPrint className="text-primary" />
               <div>
                 <h2 className="font-bold">Pet Policy</h2>
-                <p className="text-sm">Pets Allowed</p>
+                <p className="text-sm">{post.petPolicy}</p>
               </div>
             </div>
 
@@ -105,7 +123,7 @@ export default function ViewProperty() {
               <CircleDollarSign className="text-primary" />
               <div>
                 <h2 className="font-bold">Property Fees</h2>
-                <p className="text-sm">Must have 3x the rent in total household income</p>
+                <p className="text-sm">{post.incomePolicy}</p>
               </div>
             </div>
           </div>
@@ -118,7 +136,7 @@ export default function ViewProperty() {
             <div className="flex items-center gap-3 bg-white/75 p-2 rounded-lg shadow-sm">
               <Ruler className="text-primary" />
               <p className="text-sm font-semibold">
-                {post.size} sqm ({Math.floor(post.size * 10.7639)} sqft)
+                {post.size} sqm ({Math.floor(viewPost.size * 10.7639)} sqft)
               </p>
             </div>
 
@@ -180,6 +198,9 @@ export default function ViewProperty() {
               address: post.address,
               latitude: post.latitude,
               longitude: post.longitude,
+              location: post.city,
+              ptype: post.ptype,
+              ltype: post.ltype,
             }]} className="rounded-lg shadow-sm" />
           </div>
 

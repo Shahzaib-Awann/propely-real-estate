@@ -1,8 +1,9 @@
 
-import { postsTable } from "@/lib/db/schema";
+import { postsTable, postDetailsTable, postFeaturesTable, postImagesTable } from "@/lib/db/schema";
 import { and, eq, gte, lte, like, sql, desc } from "drizzle-orm";
 import { db } from "../db/connection";
-import { PropertiesResponse } from "../types/propely.type";
+import { PropertiesResponse, SinglePostDetails } from "../types/propely.type";
+import { defaultAppSettings } from "../constants";
 
 
 
@@ -132,3 +133,83 @@ export const getProperties = async (
     items,
   };
 };
+
+
+
+export const getPostDetailsById = async (postId: number): Promise<SinglePostDetails | null> => {
+
+  const [post] = await db.select({
+    id: postsTable.id,
+    title: postsTable.title,
+    image: postsTable.image,
+    price: postsTable.price,
+    bedRooms: postsTable.bedrooms,
+    bathroom: postsTable.bathrooms,
+    size: postDetailsTable.areaSqft,
+    latitude: postsTable.latitude,
+    longitude: postsTable.longitude,
+    city: postsTable.city,
+    ptype: postsTable.propertyType,
+    ltype: postsTable.listingType,
+    utilities: postDetailsTable.utilitiesPolicy,
+    petPolicy: postDetailsTable.petPolicy,
+    incomePolicy: postDetailsTable.incomePolicy,
+    address: postsTable.address,
+    school: postDetailsTable.schoolDistance,
+    bus: postDetailsTable.busDistance,
+    restaurant: postDetailsTable.restaurantDistance,
+    description: postDetailsTable.description,
+    updatedAt: postsTable.updatedAt,
+    createdAt: postsTable.createdAt
+  })
+    .from(postsTable)
+    .where(eq(postsTable.id, postId))
+    .leftJoin(postDetailsTable, eq(postDetailsTable.postId, postId));
+
+  if (!post) return null;
+
+  const [postImages, postFeatures] = await Promise.all([
+    db.select({ images: postImagesTable.imageUrl })
+      .from(postImagesTable)
+      .where(eq(postImagesTable.postId, postId)),
+    db.select({
+      title: postFeaturesTable.title,
+      description: postFeaturesTable.description,
+    })
+      .from(postFeaturesTable)
+      .where(eq(postFeaturesTable.postId, postId)),
+  ]);
+
+  const imagesArray: string[] = [
+    post.image ?? defaultAppSettings.placeholderPostImage,
+    ...((postImages ?? []).map((img) => img.images)),
+  ].filter((img): img is string => !!img);  
+
+  const normalize = {
+    id: post.id,
+    title: post.title,
+    description: post.description ?? "-",
+    price: post.price,
+    size: post.size,
+    images: imagesArray,
+    bedRooms: post.bedRooms,
+    bathroom: post.bathroom,
+    features: postFeatures ?? [],
+    address: post.address,
+    city: post.city,
+    latitude: post.latitude,
+    longitude: post.longitude,
+    ptype: post.ptype,
+    ltype: post.ltype,
+    utilities: post.utilities ?? "none",
+    petPolicy: post.petPolicy ?? "none",
+    incomePolicy: post.incomePolicy ?? "none",
+    school: post.school,
+    bus: post.bus,
+    restaurant: post.restaurant,
+    createdAt: post.createdAt,
+    updatedAt: post.updatedAt,
+  }
+
+  return normalize
+}
