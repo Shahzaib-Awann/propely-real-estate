@@ -64,7 +64,7 @@ export default async function Properties({ searchParams }: { searchParams: Promi
   const propertiesResponse = await getProperties(
     queryParams.search || undefined,
     Number(queryParams.page ?? 1),
-    Number(queryParams.limit ?? 5),
+    Number(queryParams.limit ?? 10),
     queryParams.type || undefined,
     queryParams.location || undefined,
     queryParams.minPrice || undefined,

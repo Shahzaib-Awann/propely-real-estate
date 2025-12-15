@@ -8,6 +8,8 @@ import MapWrapper from "@/components/map/map-wrapper";
 import { Button } from "@/components/ui/button";
 import { buildSearchParams } from "@/lib/utils";
 
+
+
 /**
  * Props for PropertiesClient component
  */

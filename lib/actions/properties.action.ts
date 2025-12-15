@@ -1,6 +1,6 @@
 
 import { postsTable } from "@/lib/db/schema";
-import { and, eq, gte, lte, like, sql } from "drizzle-orm";
+import { and, eq, gte, lte, like, sql, desc } from "drizzle-orm";
 import { db } from "../db/connection";
 import { PropertiesResponse } from "../types/propely.type";
 
@@ -39,7 +39,7 @@ export const getProperties = async (
 
   // Ensure pagination values are always valid
   const safePage = Math.max(page, 1);
-  const safeLimit = Math.max(limit, 1);
+  const safeLimit = Math.max(limit, 10);
   const offset = (safePage - 1) * safeLimit;
 
   // Build WHERE conditions dynamically
@@ -103,6 +103,7 @@ export const getProperties = async (
       longitude: postsTable.longitude,
     })
     .from(postsTable)
+    .orderBy(desc(postsTable.id))
     .where(and(...conditions))
     .limit(safeLimit)
     .offset(offset);

@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
     // Parse pagination values safely
     const pageNumber = Number(queryParams.get("page") ?? 1);
-    const itemsPerPage = Number(queryParams.get("limit") ?? 5);
+    const itemsPerPage = Number(queryParams.get("limit") ?? 10);
 
     // Parse bedroom filter safely
     const bedrooms = queryParams.get("bedroom")

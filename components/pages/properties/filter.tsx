@@ -23,6 +23,7 @@ const Filter = ({ params }: {
   // === Local States ===
   const router = useRouter()
   const [query, setQuery] = useState({
+    search: params?.search ?? "",
     type: params?.type ?? "any",
     location: params?.location ?? "",
     minPrice: params?.minPrice ?? "0",
@@ -44,6 +45,7 @@ const Filter = ({ params }: {
 
     // Normalize filter values (remove "any" / "0")
     const normalizedParams = {
+      search: query.search?.trim() !== "" ? query.search.trim() : undefined,
       type: query.type !== "any" ? query.type : undefined,
       location: query.location.trim() || undefined,
       minPrice:
@@ -64,7 +66,7 @@ const Filter = ({ params }: {
       limit:
         params.limit && Number(params.limit) > 0
           ? params.limit
-          : "5",
+          : "10",
       page: "1",
     };
 
@@ -84,7 +86,20 @@ const Filter = ({ params }: {
       </h1>
 
       {/* Location Input */}
-      <div className="flex flex-col">
+      <div className="flex gap-1 flex-wrap">
+        <div className="flex-3 flex flex-col min-w-40">
+        <label htmlFor="search" className="text-xs">Search</label>
+        <Input
+          id="search"
+          type="text"
+          variant="simple"
+          placeholder="Search"
+          className="rounded-xs ring-0"
+          value={query.search}
+          onChange={(e) => handleChange("search", e.target.value)}
+        />
+        </div>
+        <div className="flex-1 flex flex-col min-w-32">
         <label htmlFor="city" className="text-xs">Location</label>
         <Input
           id="city"
@@ -95,6 +110,7 @@ const Filter = ({ params }: {
           value={query.location}
           onChange={(e) => handleChange("location", e.target.value)}
         />
+        </div>
       </div>
 
       {/* Filters Row */}
