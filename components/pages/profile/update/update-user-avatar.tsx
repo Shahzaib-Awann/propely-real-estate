@@ -16,7 +16,7 @@ const UpdateUserAvatar = ({ avatar }: { avatar: string | null }) => {
 
       <Button
         type="submit"
-        className="px-5 h-14 text-base rounded-none mt-5 w-48"
+        className="px-5 h-12 text-base rounded-none mt-5 w-48"
       >
         Upload
       </Button>

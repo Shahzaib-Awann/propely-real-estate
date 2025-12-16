@@ -142,7 +142,7 @@ export default function SignInForm({ callbackUrl, email }: { callbackUrl: string
             <Button
               disabled={loading}
               type="submit"
-              className="w-full h-14 text-base rounded-none"
+              className="w-full h-12 text-base rounded-none"
             >
               Sign In
             </Button>

@@ -18,7 +18,6 @@ import z from "zod";
 
 interface UpdateUserInfoProps {
   info: {
-    avatar: string | null;
     name: string;
     email: string;
   };
@@ -32,7 +31,6 @@ export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
   const form = useForm<z.infer<typeof UpdateUserProfileFormSchema>>({
     resolver: zodResolver(UpdateUserProfileFormSchema),
     defaultValues: {
-      avatar: null,
       name: info.name,
       email: info.email,
     },
@@ -40,21 +38,51 @@ export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
 
   /* === Submit Handler === */
   async function onSubmit(values: z.infer<typeof UpdateUserProfileFormSchema>) {
+    setLoading(true);
+
+    toast.loading("Updating profile...", {
+      id: "profile-update-loading",
+    });
+
     try {
-      setLoading(true);
-      toast.loading("Signing you in...", {
-        id: "signin-loading",
+      const response = await fetch("/api/profile/update/info", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
       });
 
-      console.log({ values });
-      //   const result = true
+      const result = await response.json();
 
-      toast.success("Logged in successfully! Welcome back.");
-    } catch (e) {
-      console.log("Error from login page: ", e);
+      // Map HTTP status codes to error messages
+      const errorMap: Record<number, string> = {
+        422: "Invalid profile data. Please check your inputs.",
+        401: "Your session has expired. Please sign in again.",
+        409: result?.error ?? "This email is already in use.",
+      };
+
+      // Handle error responses
+      if (!response.ok) {
+        const message =
+          errorMap[response.status] ??
+          result?.error ??
+          "Unable to update profile. Please try again.";
+        toast.error(message);
+        return;
+      }
+
+      // === Success ===
+      toast.success(result?.message ?? "Profile updated successfully.");
+    } catch (error) {
+      console.error("Profile update failed:", error);
+
+      toast.error(
+        "Network error occurred. Please check your connection and try again."
+      );
     } finally {
       setLoading(false);
-      toast.dismiss("signin-loading");
+      toast.dismiss("profile-update-loading");
     }
   }
 
@@ -113,7 +141,7 @@ export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
             <Button
               disabled={loading}
               type="submit"
-              className="w-full h-14 text-base rounded-none"
+              className="w-full h-12 text-base rounded-none"
             >
               Update
             </Button>
