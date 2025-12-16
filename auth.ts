@@ -66,6 +66,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Return user without password
           const { password: _, ...safeUser } = user;  // eslint-disable-line
 
+          console.log(safeUser)
+
           return safeUser;
         }
 
@@ -99,7 +101,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.email = user.email;
         token.role = user.role;
         token.updatedAt = user.updatedAt;
-        token.createdAtt = user.createdAt;
+        token.createdAt = user.createdAt;
       }
       return token;
     },
