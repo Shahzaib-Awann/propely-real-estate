@@ -5,12 +5,16 @@ import { int, mysqlTable, varchar, text, mysqlEnum, timestamp, decimal } from 'd
 // Users Table
 export const usersTable = mysqlTable('users', {
   id: int().autoincrement().primaryKey(),
+
   avatar: text(),
+  avatarPublicId: varchar({ length: 255 }),
+
   name: varchar({ length: 50 }).notNull(),
   email: varchar({ length: 255 }).notNull().unique(),
   password: varchar({ length: 255 }).notNull(),
   role: mysqlEnum(["user", "admin"]).default("user").notNull(),
-  updatedAt: timestamp({ mode: "string" }),
+
+  updatedAt: timestamp({ mode: "string" }).defaultNow().onUpdateNow(),
   createdAt: timestamp({ mode: "string" }).defaultNow().notNull(),
 });
 

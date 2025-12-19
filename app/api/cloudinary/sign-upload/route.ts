@@ -1,3 +1,5 @@
+// app/api/cloudinary/sign-upload/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { auth } from "@/auth";
@@ -13,9 +15,9 @@ cloudinary.config({
 
 
 
-/*===================================================================
+/*=================================================
 === [POST] Generate Cloudinary Upload Signature ===
-================================================================== */
+================================================ */
 export async function POST(req: NextRequest) {
   try {
     // === Authenticate User ===
@@ -35,25 +37,31 @@ export async function POST(req: NextRequest) {
 
     if (!paramsToSign) {
       return NextResponse.json(
-        { error: "Missing paramsToSign" },
+        { error: "Missing parameters (paramsToSign) for upload." },
         { status: 400 }
       );
     }
 
+    // === Ensure Secret Key is Available ===
     const secret = process.env.CLOUDINARY_API_SECRET;
     if (!secret) {
-      throw new Error("CLOUDINARY_API_SECRET is not set");
+      console.error("CLOUDINARY_API_SECRET is not set");
+      return NextResponse.json(
+        { error: "Server configuration error." },
+        { status: 500 }
+      );
     }
 
+    // === Generate Signature ===
     const signature = cloudinary.utils.api_sign_request(paramsToSign, secret);
 
-    console.log(signature);
-
+    // === Return Success ===
     return Response.json({ signature });
+
   } catch (error) {
-    console.error("Cloudinary sign-upload error:", error);
+    console.error("Failed to generate upload signature:", error);
     return NextResponse.json(
-      { error: "Failed to generate upload signature" },
+      { error: "Could not generate upload signature" },
       { status: 500 }
     );
   }

@@ -170,6 +170,7 @@ export const getUserById = async (id: number, safe: boolean = true) => {
   const baseUser = {
     id: String(row.id),
     avatar: row.avatar,
+    avatarPublicId: row.avatarPublicId,
     name: row.name,
     email: row.email,
     role: row.role,

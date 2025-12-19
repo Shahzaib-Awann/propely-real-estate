@@ -1,10 +1,11 @@
-// app/api/auth/sign-up/route.ts
+// app/api/profile/update/info/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
 import { UpdateUserProfileFormSchema } from "@/lib/zod/schema.zod";
 import { updateUserProfileInfo } from "@/lib/actions/user.action";
 import { auth } from "@/auth";
 import { ZodError } from "zod";
+
 
 
 /*========================================================================
@@ -52,15 +53,15 @@ export async function POST(req: NextRequest) {
     // === Validation errors ===
     if (error instanceof ZodError) {
       return NextResponse.json(
-        { error: "Invalid request data" },
+        { error: "Invalid form data." },
         { status: 422 }
       )
     }
 
     // === Unexpected error ===
-    console.error("Profile update error:", error)
+    console.error("Profile update failed:", error)
     return NextResponse.json(
-      { error: "Something went wrong" },
+      { error: "Something went wrong. Please try again." },
       { status: 500 }
     )
   }
