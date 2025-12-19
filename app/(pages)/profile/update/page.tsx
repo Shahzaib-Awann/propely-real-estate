@@ -18,7 +18,7 @@ const UpdateProfilePage = async () => {
   const user = await getUserById(Number(session.user.id))
 
   if (!user) {
-    redirect("/sign-in")
+    redirect("/sign-in?error=userDeleted")
   }
 
   return (

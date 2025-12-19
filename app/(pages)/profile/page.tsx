@@ -21,7 +21,7 @@ export default async function Profile() {
   const user = await getUserById(Number(session.user.id))
 
   if (!user) {
-    redirect("/sign-in")
+    redirect("/sign-in?error=userDeleted")
   }
 
   return (
@@ -66,6 +66,7 @@ export default async function Profile() {
                 src={user.avatar ?? defaultAppSettings.placeholderPostImage}
                 alt="Avatar"
                 fill
+                sizes="192px"
                 className="object-cover hover:scale-110 transition-all duration-200"
               />
             </div>

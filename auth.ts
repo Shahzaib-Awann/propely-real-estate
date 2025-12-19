@@ -7,7 +7,7 @@ import type { JWT } from "next-auth/jwt";
 import type { Session, User } from "next-auth";
 import { SignInFormSchema } from './lib/zod/schema.zod';
 import { getUserForSignin } from './lib/actions/user.action';
-import { verifyPassword } from './lib/utils/passwordHasher';
+import { verifyPassword } from './lib/utils/password-hasher';
 
 
 

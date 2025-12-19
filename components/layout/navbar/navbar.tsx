@@ -11,10 +11,10 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Menu, MessageCircleMore, X } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
+import { Button } from "../../ui/button";
 import { auth } from "@/auth";
-import { getAvatarFallback } from "@/lib/utils";
+import { getAvatarFallback } from "@/lib/utils/general";
 import { getUserById } from "@/lib/actions/user.action";
 
 

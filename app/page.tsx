@@ -1,4 +1,4 @@
-import Navbar from "@/components/Navbar/navbar";
+import Navbar from "@/components/layout/navbar/navbar";
 import SearchBar from "@/components/pages/landing-page/searchBar";
 import Image from "next/image";
 

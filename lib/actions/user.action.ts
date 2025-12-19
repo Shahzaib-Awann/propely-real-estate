@@ -1,7 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "../db/connection";
 import { usersTable } from "../db/schema";
-import { hashPassword } from "../utils/passwordHasher";
+import { hashPassword } from "../utils/password-hasher";
 
 
 
@@ -77,6 +77,7 @@ export const createUserForSignUp = async (name: string, email: string, password:
         name,
         email,
         password: hashedPassword,
+        updatedAt: null
     });
 };
 

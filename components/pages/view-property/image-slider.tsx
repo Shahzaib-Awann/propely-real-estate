@@ -10,7 +10,7 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/general";
 import { useCallback, useEffect, useState } from "react";
 
 export default function ImageSlider({ images, className }: { images: string[], className?: string }) {

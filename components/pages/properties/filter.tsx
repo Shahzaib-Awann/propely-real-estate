@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PropertiesQueryParamsInterface } from "@/lib/types/propely.type";
-import { buildSearchParams } from "@/lib/utils";
+import { buildSearchParams } from "@/lib/utils/general";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useState } from "react";

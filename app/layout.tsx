@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Lato } from "next/font/google";
 import "./globals.css";
 import { Toaster } from 'react-hot-toast';
+import QueryToastHandler from "@/components/widgets/query-toast-handler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,7 +35,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${lato.variable} antialiased`}
       >
+        {/* Client component handles all query-to-toast logic */}
+        <QueryToastHandler />
+
         {children}
+        
         <Toaster
           position="top-right"
           reverseOrder={false}

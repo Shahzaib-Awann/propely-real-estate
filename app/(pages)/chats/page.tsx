@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ChatsCardList from "@/components/pages/chats/chats-card-list";
 import ViewConversation from "@/components/pages/chats/view-conversations";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/general";
 import { chatslist } from "@/lib/dummyData";
 
 export default function ChatPage() {

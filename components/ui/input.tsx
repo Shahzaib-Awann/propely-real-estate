@@ -1,5 +1,5 @@
 import * as React from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/general"
 
 interface InputProps extends React.ComponentProps<"input"> {
   variant?: "default" | "simple" | "primary" | "unstyled"

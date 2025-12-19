@@ -1,9 +1,9 @@
-import MapWrapper from "@/components/map/map-wrapper";
+import MapWrapper from "@/components/widgets/map/map-wrapper";
 import ImageSlider from "@/components/pages/view-property/image-slider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { getPostDetailsById } from "@/lib/actions/properties.action";
-import { getAvatarFallback } from "@/lib/utils";
+import { getAvatarFallback } from "@/lib/utils/general";
 import {
   Bath,
   BedDouble,
