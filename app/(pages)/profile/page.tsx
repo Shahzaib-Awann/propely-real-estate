@@ -61,7 +61,7 @@ export default async function Profile() {
           </div>
 
           <div className="h-full flex flex-col items-center justify-center gap-5">
-            <div className="size-48 rounded-lg overflow-hidden relative hover:scale-105 shadow transition-all duration-200">
+            <div className="size-48 rounded-lg overflow-hidden relative shadow">
               <Image
                 src={user.avatar ?? defaultAppSettings.placeholderPostImage}
                 alt="Avatar"

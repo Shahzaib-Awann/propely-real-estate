@@ -15,6 +15,7 @@ import { UpdateUserProfileFormSchema } from "@/lib/zod/schema.zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
+import { useRouter } from "next/navigation";
 
 interface UpdateUserInfoProps {
   info: {
@@ -26,6 +27,7 @@ interface UpdateUserInfoProps {
 export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
   /* === Local State === */
   const [loading, setLoading] = useState(false);
+  const router = useRouter()
 
   /* === React Hook Form Setup === */
   const form = useForm<z.infer<typeof UpdateUserProfileFormSchema>>({
@@ -38,11 +40,24 @@ export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
 
   /* === Submit Handler === */
   async function onSubmit(values: z.infer<typeof UpdateUserProfileFormSchema>) {
+    
+    const isUnchanged =
+    values.name?.trim() === info.name?.trim() &&
+    values.email?.trim().toLowerCase() === info.email?.trim().toLowerCase();
+
+    if (isUnchanged) {
+        toast("No changes detected.", {
+          icon: "⚠️",
+        });
+      return;
+    }
+
     setLoading(true);
 
     toast.loading("Updating profile...", {
       id: "profile-update-loading",
     });
+
 
     try {
       const response = await fetch("/api/profile/update/info", {
@@ -74,6 +89,7 @@ export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
 
       // === Success ===
       toast.success(result?.message ?? "Profile updated successfully.");
+      router.push('/profile')
     } catch (error) {
       console.error("Profile update failed:", error);
 
@@ -153,13 +169,3 @@ export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
 }
 
 export default UpdateUserInfo;
-
-{
-  /* <UploadWidget uwConfig={{
-            cloudName:"shahzaib-awan",
-            uploadPreset:"propely-real-estate",
-            multiple:false,
-            maxImageFileSize:(1 * 1024 * 1024) // 1Mb
-            folder:"avatars"
-          }} /> */
-}
