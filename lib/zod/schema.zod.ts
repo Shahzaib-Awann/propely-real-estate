@@ -23,53 +23,49 @@ export const UpdateUserProfileFormSchema = z.object({
  * Zod schema to validate Property (Post) main table inputs.
  */
 export const postSchema = z.object({
-    id: z.union([z.string(), z.number()]).transform((val) => Number(val)).nullable(),
+  id: z.number().nullable(),
 
-    title: z.string().min(3).max(255),
-  
-    address: z.string().min(3).max(255),
-    city: z.string().min(2).max(100),
-  
-    bedrooms: z.number().int().min(0),
-    bathrooms: z.number().int().min(0),
-  
-    latitude: z.string().min(1),
-    longitude: z.string().min(1),
-  
-    price: z.number().positive(),
-  
-    propertyType: z.enum(["apartment", "house", "condo", "land"]),
-    listingType: z.enum(["buy", "rent"]),
-  });
+  title: z.string("Title is required").min(3, "Title must be at least 3 characters").max(255, "Title must not exceed 255 characters"),
+  address: z.string("Address is required").min(3, "Address must be at least 3 characters").max(255, "Address must not exceed 255 characters"),
+  city: z.string("City is required").min(2, "City must be at least 2 characters").max(100, "City must not exceed 100 characters"),
+
+  bedrooms: z.number("Bedrooms must be a number").min(0, "Bedrooms cannot be negative"),
+  bathrooms: z.number("Bathrooms must be a number").min(0, "Bathrooms cannot be negative"),
+
+  latitude: z.number("Latitude must be a number").min(-90, "Latitude must be between -90 and 90").max(90, "Latitude must be between -90 and 90"),
+  longitude: z.number("Longitude must be a number").min(-180, "Longitude must be between -180 and 180").max(180, "Longitude must be between -180 and 180"),
+
+  price: z.number("Price must be a number").positive("Price must be greater than zero"),
+
+  propertyType: z.enum(["apartment", "house", "condo", "land"], "Property type is required"),
+  listingType: z.enum(["buy", "rent"], "Listing type is required"),
+});
+
   
   /**
    * Zod schema for Post Details table.
    */
-  export const postDetailsSchema = z.object({
-    id: z.union([z.string(), z.number()]).transform((val) => Number(val)).nullable(),
+export const postDetailsSchema = z.object({
+  description: z.string("Description is required").min(10, "Description must be at least 10 characters").nullable(),
+  state: z.string("State is required").min(2, "State must be at least 2 characters").max(100, "State must not exceed 100 characters"),
+  areaSqft: z.number("Area (sqft) must be a number").positive("Area (sqft) must be greater than zero"),
 
-    description: z.string().min(10),
+  schoolDistance: z.number("School distance must be a string").min(0, "School distance required"),
+  busDistance: z.number("Bus distance must be a string").min(0, "Bus distance required"),
+  restaurantDistance: z.number("Restaurant distance must be a string").min(0, "Restaurant distance required"),
   
-    state: z.string().min(2).max(100),
-  
-    areaSqft: z.number().int().positive(),
-  
-    utilitiesPolicy: z.string().default("none"),
-  
-    schoolDistance: z.string().max(15).optional().nullable(),
-    busDistance: z.string().max(15).optional().nullable(),
-    restaurantDistance: z.string().max(15).optional().nullable(),
-  
-    petPolicy: z.string().default("none").optional(),
-    incomePolicy: z.string().default("none"),
-  });
+  utilitiesPolicy: z.string(),
+  petPolicy: z.string(),
+  incomePolicy: z.string("Income policy is required"),
+});
+
   
   /**
    * Zod schema for a single post image.
    */
   export const postImageSchema = z.object({
-    id: z.union([z.string(), z.number()]).transform((val) => Number(val)).nullable(),
-    imageUrl: z.string().url(),
+    id: z.number().nullable(),
+    imageUrl: z.string(),
   });
   
   /**
@@ -82,7 +78,7 @@ export const postSchema = z.object({
    * Zod schema for a single post feature.
    */
   export const postFeatureSchema = z.object({
-    id: z.union([z.string(), z.number()]).transform((val) => Number(val)).nullable(),
+    id: z.number().nullable(),
     title: z.string().min(2).max(50),
     description: z.string().min(2).max(50),
   });
@@ -97,8 +93,8 @@ export const postSchema = z.object({
    * This is the schema you should use in forms & server actions.
    */
   export const createOrUpdatePostSchema = z.object({
-    post: postSchema,
-    details: postDetailsSchema,
-    images: postImagesSchema,
-    features: postFeaturesSchema,
+    postData: postSchema,
+    postDetails: postDetailsSchema,
+    postImages: postImagesSchema,
+    postFeatures: postFeaturesSchema,
   });

@@ -32,7 +32,7 @@ export default async function Profile() {
           {/* My List Header */}
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold">My List</h1>
-            <Link href="/properties/add">
+            <Link href="/property/add">
             <Button className="flex items-center gap-2 px-5 h-12 min-w-12 rounded-none text-primary-foreground bg-primary/90 font-medium hover:bg-primary transition-colors font-lato">
               <Plus /> <span className="hidden md:inline">Add New property</span>
             </Button>

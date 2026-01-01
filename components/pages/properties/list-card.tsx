@@ -13,7 +13,7 @@ import { ListPropertyInterface } from '@/lib/types/propely.type';
 
 const ListCard = ({ item }: { item: ListPropertyInterface }) => {
   
-  const propertyUrl = `/properties/${item.id}`;
+  const propertyUrl = `/property/${item.id}`;
 
   return (
     <Card className="max-w-full p-4 m-0 flex flex-col sm:flex-row rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200">

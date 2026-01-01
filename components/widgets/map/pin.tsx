@@ -27,7 +27,7 @@ const Pin = ({ item }: { item: ListPropertyInterface }) => {
                     {/* Info container: title (link, truncated), bedrooms, price, */}
                     <div className='flex flex-col justify-between min-w-0'>
                         <Link
-                            href={`/properties/${item.id}`}
+                            href={`/property/${item.id}`}
                             className="truncate overflow-hidden text-ellipsis whitespace-nowrap"
                         >
                             {item.title}

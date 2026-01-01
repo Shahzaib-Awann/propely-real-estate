@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
+
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { EditorState } from "lexical";
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
@@ -31,8 +32,6 @@ import ToolbarPlugin from './plugins/ToolbarPlugin';
 import TreeViewPlugin from './plugins/TreeViewPlugin';
 import { parseAllowedColor, parseAllowedFontSize } from './styleConfig'; 
 import { cn } from "@/lib/utils/general";
-
-const placeholder = 'Enter some rich text...';
 
 const removeStylesExportDOM = (
     editor: LexicalEditor,
@@ -141,10 +140,11 @@ const editorConfig = {
 };
 
 export default function RichTextEditor({
-    onChange, className
+    onChange, className, placeholder
 }: {
     onChange?: (value: string) => void;
     className?: string
+    placeholder?: string
 }) {
 
     const handleChange = (editorState: EditorState) => {
@@ -159,14 +159,14 @@ export default function RichTextEditor({
 
     return (
         <LexicalComposer initialConfig={editorConfig}>
-            <div className={cn(className, "editor-container")}>
+            <div className={cn(className, "editor-container h-auto")}>
                 <ToolbarPlugin />
                 <div className="editor-inner">
                     <RichTextPlugin
                         contentEditable={
                             <ContentEditable
                                 className="editor-input"
-                                aria-placeholder={placeholder}
+                                aria-placeholder={placeholder ?? "Enter some rich text..."}
                                 placeholder={placeholderElement}
                             />
                         }
