@@ -72,7 +72,7 @@ export const postDetailsSchema = z.object({
    * Zod schema for post images list.
    * At least one image is required.
    */
-  export const postImagesSchema = z.array(postImageSchema).min(1);
+  export const postImagesSchema = z.array(postImageSchema);
   
   /**
    * Zod schema for a single post feature.

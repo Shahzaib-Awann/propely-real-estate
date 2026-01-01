@@ -30,13 +30,21 @@ import {
 import RichTextEditor from "@/components/widgets/editor/RichTextEditor";
 import { createOrUpdatePostSchema } from "@/lib/zod/schema.zod";
 
-const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: any }) => {
+
+
+type PropertyFormProps = {
+  mode: "create" | "edit";
+  property?: Partial<z.output<typeof createOrUpdatePostSchema>>;
+};
+
+
+
+const PropertyForm = ({ mode, property }: PropertyFormProps) => {
 
   /* === Local State === */
   const [loading, setLoading] = useState(false);
   const router = useRouter()
   const [images, setImages] = useState([]);
-  const [errors, setErrors] = useState();
 
   /* === React Hook Form Setup === */
   const form = useForm<z.input<typeof createOrUpdatePostSchema>>({
@@ -66,8 +74,8 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
         busDistance: 0,
         restaurantDistance: 0,
       },
-      postImages: property?.images ?? [],
-      postFeatures: property?.features ?? [],
+      postImages: property?.postImages ?? [],
+      postFeatures: property?.postFeatures ?? [],
     },
   });
 
@@ -127,18 +135,21 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
     }
   }
 
-  console.log(errors);
+  const onError = (e: unknown) => {
+    console.log("Form Submission Error: ", e)
+  }
+
   return (
     <>
       {/* LEFT: User Info Form */}
       <section className="flex-3 lg:h-full">
         <div className="flex flex-col gap-10 py-5 pr-0 pb-12 lg:pr-10 overflow-y-visible lg:overflow-y-auto h-auto lg:h-full">
           <h1 className='text-2xl font-semibold'>{mode === "create" ? "Add New Property" : "Edit Property"}</h1>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={form.handleSubmit(onSubmit, onError)}>
             <FieldSet>
               <FieldGroup>
 
-                {/* Title + Price + Address */}
+                {/* Title + Price + Size (sqft) */}
                 <div className="flex flex-col sm:flex-row gap-2">
                   {/* Title */}
                   <Controller
@@ -154,11 +165,6 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
                           className="h-14"
                           {...field}
                         />
-                        {fieldState.error && (
-  <p className="text-red-500 text-sm">
-    {fieldState.error.message}
-  </p>
-)}
                         <FieldError
                           errors={fieldState.error ? [fieldState.error] : []}
                         />
@@ -189,6 +195,53 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
                     )}
                   />
 
+                  {/* Size (sqft) */}
+                  <Controller
+                    name="postDetails.areaSqft"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={!!fieldState.error}>
+                        <FieldLabel htmlFor="areaSqft">Size (sqft)</FieldLabel>
+                        <Input
+                          id="areaSqft"
+                          type="number"
+                          placeholder="Enter area in square feet"
+                          variant="primary"
+                          className="h-14"
+                          value={field.value ?? 0}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                        <FieldError
+                          errors={fieldState.error ? [fieldState.error] : []}
+                        />
+                      </Field>
+                    )}
+                  />
+                </div>
+
+
+                {/* Description */}
+                <Controller
+                  name="postDetails.description"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={!!fieldState.error}>
+                      <FieldLabel htmlFor="description">Description</FieldLabel>
+                      <RichTextEditor
+                        className="w-full h-72"
+                        placeholder="Enter property description"
+                        onChange={(value) => field.onChange(value)}
+                      />
+                      <FieldError
+                        errors={fieldState.error ? [fieldState.error] : []}
+                      />
+                    </Field>
+                  )}
+                />
+
+
+                {/* Adsress + City + State */}
+                <div className="flex flex-col sm:flex-row gap-2">
                   {/* Address */}
                   <Controller
                     name="postData.address"
@@ -211,29 +264,6 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
                     )}
                   />
 
-                </div>
-
-                {/* Description */}
-                <Controller
-                  name="postDetails.description"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel htmlFor="description">Description</FieldLabel>
-                      <RichTextEditor
-                        className="w-full h-72"
-                        placeholder="Enter property description"
-                        onChange={(value) => field.onChange(value)}
-                      />
-                      <FieldError
-                        errors={fieldState.error ? [fieldState.error] : []}
-                      />
-                    </Field>
-                  )}
-                />
-
-                {/* City + Bedrooms + Bathrooms */}
-                <div className="flex flex-col sm:flex-row gap-2">
                   {/* City */}
                   <Controller
                     name="postData.city"
@@ -256,6 +286,32 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
                     )}
                   />
 
+                  {/* State */}
+                  <Controller
+                    name="postDetails.state"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={!!fieldState.error}>
+                        <FieldLabel htmlFor="state">State</FieldLabel>
+                        <Input
+                          id="state"
+                          type="text"
+                          placeholder="Enter State"
+                          variant="primary"
+                          className="h-14"
+                          {...field}
+                        />
+                        <FieldError
+                          errors={fieldState.error ? [fieldState.error] : []}
+                        />
+                      </Field>
+                    )}
+                  />
+                </div>
+
+
+                {/* Bedrooms + Bathrooms + Property Type */}
+                <div className="flex flex-col sm:flex-row gap-2">
                   {/* Bedrooms */}
                   <Controller
                     name="postData.bedrooms"
@@ -301,9 +357,39 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
                       </Field>
                     )}
                   />
+
+                  {/* Property Type */}
+                  <Controller
+                    name="postData.propertyType"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={!!fieldState.error}>
+                        <FieldLabel htmlFor="propertyType">Property</FieldLabel>
+                        <Select value={field.value}
+                          onValueChange={field.onChange}>
+                          <SelectTrigger id="propertyType" className="w-full shrink-0 rounded-xs border shadow min-h-14">
+                            <SelectValue placeholder="Select property type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup className="[&_div:focus]:bg-primary [&_div:focus]:text-primary-foreground">
+                              {["apartment", "house", "condo", "land"].map((opt) => (
+                                <SelectItem key={opt} value={opt}>
+                                  {opt[0].toUpperCase() + opt.slice(1)}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                        <FieldError
+                          errors={fieldState.error ? [fieldState.error] : []}
+                        />
+                      </Field>
+                    )}
+                  />
                 </div>
 
-                {/* Latitude + Longitude + Property Type */}
+
+                {/* Latitude+ Longitude + Listing Type*/}
                 <div className="flex flex-col sm:flex-row gap-2">
                   {/* Latitude */}
                   <Controller
@@ -351,39 +437,6 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
                     )}
                   />
 
-                  {/* Property Type */}
-                  <Controller
-                    name="postData.propertyType"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={!!fieldState.error}>
-                        <FieldLabel htmlFor="propertyType">Property</FieldLabel>
-                        <Select value={field.value}
-  onValueChange={field.onChange}>
-                          <SelectTrigger id="propertyType" className="w-full shrink-0 rounded-xs border shadow min-h-14">
-                            <SelectValue placeholder="Select property type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup className="[&_div:focus]:bg-primary [&_div:focus]:text-primary-foreground">
-                              {["apartment", "house", "condo", "land"].map((opt) => (
-                                <SelectItem key={opt} value={opt}>
-                                  {opt[0].toUpperCase() + opt.slice(1)}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                        <FieldError
-                          errors={fieldState.error ? [fieldState.error] : []}
-                        />
-                      </Field>
-                    )}
-                  />
-                </div>
-
-
-                {/* Listing Type + Utilities Policy + Pet Policy */}
-                <div className="flex flex-col sm:flex-row gap-2">
                   {/* Listing Type */}
                   <Controller
                     name="postData.listingType"
@@ -413,6 +466,32 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
                       </Field>
                     )}
                   />
+                </div>
+
+
+                {/* Income Policy + Utilities Policy + Pet Policy */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  {/* Income Policy */}
+                  <Controller
+                    name="postDetails.incomePolicy"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={!!fieldState.error}>
+                        <FieldLabel htmlFor="incomePolicy">Income Policy</FieldLabel>
+                        <Input
+                          id="incomePolicy"
+                          type="text"
+                          placeholder="Enter income policy"
+                          variant="primary"
+                          className="h-14"
+                          {...field}
+                        />
+                        <FieldError
+                          errors={fieldState.error ? [fieldState.error] : []}
+                        />
+                      </Field>
+                    )}
+                  />
 
                   {/* Utilities Policy */}
                   <Controller
@@ -422,7 +501,7 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
                       <Field data-invalid={!!fieldState.error}>
                         <FieldLabel htmlFor="utilitiesPolicy">Utilities Policy</FieldLabel>
                         <Select value={field.value}
-  onValueChange={field.onChange}>
+                          onValueChange={field.onChange}>
                           <SelectTrigger id="utilitiesPolicy" className="w-full shrink-0 rounded-xs border shadow min-h-14">
                             <SelectValue placeholder="Select utilities policy" />
                           </SelectTrigger>
@@ -449,7 +528,7 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
                       <Field data-invalid={!!fieldState.error}>
                         <FieldLabel htmlFor="petPolicy">Pet Policy</FieldLabel>
                         <Select value={field.value}
-  onValueChange={field.onChange} >
+                          onValueChange={field.onChange} >
                           <SelectTrigger id="petPolicy" className="w-full shrink-0 rounded-xs border shadow min-h-14">
                             <SelectValue placeholder="Select pet policy" />
                           </SelectTrigger>
@@ -471,53 +550,8 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
                   />
                 </div>
 
-                {/* Income Policy + Size (sqft) + School Distance */}
-                <div className="flex flex-col sm:flex-row gap-2">
-                  {/* Income Policy */}
-                  <Controller
-                    name="postDetails.incomePolicy"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={!!fieldState.error}>
-                        <FieldLabel htmlFor="incomePolicy">Income Policy</FieldLabel>
-                        <Input
-                          id="incomePolicy"
-                          type="text"
-                          placeholder="Enter income policy"
-                          variant="primary"
-                          className="h-14"
-                          {...field}
-                        />
-                        <FieldError
-                          errors={fieldState.error ? [fieldState.error] : []}
-                        />
-                      </Field>
-                    )}
-                  />
-
-                  {/* Size (sqft) */}
-                  <Controller
-                    name="postDetails.areaSqft"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={!!fieldState.error}>
-                        <FieldLabel htmlFor="areaSqft">Size (sqft)</FieldLabel>
-                        <Input
-                          id="areaSqft"
-                          type="number"
-                          placeholder="Enter area in square feet"
-                          variant="primary"
-                          className="h-14"
-                          value={field.value ?? 0}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                        />
-                        <FieldError
-                          errors={fieldState.error ? [fieldState.error] : []}
-                        />
-                      </Field>
-                    )}
-                  />
-
+                {/* School Distance + Bus Distance + Restaurant Distance */}
+                <div className="flex flex-col sm:flex-row gap-2 items-end">
                   {/* School Distance */}
                   <Controller
                     name="postDetails.schoolDistance"
@@ -540,10 +574,7 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
                       </Field>
                     )}
                   />
-                </div>
 
-                {/* Bus Distance + Restaurant Distance + Submit Button */}
-                <div className="flex flex-col sm:flex-row gap-2 items-end">
                   {/* Bus Distance */}
                   <Controller
                     name="postDetails.busDistance"
@@ -590,18 +621,18 @@ const PropertyForm = ({ mode, property }: { mode: 'create' | 'edit', property?: 
                     )}
                   />
 
-                  {/* Submit Button */}
-                  <Field orientation="horizontal">
-                    <Button
-                      disabled={loading}
-                      type="submit"
-                      className="w-full h-14 text-base rounded-none"
-                    >
-                      Update
-                    </Button>
-                  </Field>
-
                 </div>
+
+                {/* Submit Button */}
+                <Field orientation="horizontal">
+                  <Button
+                    disabled={loading}
+                    type="submit"
+                    className="w-full h-14 text-base rounded-none"
+                  >
+                    Update
+                  </Button>
+                </Field>
 
               </FieldGroup>
             </FieldSet>
