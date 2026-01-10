@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import toast from "react-hot-toast";
@@ -29,6 +29,8 @@ import {
 
 import RichTextEditor from "@/components/widgets/editor/RichTextEditor";
 import { createOrUpdatePostSchema } from "@/lib/zod/schema.zod";
+import { Trash, X } from "lucide-react";
+import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";
 
 
 
@@ -43,8 +45,11 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
 
   /* === Local State === */
   const [loading, setLoading] = useState(false);
+  const [imagesUploadLoading, setImagesUploadLoading] = useState(false);
   const router = useRouter()
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState<
+    { id: number | null; imageUrl: string; publicId: string }[]
+  >([]);
 
   /* === React Hook Form Setup === */
   const form = useForm<z.input<typeof createOrUpdatePostSchema>>({
@@ -91,6 +96,10 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
     control: form.control,
     name: "postFeatures",
   });
+
+  useEffect(() => {
+    form.setValue("postImages", images);
+  }, [images, form]);
 
   /* === Submit Handler === */
   async function onSubmit(values: z.infer<typeof createOrUpdatePostSchema>) {
@@ -163,7 +172,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
               <FieldGroup>
 
                 {/* Title + Price + Size (sqft) */}
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
                   {/* Title */}
                   <Controller
                     name="postData.title"
@@ -234,27 +243,30 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
 
 
                 {/* Description */}
-                <Controller
-                  name="postDetails.description"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel htmlFor="description">Description</FieldLabel>
-                      <RichTextEditor
-                        className="w-full h-72"
-                        placeholder="Enter property description"
-                        onChange={(value) => field.onChange(value)}
-                      />
-                      <FieldError
-                        errors={fieldState.error ? [fieldState.error] : []}
-                      />
-                    </Field>
-                  )}
-                />
+                <div className="border p-4 relative">
+                  <h1 className="absolute z-10 -top-3 bg-background w-fit px-2 py-1 border text-sm">Description</h1>
+                  <Controller
+                    name="postDetails.description"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={!!fieldState.error} >
+                        <FieldLabel htmlFor="description" hidden>description</FieldLabel>
+                        <RichTextEditor
+                          className="w-full h-72"
+                          placeholder="Enter property description"
+                          onChange={(value) => field.onChange(value)}
+                        />
+                        <FieldError
+                          errors={fieldState.error ? [fieldState.error] : []}
+                        />
+                      </Field>
+                    )}
+                  />
+                </div>
 
 
                 {/* Adsress + City + State */}
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
                   {/* Address */}
                   <Controller
                     name="postData.address"
@@ -324,7 +336,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
 
 
                 {/* Bedrooms + Bathrooms + Property Type */}
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
                   {/* Bedrooms */}
                   <Controller
                     name="postData.bedrooms"
@@ -403,7 +415,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
 
 
                 {/* Latitude+ Longitude + Listing Type*/}
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
                   {/* Latitude */}
                   <Controller
                     name="postData.latitude"
@@ -483,7 +495,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
 
 
                 {/* Income Policy + Utilities Policy + Pet Policy */}
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
                   {/* Income Policy */}
                   <Controller
                     name="postDetails.incomePolicy"
@@ -564,7 +576,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
                 </div>
 
                 {/* School Distance + Bus Distance + Restaurant Distance */}
-                <div className="flex flex-col sm:flex-row gap-2 items-end">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-2 items-end">
                   {/* School Distance */}
                   <Controller
                     name="postDetails.schoolDistance"
@@ -638,7 +650,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
 
                 {/* Dynamic Features */}
                 <div className="pt-8 space-y-4 border p-4 relative">
-                  <h1 className="absolute z-10 -top-[12px] bg-background px-2 py-1 border">Features</h1>
+                  <h1 className="absolute z-10 -top-3 bg-background px-2 py-1 border text-sm">Features</h1>
                   {featureFields.map((item, index) => (
                     <div key={item.id} className="flex flex-col sm:flex-row gap-2 items-end">
                       {/* Feature Title */}
@@ -661,35 +673,38 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
                         )}
                       />
 
-                      {/* Feature Description */}
-                      <Controller
-                        name={`postFeatures.${index}.description`}
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={!!fieldState.error}>
-                            <FieldLabel>Feature Description</FieldLabel>
-                            <Input
-                              {...field}
-                              placeholder="Short detail (e.g. On-site, Free)"
-                              variant="primary"
-                              className="h-14"
-                            />
-                            <FieldError
-                              errors={fieldState.error ? [fieldState.error] : []}
-                            />
-                          </Field>
-                        )}
-                      />
+                      <div className="w-full flex flex-row items-end gap-2">
+                        {/* Feature Description */}
+                        <Controller
+                          name={`postFeatures.${index}.description`}
+                          control={form.control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={!!fieldState.error}>
+                              <FieldLabel>Feature Description</FieldLabel>
+                              <Input
+                                {...field}
+                                placeholder="Short detail (e.g. On-site, Free)"
+                                variant="primary"
+                                className="h-14"
+                              />
+                              <FieldError
+                                errors={fieldState.error ? [fieldState.error] : []}
+                              />
+                            </Field>
+                          )}
+                        />
 
-                      {/* Remove Button */}
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        className="h-14"
-                        onClick={() => removeFeature(index)}
-                      >
-                        Remove
-                      </Button>
+                        {/* Remove Button */}
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          className="h-14 aspect-square sm:aspect-auto"
+                          onClick={() => removeFeature(index)}
+                        >
+                          <Trash />
+                          <span className="sm:block hidden">Remove</span>
+                        </Button>
+                      </div>
                     </div>
                   ))}
 
@@ -729,23 +744,92 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
 
       {/* RIGHT: User Avatar Panel */}
       <aside className="flex flex-2 h-full bg-side-panel pb-5 lg:pb-0 lg:py-5 rounded-lg lg:rounded-none">
-        <div className="p-4 flex h-full w-full">
-          {images?.map((image, index) => (
-            <div key={index} className="w-20 h-20 relative">
-              <Image src={image} alt="Image" fill />
-            </div>
-          ))}
-          {/* <CldUploadWidget
-          options={{
-            multiple: true,
-            cloudName: "lamadev",
-            uploadPreset: "estate",
-            folder: "posts",
-          }}
-          setState={setImages}
-        /> */}
+        <div className="p-4 flex flex-col gap-4 h-full w-full">
+          <div className="my-auto">
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2 scroll-y-auto max-h-[70dvh] overflow-y-auto pr-2">
+            {images?.map((img, index) => (
+              <div key={index} className="relative w-full aspect-video border rounded overflow-hidden shadow-sm">
+                <Image src={img.imageUrl} alt="Property Image" fill className="object-cover hover:scale-110 transition-all duration-200" />
+                <Button
+                  type="button"
+                  onClick={() =>
+                    setImages((prev) => prev.filter((_, i) => i !== index))
+                  }
+                  className="absolute top-1 right-1 bg-black/60 text-white text-xs px-1 rounded"
+                >
+                  <X />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          <CldUploadWidget
+            signatureEndpoint="/api/cloudinary/sign-upload"
+            options={{
+              multiple: true,
+              maxFiles: 10,
+              folder: "properties",
+              maxImageFileSize: 1 * 1024 * 1024, // <-- 1MB
+              clientAllowedFormats: ["jpg", "jpeg", "png"],
+            }}
+            uploadPreset="propely-real-estate"
+            onQueuesStart={() => {
+              setImagesUploadLoading(true);
+              toast.loading("Uploading avatar...", {
+                id: "images-upload"
+              });
+            }}
+            onSuccess={(results) => {
+              if (!results?.info || typeof results.info !== "object") return;
+
+              const info = results.info as CloudinaryUploadWidgetInfo;
+              if (
+                typeof info.secure_url !== "string" ||
+                typeof info.public_id !== "string"
+              ) {
+                return;
+              }
+
+              setImages((prev) => [
+                ...prev,
+                {
+                  id: null,
+                  imageUrl: info.secure_url,
+                  publicId: info.public_id,
+                },
+              ]);
+            }}
+            onError={() => {
+              toast.error("upload failed", {
+                id: "images-upload",
+              });
+            }}
+            onQueuesEnd={(_, { widget }) => {
+              toast.dismiss("images-upload");
+              setImagesUploadLoading(false);
+              widget.close();
+            }}
+          >
+            {({ open }) => (
+              <div className="flex flex-row justify-center w-full">
+                <Button
+                onClick={() => {
+                  open();
+                }}
+                disabled={imagesUploadLoading}
+                className="w-48 h-12 text-base rounded-none mt-5"
+              >
+                {imagesUploadLoading ? "Uploading..." : "Upload Images"}
+              </Button>
+              </div>
+            )}
+          </CldUploadWidget>
+
+          </div>
         </div>
       </aside>
+
     </>
   )
 }

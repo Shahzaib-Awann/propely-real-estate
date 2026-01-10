@@ -76,7 +76,6 @@ export const postImagesTable = mysqlTable('post_images', {
   id: int('id').primaryKey().autoincrement(),
   
   postId: int('post_id').notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
-
   imageUrl: text('image_url'),
 });
 

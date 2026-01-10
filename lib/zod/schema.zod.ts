@@ -65,7 +65,8 @@ export const postDetailsSchema = z.object({
    */
   export const postImageSchema = z.object({
     id: z.number().nullable(),
-    imageUrl: z.string(),
+  imageUrl: z.string(),
+  publicId: z.string(),
   });
   
   /**
