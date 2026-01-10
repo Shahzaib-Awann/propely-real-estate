@@ -31,6 +31,7 @@ import RichTextEditor from "@/components/widgets/editor/RichTextEditor";
 import { createOrUpdatePostSchema } from "@/lib/zod/schema.zod";
 import { Trash, X } from "lucide-react";
 import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";
+import { cn } from "@/lib/utils/general";
 
 
 
@@ -47,9 +48,8 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
   const [loading, setLoading] = useState(false);
   const [imagesUploadLoading, setImagesUploadLoading] = useState(false);
   const router = useRouter()
-  const [images, setImages] = useState<
-    { id: number | null; imageUrl: string; publicId: string }[]
-  >([]);
+  const [images, setImages] = useState<{ id: number | null; imageUrl: string; publicId: string }[]>([]);
+  const [imageRemoveLoading, setImageRemoveLoading] = useState(false);
 
   /* === React Hook Form Setup === */
   const form = useForm<z.input<typeof createOrUpdatePostSchema>>({
@@ -88,6 +88,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
     },
   });
 
+  // === Dynamic property features ===
   const {
     fields: featureFields,
     append: addFeature,
@@ -156,6 +157,31 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
       toast.dismiss("property-loading");
     }
   }
+
+  // === Remove image from Cloudinary and local state ===
+  async function handleRemoveImage(index: number) {
+    const img = images[index];
+
+    try {
+      setImageRemoveLoading(true)
+
+      // API request to delete the asset from Cloudinary
+      await fetch("/api/cloudinary/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publicId: img.publicId }),
+      });
+
+      // On successful deletion, remove the image from local state
+      setImages((prev) => prev.filter((_, i) => i !== index));
+
+    } catch {
+      toast.error("Could not remove image from Cloudinary");
+    } finally {
+      setImageRemoveLoading(false)
+    }
+  }
+
 
   const onError = (e: unknown) => {
     console.log("Form Submission Error: ", e)
@@ -742,89 +768,105 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
         </div>
       </section>
 
-      {/* RIGHT: User Avatar Panel */}
+      {/* RIGHT: Property Images Panel */}
       <aside className="flex flex-2 h-full bg-side-panel pb-5 lg:pb-0 lg:py-5 rounded-lg lg:rounded-none">
         <div className="p-4 flex flex-col gap-4 h-full w-full">
           <div className="my-auto">
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2 scroll-y-auto max-h-[70dvh] overflow-y-auto pr-2">
-            {images?.map((img, index) => (
-              <div key={index} className="relative w-full aspect-video border rounded overflow-hidden shadow-sm">
-                <Image src={img.imageUrl} alt="Property Image" fill className="object-cover hover:scale-110 transition-all duration-200" />
-                <Button
-                  type="button"
-                  onClick={() =>
-                    setImages((prev) => prev.filter((_, i) => i !== index))
-                  }
-                  className="absolute top-1 right-1 bg-black/60 text-white text-xs px-1 rounded"
-                >
-                  <X />
-                </Button>
-              </div>
-            ))}
-          </div>
+            {/* Responsive image grid with vertical scrolling */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2 scroll-y-auto max-h-[70dvh] overflow-y-auto pr-2">
+              {images?.map((img, index) => (
+                <div key={index} className="relative w-full aspect-video border rounded overflow-hidden shadow-sm">
+                  <Image
+                    src={img.imageUrl}
+                    alt="Property Image"
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 50vw"
+                    className={cn(
+                      "object-cover hover:scale-110 transition-all duration-200",
+                      imageRemoveLoading ? 'opacity-75' : 'opacity-100')}
+                  />
 
-          <CldUploadWidget
-            signatureEndpoint="/api/cloudinary/sign-upload"
-            options={{
-              multiple: true,
-              maxFiles: 10,
-              folder: "properties",
-              maxImageFileSize: 1 * 1024 * 1024, // <-- 1MB
-              clientAllowedFormats: ["jpg", "jpeg", "png"],
-            }}
-            uploadPreset="propely-real-estate"
-            onQueuesStart={() => {
-              setImagesUploadLoading(true);
-              toast.loading("Uploading avatar...", {
-                id: "images-upload"
-              });
-            }}
-            onSuccess={(results) => {
-              if (!results?.info || typeof results.info !== "object") return;
+                  {/* Remove image button */}
+                  <Button
+                    type="button"
+                    size={"icon"}
+                    disabled={imageRemoveLoading}
+                    onClick={() =>
+                      handleRemoveImage(index)
+                    }
+                    className="absolute top-1 right-1 bg-black/60 text-white text-xs px-1 rounded"
+                  >
+                    <X />
+                  </Button>
+                </div>
+              ))}
+            </div>
 
-              const info = results.info as CloudinaryUploadWidgetInfo;
-              if (
-                typeof info.secure_url !== "string" ||
-                typeof info.public_id !== "string"
-              ) {
-                return;
-              }
+            {/* Cloudinary upload widget for adding multiple property images */}
+            <CldUploadWidget
+              signatureEndpoint="/api/cloudinary/sign-upload"
+              options={{
+                multiple: true,
+                maxFiles: 10,
+                folder: "properties",
+                maxImageFileSize: 1 * 1024 * 1024, // <-- 1MB
+                clientAllowedFormats: ["jpg", "jpeg", "png"],
+              }}
+              uploadPreset="propely-real-estate"
+              onQueuesStart={() => {
+                setImagesUploadLoading(true);
+                toast.loading("Uploading avatar...", {
+                  id: "images-upload"
+                });
+              }}
+              onSuccess={(results) => {
+                if (!results?.info || typeof results.info !== "object") return;
 
-              setImages((prev) => [
-                ...prev,
-                {
-                  id: null,
-                  imageUrl: info.secure_url,
-                  publicId: info.public_id,
-                },
-              ]);
-            }}
-            onError={() => {
-              toast.error("upload failed", {
-                id: "images-upload",
-              });
-            }}
-            onQueuesEnd={(_, { widget }) => {
-              toast.dismiss("images-upload");
-              setImagesUploadLoading(false);
-              widget.close();
-            }}
-          >
-            {({ open }) => (
-              <div className="flex flex-row justify-center w-full">
-                <Button
-                onClick={() => {
-                  open();
-                }}
-                disabled={imagesUploadLoading}
-                className="w-48 h-12 text-base rounded-none mt-5"
-              >
-                {imagesUploadLoading ? "Uploading..." : "Upload Images"}
-              </Button>
-              </div>
-            )}
-          </CldUploadWidget>
+                const info = results.info as CloudinaryUploadWidgetInfo;
+                if (
+                  typeof info.secure_url !== "string" ||
+                  typeof info.public_id !== "string"
+                ) {
+                  return;
+                }
+
+                setImages((prev) => [
+                  ...prev,
+                  {
+                    id: null,
+                    imageUrl: info.secure_url,
+                    publicId: info.public_id,
+                  },
+                ]);
+              }}
+              onError={() => {
+                toast.error("upload failed", {
+                  id: "images-upload",
+                });
+              }}
+              onQueuesEnd={(_, { widget }) => {
+                toast.dismiss("images-upload");
+                setImagesUploadLoading(false);
+                widget.close();
+              }}
+            >
+              {({ open }) => (
+                <div className="flex flex-row justify-center w-full">
+
+                  {/* Upload images button */}
+                  <Button
+                    onClick={() => {
+                      open();
+                    }}
+                    disabled={imagesUploadLoading}
+                    className="w-48 h-12 text-base rounded-none mt-5"
+                  >
+                    {imagesUploadLoading ? "Uploading..." : "Upload Images"}
+                  </Button>
+                </div>
+              )}
+            </CldUploadWidget>
 
           </div>
         </div>
