@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -75,8 +75,21 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
         restaurantDistance: 0,
       },
       postImages: property?.postImages ?? [],
-      postFeatures: property?.postFeatures ?? [],
+      postFeatures: property?.postFeatures ?? [{
+        id: null,
+        title: "",
+        description: ""
+      }],
     },
+  });
+
+  const {
+    fields: featureFields,
+    append: addFeature,
+    remove: removeFeature,
+  } = useFieldArray({
+    control: form.control,
+    name: "postFeatures",
   });
 
   /* === Submit Handler === */
@@ -622,6 +635,80 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
                   />
 
                 </div>
+
+                {/* Dynamic Features */}
+                <div className="pt-8 space-y-4 border p-4 relative">
+                  <h1 className="absolute z-10 -top-[12px] bg-background px-2 py-1 border">Features</h1>
+                  {featureFields.map((item, index) => (
+                    <div key={item.id} className="flex flex-col sm:flex-row gap-2 items-end">
+                      {/* Feature Title */}
+                      <Controller
+                        name={`postFeatures.${index}.title`}
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={!!fieldState.error}>
+                            <FieldLabel>Feature Title</FieldLabel>
+                            <Input
+                              {...field}
+                              placeholder="Feature name (e.g. Gym, Parking)"
+                              variant="primary"
+                              className="h-14"
+                            />
+                            <FieldError
+                              errors={fieldState.error ? [fieldState.error] : []}
+                            />
+                          </Field>
+                        )}
+                      />
+
+                      {/* Feature Description */}
+                      <Controller
+                        name={`postFeatures.${index}.description`}
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={!!fieldState.error}>
+                            <FieldLabel>Feature Description</FieldLabel>
+                            <Input
+                              {...field}
+                              placeholder="Short detail (e.g. On-site, Free)"
+                              variant="primary"
+                              className="h-14"
+                            />
+                            <FieldError
+                              errors={fieldState.error ? [fieldState.error] : []}
+                            />
+                          </Field>
+                        )}
+                      />
+
+                      {/* Remove Button */}
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        className="h-14"
+                        onClick={() => removeFeature(index)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+
+                  {/* Add New Feature */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      addFeature({
+                        id: null,
+                        title: "",
+                        description: "",
+                      })
+                    }
+                  >
+                    + Add Feature
+                  </Button>
+                </div>
+
 
                 {/* Submit Button */}
                 <Field orientation="horizontal">
