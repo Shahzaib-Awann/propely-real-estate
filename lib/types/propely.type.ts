@@ -1,3 +1,4 @@
+import { SerializedEditorState } from "lexical";
 
 
 
@@ -88,12 +89,29 @@ interface PostSelletInfo {
 
 
 /**
+ * Full Single property SEO response
+ */
+export interface SinglePostSEO {
+  id: string;
+  title: string;
+  city: string;
+  address: string;
+  price: string;
+  bedRooms: number;
+  bathroom: number;
+  ptype: "apartment" | "house" | "condo" | "land";
+  ltype: "buy" | "rent";
+  images: string[];
+};
+
+
+/**
  * Full Single property details response
  */
 export interface SinglePostDetails {
   id: string;
   title: string;
-  description: string;
+  description: string | SerializedEditorState;
 
   price: string;
   size: number;
@@ -114,9 +132,9 @@ export interface SinglePostDetails {
   longitude: string;
   ptype: string;
   ltype: string;
-  school: string | null;
-  bus: string | null;
-  restaurant: string | null;
+  school: number | null;
+  bus: number | null;
+  restaurant: number | null;
 
   sellerInfo: PostSelletInfo | null
   

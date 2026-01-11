@@ -2,8 +2,9 @@
 import { postsTable, postDetailsTable, postFeaturesTable, postImagesTable, usersTable } from "@/lib/db/schema";
 import { and, eq, gte, lte, like, sql, desc } from "drizzle-orm";
 import { db } from "../db/connection";
-import { PropertiesResponse, SinglePostDetails } from "../types/propely.type";
+import { PropertiesResponse, SinglePostDetails, SinglePostSEO } from "../types/propely.type";
 import { defaultAppSettings } from "../constants";
+import { SerializedEditorState } from "lexical";
 
 
 
@@ -137,6 +138,68 @@ export const getProperties = async (
 
 
 /**
+ * === Fetch single post (property) by post ID For SEO. ===
+ *
+ * Retrieves base post required data, and images for SEO,
+ * then normalizes everything into a single response object.
+ *
+ * @param postId - ID of the post to retrieve.
+ * @returns {Promise<SinglePostSEO | null>} Normalized post details or `null` if not found.
+ */
+export const getPostSEOById = async (postId: string): Promise<SinglePostSEO | null> => {
+
+  // Fetch the base post data required for SEO.
+  const [post] = await db
+    .select({
+      id: postsTable.id,
+      title: postsTable.title,
+      city: postsTable.city,
+      address: postsTable.address,
+      price: postsTable.price,
+      bedRooms: postsTable.bedrooms,
+      bathroom: postsTable.bathrooms,
+      ptype: postsTable.propertyType,
+      ltype: postsTable.listingType,
+      cover: postsTable.image,
+    })
+    .from(postsTable)
+    .where(eq(postsTable.id, postId));
+
+  // Return null if post not found
+  if (!post) return null;
+
+  // Fetch all gallery images associated with the post.
+  const images = await db
+    .select({ url: postImagesTable.imageUrl })
+    .from(postImagesTable)
+    .where(eq(postImagesTable.postId, postId));
+
+  // Normalize image list (cover + gallery)
+  const imagesArray: string[] = [
+    post.cover ?? defaultAppSettings.placeholderPostImage,
+    ...images
+      .map((i) => i.url)
+      .filter((url): url is string => typeof url === "string"),
+  ];
+   
+  // Normalize the return output
+  return {
+    id: post.id,
+    title: post.title,
+    city: post.city,
+    address: post.address,
+    price: post.price,
+    bedRooms: post.bedRooms,
+    bathroom: post.bathroom,
+    ptype: post.ptype,
+    ltype: post.ltype,
+    images: imagesArray,
+  };
+}
+
+
+
+/**
  * === Fetch single post (property) details by post ID. ===
  *
  * Retrieves base post data, images, features, and seller information,
@@ -208,10 +271,12 @@ export const getPostDetailsById = async (postId: string): Promise<SinglePostDeta
   ].filter((img): img is string => !!img);  
    
   // Normalize the return output
-  const normalize = {
+  const normalize: SinglePostDetails = {
     id: post.id,
     title: post.title,
-    description: post.description ?? "-",
+    description: typeof post.description === "string"
+      ? post.description
+      : (post.description as SerializedEditorState),
 
     price: post.price,
     size: post.size ?? 0,

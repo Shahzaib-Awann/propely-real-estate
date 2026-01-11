@@ -2,7 +2,7 @@ import MapWrapper from "@/components/widgets/map/map-wrapper";
 import ImageSlider from "@/components/pages/view-property/image-slider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getPostDetailsById } from "@/lib/actions/properties.action";
+import { getPostDetailsById, getPostSEOById } from "@/lib/actions/properties.action";
 import { getAvatarFallback } from "@/lib/utils/general";
 import {
   Bath,
@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
+import LexicalViewer from "@/components/widgets/editor/LexicalViewer";
 
 
 
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ postId: s
     };
   }
 
-  const post = await getPostDetailsById(postId);
+  const post = await getPostSEOById(postId);
 
   // Fallback if post not found
   if (!post) {
@@ -165,9 +166,7 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
 
             {/* Description */}
             <div className="mt-12 bg-side-panel/30 text-sm sm:text-base rounded-lg leading-6 p-4">
-            {typeof post.description === "object"
-    ? JSON.stringify(post.description)
-    : post.description} <h1>Fix this later with the lexical viewer</h1>
+            <LexicalViewer value={post.description} />
             </div>
           </div>
         </div>
