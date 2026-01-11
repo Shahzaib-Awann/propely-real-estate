@@ -22,7 +22,7 @@ export interface PropertiesQueryParamsInterface {
  * A single property item from the properties API. 
  */
 export interface ListPropertyInterface {
-  id: number;
+  id: string;
   title: string;
   img: string | null;
   bedRooms: number;
@@ -91,7 +91,7 @@ interface PostSelletInfo {
  * Full Single property details response
  */
 export interface SinglePostDetails {
-  id: number;
+  id: string;
   title: string;
   description: string;
 

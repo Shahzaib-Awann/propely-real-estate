@@ -105,8 +105,17 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
   /* === Submit Handler === */
   async function onSubmit(values: z.infer<typeof createOrUpdatePostSchema>) {
 
-    setLoading(true);
+    const API_URL = "/api/property";
 
+    const requestOptions = {
+      method: mode === "create" ? "POST" : "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    }
+
+    setLoading(true);
     toast.loading("Saving property...", {
       id: "property-loading",
     });
@@ -114,19 +123,12 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
     console.log(JSON.stringify(values, null, 4))
 
     try {
-      const response = await fetch("/api/property", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
+      const response = await fetch(API_URL, requestOptions);
       const result = await response.json();
 
       // Map HTTP status codes to error messages
       const errorMap: Record<number, string> = {
-        422: "Invalid profile data. Please check your inputs.",
+        422: "Invalid Property data. Please check your inputs.",
         401: "Your session has expired. Please sign in again.",
         409: result?.error ?? "This Property is already exits.",
       };
@@ -141,9 +143,12 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
         return;
       }
 
+      console.log({ result })
+
       // === Success ===
       toast.success(result?.message ?? "Property Saved successfully.");
-      router.push(`/properties/${result?.propertyId}`)
+      router.push(`/property/${result?.propertyId}`)
+
     } catch (error) {
       console.error("Profile update failed:", error);
 
@@ -758,7 +763,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
                     type="submit"
                     className="w-full h-14 text-base rounded-none"
                   >
-                    Update
+                    {mode === 'create' ? 'Submit' : 'Update'}
                   </Button>
                 </Field>
 
@@ -871,7 +876,6 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
           </div>
         </div>
       </aside>
-
     </>
   )
 }

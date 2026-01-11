@@ -31,14 +31,14 @@ export async function generateMetadata({ params }: { params: Promise<{ postId: s
   const { postId } = await params;
 
   // Fallback metadata if postId is invalid
-  if (!postId || isNaN(Number(postId))) {
+  if (!postId) {
     return {
       title: "Property Not Found",
       description: "The property you are looking for does not exist.",
     };
   }
 
-  const post = await getPostDetailsById(Number(postId));
+  const post = await getPostDetailsById(postId);
 
   // Fallback if post not found
   if (!post) {
@@ -48,14 +48,17 @@ export async function generateMetadata({ params }: { params: Promise<{ postId: s
     };
   }
 
-  const { title, description, city, images } = post;
+  const { title, city, images, bedRooms, bathroom, ptype, ltype, address, price } = post;
+
+  const typeLabel = ptype.charAt(0).toUpperCase() + ptype.slice(1);
+  const action = ltype === "rent" ? "for rent" : "for sale";
 
   return {
     title: `${title} in ${city} | Real Estate Listing`,
-    description: description.slice(0, 150) + "...",
+    description: `${title} — A ${bedRooms}-bedroom, ${bathroom}-bathroom ${typeLabel.toLowerCase()} ${action} in ${city}. Located at ${address}, this property offers comfortable living at a price of $${price}. Ideal for families or professionals looking for a modern home in a prime location.`,
     openGraph: {
       title: `${title} in ${city} | Real Estate Listing`,
-      description: description.slice(0, 150) + "...",
+      description: `${title} — A ${bedRooms}-bedroom, ${bathroom}-bathroom ${typeLabel.toLowerCase()} ${action} in ${city}. Located at ${address}, this property offers comfortable living at a price of $${price}. Ideal for families or professionals looking for a modern home in a prime location.`,
       siteName: "Propely Real Estate",
       images: images && images.length > 0 ? [{ url: images[0], width: 1200, height: 630 }] : [],
       locale: "en_US",
@@ -64,7 +67,7 @@ export async function generateMetadata({ params }: { params: Promise<{ postId: s
     twitter: {
       card: "summary_large_image",
       title: `${title} in ${city}`,
-      description: description.slice(0, 150) + "...",
+      description: `${title} — A ${bedRooms}-bedroom, ${bathroom}-bathroom ${typeLabel.toLowerCase()} ${action} in ${city}. Located at ${address}, this property offers comfortable living at a price of $${price}. Ideal for families or professionals looking for a modern home in a prime location.`,
       images: images && images.length > 0 ? [images[0]] : [],
     },
   };
@@ -80,11 +83,11 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
   const { postId } = await params;
 
   // 404 if post not found
-  if (!postId || isNaN(Number(postId))) {
+  if (!postId) {
     redirect('/properties');
   }
 
-  const post = await getPostDetailsById(Number(postId))
+  const post = await getPostDetailsById(postId)
 
   // 404 if post not found
   if (!post) {
@@ -162,7 +165,9 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
 
             {/* Description */}
             <div className="mt-12 bg-side-panel/30 text-sm sm:text-base rounded-lg leading-6 p-4">
-              {post.description}
+            {typeof post.description === "object"
+    ? JSON.stringify(post.description)
+    : post.description} <h1>Fix this later with the lexical viewer</h1>
             </div>
           </div>
         </div>

@@ -145,7 +145,7 @@ export const getProperties = async (
  * @param postId - ID of the post to retrieve.
  * @returns {Promise<SinglePostDetails | null>} Normalized post details or `null` if not found.
  */
-export const getPostDetailsById = async (postId: number): Promise<SinglePostDetails | null> => {
+export const getPostDetailsById = async (postId: string): Promise<SinglePostDetails | null> => {
 
   // Fetch base post + details
   const [post] = await db.select({

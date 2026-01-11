@@ -1,4 +1,4 @@
-import { int, mysqlTable, varchar, text, mysqlEnum, timestamp, decimal } from 'drizzle-orm/mysql-core';
+import { int, mysqlTable, varchar, text, mysqlEnum, timestamp, decimal, char, json } from 'drizzle-orm/mysql-core';
 
 
 
@@ -22,7 +22,7 @@ export const usersTable = mysqlTable('users', {
 
 // Posts Table
 export const postsTable = mysqlTable('posts', {
-  id: int().autoincrement().primaryKey(),
+  id: char('id', { length: 36 }).primaryKey(), // <- UUIDv6
 
   sellerId: int('seller_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
 
@@ -42,7 +42,7 @@ export const postsTable = mysqlTable('posts', {
   propertyType: mysqlEnum('property_type', ['apartment', 'house', 'condo', 'land']).notNull(),
   listingType: mysqlEnum('listing_type', ['buy', 'rent']).notNull(),
 
-  updatedAt: timestamp({ mode: 'string' }),
+  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
   createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
 });
 
@@ -52,9 +52,9 @@ export const postsTable = mysqlTable('posts', {
 export const postDetailsTable = mysqlTable('post_details', {
     id: int('id').primaryKey().autoincrement(),
 
-    postId: int('post_id').notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
+    postId: char('post_id', { length: 36 }).notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
 
-    description: text('description').notNull(),
+    description: json('description').notNull(),
     state: varchar('state', { length: 100 }).notNull(),
 
     areaSqft: int('area_sqft').notNull(),
@@ -74,9 +74,9 @@ export const postDetailsTable = mysqlTable('post_details', {
 // Post Images Table
 export const postImagesTable = mysqlTable('post_images', {
   id: int('id').primaryKey().autoincrement(),
-  
-  postId: int('post_id').notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
+  postId: char('post_id', { length: 36 }).notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
   imageUrl: text('image_url'),
+  imagePublicId: varchar('image_public_id', { length: 255 }) 
 });
 
 
@@ -85,7 +85,7 @@ export const postImagesTable = mysqlTable('post_images', {
 export const postFeaturesTable = mysqlTable('post_features', {
   id: int('id').primaryKey().autoincrement(),
 
-  postId: int('post_id').notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
+  postId: char('post_id', { length: 36 }).notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
 
   title: varchar('title', { length: 50 }).notNull(),
   description: varchar('description', { length: 50 }).notNull(),

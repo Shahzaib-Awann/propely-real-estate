@@ -80,8 +80,8 @@ export const postImagesSchema = z.array(postImageSchema);
  */
 export const postFeatureSchema = z.object({
   id: z.number().nullable(),
-  title: z.string().min(2).max(50),
-  description: z.string().min(2).max(50),
+  title: z.string().min(2, "Title must be at least 2 characters").max(50, "Title must not exceed 50 characters"),
+  description: z.string().min(2, "Description must be at least 2 characters").max(50, "Description must not exceed 50 characters"),
 });
 
 /**
