@@ -1,3 +1,5 @@
+"use server";
+
 import { eq, sql } from "drizzle-orm";
 import { db } from "../db/connection";
 import { usersTable } from "../db/schema";

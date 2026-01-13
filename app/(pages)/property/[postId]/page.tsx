@@ -3,7 +3,7 @@ import ImageSlider from "@/components/pages/view-property/image-slider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { getPostDetailsById, getPostSEOById } from "@/lib/actions/properties.action";
-import { getAvatarFallback } from "@/lib/utils/general";
+import { formatMeters, getAvatarFallback } from "@/lib/utils/general";
 import {
   Bath,
   BedDouble,
@@ -27,13 +27,16 @@ import LexicalViewer from "@/components/widgets/editor/LexicalViewer";
 /**
  * Generate SEO metadata dynamically based on search filters
  */
-export async function generateMetadata({ params }: { params: Promise<{ postId: string }> }): Promise<Metadata> {
-  
+export async function generateMetadata(
+  { params }: { params: Promise<{ postId: string }> }
+): Promise<Metadata> {
+
   const { postId } = await params;
 
   // Fallback metadata if postId is invalid
   if (!postId) {
     return {
+      metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
       title: "Property Not Found",
       description: "The property you are looking for does not exist.",
     };
@@ -44,6 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ postId: s
   // Fallback if post not found
   if (!post) {
     return {
+      metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
       title: "Property Not Found",
       description: "The property you are looking for does not exist.",
     };
@@ -54,25 +58,29 @@ export async function generateMetadata({ params }: { params: Promise<{ postId: s
   const typeLabel = ptype.charAt(0).toUpperCase() + ptype.slice(1);
   const action = ltype === "rent" ? "for rent" : "for sale";
 
+  const description = `${title} — A ${bedRooms}-bedroom, ${bathroom}-bathroom ${typeLabel.toLowerCase()} ${action} in ${city}. Located at ${address}, this property offers comfortable living at a price of $${price}. Ideal for families or professionals looking for a modern home in a prime location.`;
+
   return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
     title: `${title} in ${city} | Real Estate Listing`,
-    description: `${title} — A ${bedRooms}-bedroom, ${bathroom}-bathroom ${typeLabel.toLowerCase()} ${action} in ${city}. Located at ${address}, this property offers comfortable living at a price of $${price}. Ideal for families or professionals looking for a modern home in a prime location.`,
+    description,
     openGraph: {
       title: `${title} in ${city} | Real Estate Listing`,
-      description: `${title} — A ${bedRooms}-bedroom, ${bathroom}-bathroom ${typeLabel.toLowerCase()} ${action} in ${city}. Located at ${address}, this property offers comfortable living at a price of $${price}. Ideal for families or professionals looking for a modern home in a prime location.`,
+      description,
       siteName: "Propely Real Estate",
-      images: images && images.length > 0 ? [{ url: images[0], width: 1200, height: 630 }] : [],
+      images: images.length > 0 ? [{ url: images[0], width: 1200, height: 630 }] : [],
       locale: "en_US",
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} in ${city}`,
-      description: `${title} — A ${bedRooms}-bedroom, ${bathroom}-bathroom ${typeLabel.toLowerCase()} ${action} in ${city}. Located at ${address}, this property offers comfortable living at a price of $${price}. Ideal for families or professionals looking for a modern home in a prime location.`,
-      images: images && images.length > 0 ? [images[0]] : [],
+      description,
+      images: images.length > 0 ? [images[0]] : [],
     },
   };
 }
+
 
 
 
@@ -94,9 +102,6 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
   if (!post) {
     return <div>Not Found</div>
   }
-
-  // Convert sqm to sqft
-  const sizeSqft = Math.floor(post.size * 10.7639);
 
   return (
     <main className="flex flex-col lg:flex-row flex-1 px-4 pb-20 lg:pb-0 max-h-[calc(100vh-80px)] bg-transparent overflow-y-scroll lg:overflow-y-hidden scroll-smooth">
@@ -166,7 +171,7 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
 
             {/* Description */}
             <div className="mt-12 bg-side-panel/30 text-sm sm:text-base rounded-lg leading-6 p-4">
-            <LexicalViewer value={post.description} />
+              <LexicalViewer value={post.description} />
             </div>
           </div>
         </div>
@@ -218,7 +223,7 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
             <div className="flex items-center gap-3 bg-white/75 p-2 rounded-lg shadow-sm">
               <Ruler className="text-primary" />
               <p className="text-sm font-semibold">
-                {post.size} sqm ({sizeSqft} sqft)
+                {post.size} sqft
               </p>
             </div>
 
@@ -244,7 +249,7 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
               <School className="text-primary" />
               <div>
                 <h2 className="font-bold">School</h2>
-                <p className="text-sm">{post.school}</p>
+                <p className="text-sm">{formatMeters(post.school)}</p>
               </div>
             </div>
 
@@ -253,7 +258,7 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
               <Bus className="text-primary" />
               <div>
                 <h2 className="font-bold">Bus Stop</h2>
-                <p className="text-sm">{post.bus}</p>
+                <p className="text-sm">{formatMeters(post.bus)}</p>
               </div>
             </div>
 
@@ -262,7 +267,7 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
               <Building className="text-primary" />
               <div>
                 <h2 className="font-bold">Restaurant</h2>
-                <p className="text-sm">{post.restaurant}</p>
+                <p className="text-sm">{formatMeters(post.restaurant)}</p>
               </div>
             </div>
           </div>

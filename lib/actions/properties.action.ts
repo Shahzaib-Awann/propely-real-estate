@@ -1,6 +1,7 @@
+"use server";
 
 import { postsTable, postDetailsTable, postFeaturesTable, postImagesTable, usersTable } from "@/lib/db/schema";
-import { and, eq, gte, lte, like, sql, desc } from "drizzle-orm";
+import { and, eq, gte, lte, like, sql, desc, asc, inArray } from "drizzle-orm";
 import { db } from "../db/connection";
 import { PropertiesResponse, SinglePostDetails, SinglePostSEO } from "../types/propely.type";
 import { defaultAppSettings } from "../constants";
@@ -93,7 +94,6 @@ export const getProperties = async (
     .select({
       id: postsTable.id,
       title: postsTable.title,
-      img: postsTable.image,
       bedRooms: postsTable.bedrooms,
       bathRooms: postsTable.bathrooms,
       price: postsTable.price,
@@ -105,10 +105,38 @@ export const getProperties = async (
       longitude: postsTable.longitude,
     })
     .from(postsTable)
-    .orderBy(desc(postsTable.id))
+    .orderBy(desc(postsTable.createdAt))
     .where(and(...conditions))
     .limit(safeLimit)
     .offset(offset);
+
+    const postIds = items.map((i) => i.id);
+  
+    // 2) Fetch FIFO images for those posts
+  const images = postIds.length
+  ? await db
+      .select({
+        postId: postImagesTable.postId,
+        url: postImagesTable.imageUrl,
+      })
+      .from(postImagesTable)
+      .where(inArray(postImagesTable.postId, postIds))
+      .orderBy(postImagesTable.id) // FIFO
+  : [];
+
+// Build a map: postId -> first image
+const imageMap = new Map<string, string>();
+for (const img of images) {
+  if (img.url && !imageMap.has(img.postId)) {
+    imageMap.set(img.postId, img.url);
+  }
+}
+
+// 3) Attach image (or fallback)
+const normalizedItems = items.map((item) => ({
+  ...item,
+  img: imageMap.get(item.id) ?? defaultAppSettings.placeholderPostImage,
+}));
 
   // Count total matching records (for pagination)
   const [{ total }] = await db
@@ -131,7 +159,7 @@ export const getProperties = async (
       totalPage,
       totalItems: total,
     },
-    items,
+    items: normalizedItems,
   };
 };
 
@@ -160,7 +188,6 @@ export const getPostSEOById = async (postId: string): Promise<SinglePostSEO | nu
       bathroom: postsTable.bathrooms,
       ptype: postsTable.propertyType,
       ltype: postsTable.listingType,
-      cover: postsTable.image,
     })
     .from(postsTable)
     .where(eq(postsTable.id, postId));
@@ -172,15 +199,19 @@ export const getPostSEOById = async (postId: string): Promise<SinglePostSEO | nu
   const images = await db
     .select({ url: postImagesTable.imageUrl })
     .from(postImagesTable)
-    .where(eq(postImagesTable.postId, postId));
+    .where(eq(postImagesTable.postId, postId))
+    .orderBy(asc(postImagesTable.id));
 
-  // Normalize image list (cover + gallery)
-  const imagesArray: string[] = [
-    post.cover ?? defaultAppSettings.placeholderPostImage,
-    ...images
-      .map((i) => i.url)
-      .filter((url): url is string => typeof url === "string"),
-  ];
+  // Normalize image list
+  const imagesArray = images
+    .map((i) => i.url)
+    .filter((url): url is string => typeof url === "string");
+
+    // Fallback if no images exist
+    const normalizedImages =
+    imagesArray.length > 0
+      ? imagesArray
+      : [defaultAppSettings.placeholderPostImage];
    
   // Normalize the return output
   return {
@@ -193,7 +224,7 @@ export const getPostSEOById = async (postId: string): Promise<SinglePostSEO | nu
     bathroom: post.bathroom,
     ptype: post.ptype,
     ltype: post.ltype,
-    images: imagesArray,
+    images: normalizedImages,
   };
 }
 
@@ -215,7 +246,6 @@ export const getPostDetailsById = async (postId: string): Promise<SinglePostDeta
     id: postsTable.id,
     sellerId: postsTable.sellerId,
     title: postsTable.title,
-    image: postsTable.image,
     price: postsTable.price,
     bedRooms: postsTable.bedrooms,
     bathroom: postsTable.bathrooms,
@@ -245,9 +275,11 @@ export const getPostDetailsById = async (postId: string): Promise<SinglePostDeta
 
   // Fetch related data [Post Images, Post Features, Seller Info] in parallel
   const [postImages, postFeatures, sellerInfo] = await Promise.all([
-    db.select({ images: postImagesTable.imageUrl })
+    db
+      .select({ url: postImagesTable.imageUrl })
       .from(postImagesTable)
-      .where(eq(postImagesTable.postId, postId)),
+      .where(eq(postImagesTable.postId, postId))
+      .orderBy(postImagesTable.id),
     db.select({
       title: postFeaturesTable.title,
       description: postFeaturesTable.description,
@@ -265,10 +297,12 @@ export const getPostDetailsById = async (postId: string): Promise<SinglePostDeta
   ]);
 
   // Normalize image list (cover + gallery)
-  const imagesArray: string[] = [
-    post.image ?? defaultAppSettings.placeholderPostImage,
-    ...((postImages ?? []).map((img) => img.images)),
-  ].filter((img): img is string => !!img);  
+  const imagesArray =
+    postImages.length > 0
+      ? postImages
+          .map((img) => img.url)
+          .filter((url): url is string => typeof url === "string")
+      : [defaultAppSettings.placeholderPostImage]; 
    
   // Normalize the return output
   const normalize: SinglePostDetails = {

@@ -14,7 +14,7 @@ export const usersTable = mysqlTable('users', {
   password: varchar({ length: 255 }).notNull(),
   role: mysqlEnum(["user", "admin"]).default("user").notNull(),
 
-  updatedAt: timestamp({ mode: "string" }).defaultNow().onUpdateNow(),
+  updatedAt: timestamp({ mode: "string" }).onUpdateNow(),
   createdAt: timestamp({ mode: "string" }).defaultNow().notNull(),
 });
 
@@ -27,22 +27,21 @@ export const postsTable = mysqlTable('posts', {
   sellerId: int('seller_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
 
   title: varchar({ length: 255 }).notNull(),
-  image: text(),
   address: varchar({ length: 255 }).notNull(),
   city: varchar({ length: 100 }).notNull(),
 
   bedrooms: int().notNull(),
   bathrooms: int().notNull(),
 
-  latitude: varchar({ length: 50 }).notNull(),
-  longitude: varchar({ length: 50 }).notNull(),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
 
   price: decimal({ precision: 10, scale: 2 }).notNull(),
 
   propertyType: mysqlEnum('property_type', ['apartment', 'house', 'condo', 'land']).notNull(),
   listingType: mysqlEnum('listing_type', ['buy', 'rent']).notNull(),
 
-  updatedAt: timestamp({ mode: 'string' }).defaultNow().onUpdateNow(),
+  updatedAt: timestamp({ mode: 'string' }).onUpdateNow(),
   createdAt: timestamp({ mode: 'string' }).defaultNow().notNull(),
 });
 
@@ -59,13 +58,13 @@ export const postDetailsTable = mysqlTable('post_details', {
 
     areaSqft: int('area_sqft').notNull(),
 
-    utilitiesPolicy: text('utilities_policy').default("none").notNull(),
+    utilitiesPolicy: mysqlEnum('utilities_policy', ["owner", "tenant", "shared"]).notNull(),
 
     schoolDistance: int("school_distance").default(0),
     busDistance: int("bus_distance").default(0),
     restaurantDistance: int("restaurant_distance").default(0),
 
-    petPolicy: text('pet_policy').default("none"),
+    petPolicy: mysqlEnum('pet_policy', ["allowed", "not-allowed"]).notNull(),
     incomePolicy: text('income_policy').default("none").notNull(),
 });
 

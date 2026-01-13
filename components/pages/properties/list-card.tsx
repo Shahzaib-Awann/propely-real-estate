@@ -8,8 +8,9 @@ import {
 } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
-import { Bath, BedDouble, MapPin, Bookmark } from "lucide-react";
+import { Bath, BedDouble, MapPin, Bookmark, Pencil } from "lucide-react";
 import { ListPropertyInterface } from '@/lib/types/propely.type';
+import { Button } from "@/components/ui/button";
 
 const ListCard = ({ item }: { item: ListPropertyInterface }) => {
   
@@ -27,7 +28,7 @@ const ListCard = ({ item }: { item: ListPropertyInterface }) => {
                 fill
                 sizes="(max-width: 640px) 100vw, 160px"
                 className="object-cover"
-                loading="lazy"
+                loading="eager"
               />
           </Link>
         </CardContent>
@@ -93,14 +94,28 @@ const ListCard = ({ item }: { item: ListPropertyInterface }) => {
             ))}
           </div>
 
-          {/* Bookmark Button */}
-          <button
+          <div className="flex flex-row gap-2">
+
+            {/* Bookmark Button */}
+          <Button
+            type="button"
+            aria-label="Save property"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors"
+            >
+            <Bookmark className="h-4 w-4 text-black" />
+          </Button>
+
+            {/* Edit Button */}
+            <Link href={`/property/edit/${item.id}`}>
+          <Button
             type="button"
             aria-label="Save property"
             className="inline-flex h-8 w-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors"
           >
-            <Bookmark className="h-4 w-4" />
-          </button>
+            <Pencil className="h-4 w-4 text-black" /> 
+          </Button>
+            </Link>
+          </div>
 
         </CardFooter>
       </div>

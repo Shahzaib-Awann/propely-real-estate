@@ -54,9 +54,9 @@ export const postDetailsSchema = z.object({
   busDistance: z.number("Bus distance must be a string").min(0, "Bus distance required"),
   restaurantDistance: z.number("Restaurant distance must be a string").min(0, "Restaurant distance required"),
 
-  utilitiesPolicy: z.string(),
-  petPolicy: z.string(),
-  incomePolicy: z.string("Income policy is required"),
+  utilitiesPolicy: z.enum(["owner", "tenant", "shared"]),
+  petPolicy: z.enum(["allowed", "not-allowed"]),
+  incomePolicy: z.string("Income policy is required").max(100, "Income Policy must not exceed 100 characters"),
 });
 
 

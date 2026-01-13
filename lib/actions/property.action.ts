@@ -1,3 +1,4 @@
+"use server";
 
 import { postsTable, postDetailsTable, postFeaturesTable, postImagesTable } from "@/lib/db/schema";
 import { db } from "../db/connection";
@@ -8,6 +9,7 @@ import z from "zod";
 import { InferInsertModel } from "drizzle-orm";
 
 
+
 type CreatePostInput = z.infer<typeof createOrUpdatePostSchema>;
 type PostDataInput = CreatePostInput["postData"];
 type PostDetailsInput = CreatePostInput["postDetails"];
@@ -16,18 +18,36 @@ type PostFeaturesInput = CreatePostInput["postFeatures"];
 type PostDetailsInsert = InferInsertModel<typeof postDetailsTable>;
 
 
+
+/**
+ * === Create a new property post. ===
+ *
+ * Inserts a property post along with its details, images, and features
+ * in a single atomic transaction.
+ *
+ * @param userId - ID of the property owner (seller).
+ * @param postData - Core post information.
+ * @param postImages - Property image list.
+ * @param postDetails - Additional property details.
+ * @param postFeatures - Property feature list.
+ * @returns {Promise<{ propertyId: string }>} Newly created property ID.
+ */
 export const addNewProperty = async (
     userId: number,
     postData: PostDataInput,
   postImages: PostImagesInput,
   postDetails: PostDetailsInput,
   postFeatures: PostFeaturesInput
-  ) => {
+  ): Promise<{ propertyId: string }> => {
+
+    // === Generate unique property ID ===
     const propertyId = uuidv6();
+
+    // === Normalize Lexical description to JSON-safe format ===
     const normalizedDescription = parseLexicalContent(postDetails.description) ?? {};
   
     return await db.transaction(async (tx) => {
-      // === Insert Post ===
+      // === Insert base Post ===
       await tx.insert(postsTable).values({
         id: propertyId,
         sellerId: userId,

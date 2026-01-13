@@ -88,16 +88,13 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
     },
   });
 
-  // === Dynamic property features ===
-  const {
-    fields: featureFields,
-    append: addFeature,
-    remove: removeFeature,
-  } = useFieldArray({
+  /* === Dynamic Property Features === */
+  const { fields: featureFields, append: addFeature, remove: removeFeature } = useFieldArray({
     control: form.control,
     name: "postFeatures",
   });
 
+  /* === Sync images with form state === */
   useEffect(() => {
     form.setValue("postImages", images);
   }, [images, form]);
@@ -120,8 +117,6 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
       id: "property-loading",
     });
 
-    console.log(JSON.stringify(values, null, 4))
-
     try {
       const response = await fetch(API_URL, requestOptions);
       const result = await response.json();
@@ -143,20 +138,17 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
         return;
       }
 
-      console.log({ result })
-
       // === Success ===
       toast.success(result?.message ?? "Property Saved successfully.");
       router.push(`/property/${result?.propertyId}`)
 
     } catch (error) {
-      console.error("Profile update failed:", error);
-
+      console.error("Property save failed:", error);
       toast.error(
         "Network error occurred. Please check your connection and try again.", {
         id: "property-loading",
-      }
-      );
+      });
+
     } finally {
       setLoading(false);
       toast.dismiss("property-loading");
@@ -170,7 +162,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
     try {
       setImageRemoveLoading(true)
 
-      // API request to delete the asset from Cloudinary
+      // Delete image from Cloudinary via API
       await fetch("/api/cloudinary/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -187,10 +179,10 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
     }
   }
 
-
-  const onError = (e: unknown) => {
-    console.log("Form Submission Error: ", e)
-  }
+  /* === Form Validation Error Handler === */
+  const onError = () => {
+    toast.error("All fields are required.");
+  };
 
   return (
     <>
@@ -815,8 +807,10 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
                 multiple: true,
                 maxFiles: 10,
                 folder: "properties",
-                maxImageFileSize: 1 * 1024 * 1024, // <-- 1MB
+                maxImageFileSize: 2 * 1024 * 1024, // <-- 2MB
                 clientAllowedFormats: ["jpg", "jpeg", "png"],
+                showCompletedButton: true,
+                singleUploadAutoClose: false,
               }}
               uploadPreset="propely-real-estate"
               onQueuesStart={() => {

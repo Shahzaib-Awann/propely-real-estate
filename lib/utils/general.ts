@@ -58,3 +58,30 @@ export function buildSearchParams<T extends object>(params: T) {
       .map(([key, value]) => [key, String(value)])
   );
 }
+
+
+
+/**
+ * === Format distance from meters to meters/kilometers ===
+ *
+ * Formats a distance in meters into a readable string (m or km).
+ * Handles null or undefined values with a safe fallback.
+ *
+ * @param {number | null | undefined} meters - Distance value in meters.
+ * @returns {string} - Formatted distance (e.g., "850m", "1.2km", "0m").
+ */
+export function formatMeters(meters: number | null | undefined): string {
+  // Return fallback if value is null or undefined
+  if (meters == null) return "0m";
+
+  // Show meters for distances under 1 kilometer
+  if (meters < 1000) {
+    return `${meters}m`;
+  }
+
+  // Convert meters to kilometers
+  const km = meters / 1000;
+
+  // Remove trailing .0 for whole kilometers
+  return `${km % 1 === 0 ? km : km.toFixed(1)}km`;
+}
