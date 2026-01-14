@@ -1,11 +1,10 @@
 "use server";
 
-import { postsTable, postDetailsTable, postFeaturesTable, postImagesTable, usersTable } from "@/lib/db/schema";
+import { postsTable, postImagesTable } from "@/lib/db/schema";
 import { and, eq, gte, lte, like, sql, desc, asc, inArray } from "drizzle-orm";
 import { db } from "../db/connection";
-import { PropertiesResponse, SinglePostDetails, SinglePostSEO } from "../types/propely.type";
+import { ListPropertyInterface, PropertiesResponse } from "../types/propely.type";
 import { defaultAppSettings } from "../constants";
-import { SerializedEditorState } from "lexical";
 
 
 
@@ -166,180 +165,64 @@ const normalizedItems = items.map((item) => ({
 
 
 /**
- * === Fetch single post (property) by post ID For SEO. ===
+ * === Fetch a list of properties for a specific user. ===
  *
- * Retrieves base post required data, and images for SEO,
- * then normalizes everything into a single response object.
+ * Retrieves all properties created by the given user with key details 
+ * (bedrooms, bathrooms, price, address, location, type) and attaches the first image to each. Returns an empty array if none exist.
  *
- * @param postId - ID of the post to retrieve.
- * @returns {Promise<SinglePostSEO | null>} Normalized post details or `null` if not found.
+ * @param {number} userId - ID of the user whose properties to fetch.
+ * @returns {Promise<ListPropertyInterface[]>} A list of normalized property objects,
+ * each containing property details and a representative image URL.
  */
-export const getPostSEOById = async (postId: string): Promise<SinglePostSEO | null> => {
+export const getMyPropertiesList = async (userId: number): Promise<ListPropertyInterface[]> => {
 
-  // Fetch the base post data required for SEO.
-  const [post] = await db
+  // Fetch all properties for the user
+  const items = await db
     .select({
       id: postsTable.id,
       title: postsTable.title,
-      city: postsTable.city,
-      address: postsTable.address,
-      price: postsTable.price,
       bedRooms: postsTable.bedrooms,
-      bathroom: postsTable.bathrooms,
+      bathRooms: postsTable.bathrooms,
+      price: postsTable.price,
+      address: postsTable.address,
+      location: postsTable.city,
       ptype: postsTable.propertyType,
       ltype: postsTable.listingType,
+      latitude: postsTable.latitude,
+      longitude: postsTable.longitude,
     })
     .from(postsTable)
-    .where(eq(postsTable.id, postId));
+    .where(eq(postsTable.sellerId, userId))
+    .orderBy(desc(postsTable.createdAt));
 
-  // Return null if post not found
-  if (!post) return null;
+  // if no properties found
+  if (items.length === 0) return [];
 
-  // Fetch all gallery images associated with the post.
+  const postIds = items.map((i) => i.id);
+
+  // Fetch first uploaded image for each property
   const images = await db
-    .select({ url: postImagesTable.imageUrl })
+    .select({
+      postId: postImagesTable.postId,
+      url: postImagesTable.imageUrl,
+    })
     .from(postImagesTable)
-    .where(eq(postImagesTable.postId, postId))
-    .orderBy(asc(postImagesTable.id));
+    .where(inArray(postImagesTable.postId, postIds))
+    .orderBy(asc(postImagesTable.id)); // FIFO
 
-  // Normalize image list
-  const imagesArray = images
-    .map((i) => i.url)
-    .filter((url): url is string => typeof url === "string");
-
-    // Fallback if no images exist
-    const normalizedImages =
-    imagesArray.length > 0
-      ? imagesArray
-      : [defaultAppSettings.placeholderPostImage];
-   
-  // Normalize the return output
-  return {
-    id: post.id,
-    title: post.title,
-    city: post.city,
-    address: post.address,
-    price: post.price,
-    bedRooms: post.bedRooms,
-    bathroom: post.bathroom,
-    ptype: post.ptype,
-    ltype: post.ltype,
-    images: normalizedImages,
-  };
-}
-
-
-
-/**
- * === Fetch single post (property) details by post ID. ===
- *
- * Retrieves base post data, images, features, and seller information,
- * then normalizes everything into a single response object.
- *
- * @param postId - ID of the post to retrieve.
- * @returns {Promise<SinglePostDetails | null>} Normalized post details or `null` if not found.
- */
-export const getPostDetailsById = async (postId: string): Promise<SinglePostDetails | null> => {
-
-  // Fetch base post + details
-  const [post] = await db.select({
-    id: postsTable.id,
-    sellerId: postsTable.sellerId,
-    title: postsTable.title,
-    price: postsTable.price,
-    bedRooms: postsTable.bedrooms,
-    bathroom: postsTable.bathrooms,
-    size: postDetailsTable.areaSqft,
-    latitude: postsTable.latitude,
-    longitude: postsTable.longitude,
-    city: postsTable.city,
-    ptype: postsTable.propertyType,
-    ltype: postsTable.listingType,
-    utilities: postDetailsTable.utilitiesPolicy,
-    petPolicy: postDetailsTable.petPolicy,
-    incomePolicy: postDetailsTable.incomePolicy,
-    address: postsTable.address,
-    school: postDetailsTable.schoolDistance,
-    bus: postDetailsTable.busDistance,
-    restaurant: postDetailsTable.restaurantDistance,
-    description: postDetailsTable.description,
-    updatedAt: postsTable.updatedAt,
-    createdAt: postsTable.createdAt
-  })
-    .from(postsTable)
-    .where(eq(postsTable.id, postId))
-    .leftJoin(postDetailsTable, eq(postDetailsTable.postId, postId));
-
-  // Return null if post not found
-  if (!post) return null;
-
-  // Fetch related data [Post Images, Post Features, Seller Info] in parallel
-  const [postImages, postFeatures, sellerInfo] = await Promise.all([
-    db
-      .select({ url: postImagesTable.imageUrl })
-      .from(postImagesTable)
-      .where(eq(postImagesTable.postId, postId))
-      .orderBy(postImagesTable.id),
-    db.select({
-      title: postFeaturesTable.title,
-      description: postFeaturesTable.description,
-    })
-      .from(postFeaturesTable)
-      .where(eq(postFeaturesTable.postId, postId)),
-    db.select({
-      id: usersTable.id,
-      avatar: usersTable.avatar,
-      name: usersTable.name,
-      email: usersTable.email,
-    })
-      .from(usersTable)
-      .where(eq(usersTable.id, post.sellerId)),
-  ]);
-
-  // Normalize image list (cover + gallery)
-  const imagesArray =
-    postImages.length > 0
-      ? postImages
-          .map((img) => img.url)
-          .filter((url): url is string => typeof url === "string")
-      : [defaultAppSettings.placeholderPostImage]; 
-   
-  // Normalize the return output
-  const normalize: SinglePostDetails = {
-    id: post.id,
-    title: post.title,
-    description: typeof post.description === "string"
-      ? post.description
-      : (post.description as SerializedEditorState),
-
-    price: post.price,
-    size: post.size ?? 0,
-
-    images: imagesArray,
-
-    bedRooms: post.bedRooms,
-    bathroom: post.bathroom,
-    features: postFeatures ?? [],
-    
-    utilities: post.utilities ?? "none",
-    petPolicy: post.petPolicy ?? "none",
-    incomePolicy: post.incomePolicy ?? "none",
-
-    address: post.address,
-    city: post.city,
-    latitude: post.latitude,
-    longitude: post.longitude,
-    ptype: post.ptype,
-    ltype: post.ltype,
-    school: post.school,
-    bus: post.bus,
-    restaurant: post.restaurant,
-
-    sellerInfo: sellerInfo[0] ?? null,
-
-    createdAt: post.createdAt,
-    updatedAt: post.updatedAt,
+  // Build a map: postId -> first image
+  const imageMap = new Map<string, string>();
+  for (const img of images) {
+    if (img.url && !imageMap.has(img.postId)) {
+      imageMap.set(img.postId, img.url);
+    }
   }
 
-  return normalize
-}
+  // Attach image (or fallback)
+  const normalizedItems: ListPropertyInterface[] = items.map((item) => ({
+    ...item,
+    img: imageMap.get(item.id) ?? defaultAppSettings.placeholderPostImage,
+  }));
+
+  return normalizedItems;
+};

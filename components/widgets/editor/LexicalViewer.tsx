@@ -7,6 +7,7 @@ import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import type { SerializedEditorState } from "lexical";
+import { LEXICAL_EMPTY_STATE } from "./plugins/utils";
 
 
 
@@ -17,25 +18,6 @@ import type { SerializedEditorState } from "lexical";
  */
 type LexicalValue = string | SerializedEditorState;
 
-const EMPTY_STATE = JSON.stringify({
-  root: {
-    children: [
-      {
-        children: [],
-        direction: null,
-        format: "",
-        indent: 0,
-        type: "paragraph",
-        version: 1,
-      },
-    ],
-    direction: null,
-    format: "",
-    indent: 0,
-    type: "root",
-    version: 1,
-  },
-});
 
 
 /**
@@ -59,7 +41,7 @@ export default function LexicalViewer({ value }: { value: LexicalValue }) {
       ? value
       : value && typeof value === "object"
         ? JSON.stringify(value)
-        : EMPTY_STATE;
+        : LEXICAL_EMPTY_STATE;
 
   return (
     <LexicalComposer

@@ -32,6 +32,7 @@ import ToolbarPlugin from './plugins/ToolbarPlugin';
 import TreeViewPlugin from './plugins/TreeViewPlugin';
 import { parseAllowedColor, parseAllowedFontSize } from './styleConfig'; 
 import { cn } from "@/lib/utils/general";
+import { SyncEditorStatePlugin } from "./plugins/SyncEditorStatePlugin";
 
 const removeStylesExportDOM = (
     editor: LexicalEditor,
@@ -140,11 +141,12 @@ const editorConfig = {
 };
 
 export default function RichTextEditor({
-    onChange, className, placeholder
+    onChange, className, placeholder, value
 }: {
     onChange?: (value: string) => void;
     className?: string
     placeholder?: string
+    value?: string;
 }) {
 
     const handleChange = (editorState: EditorState) => {
@@ -158,7 +160,9 @@ export default function RichTextEditor({
     );
 
     return (
-        <LexicalComposer initialConfig={editorConfig}>
+        <LexicalComposer initialConfig={{
+            ...editorConfig,        
+          }}>
             <div className={cn(className, "editor-container h-auto")}>
                 <ToolbarPlugin />
                 <div className="editor-inner">
@@ -176,6 +180,7 @@ export default function RichTextEditor({
                     <HistoryPlugin />
                     <AutoFocusPlugin />
                     <OnChangePlugin onChange={handleChange} />
+                    <SyncEditorStatePlugin value={value} />
                     {/* <TreeViewPlugin /> */}
                 </div>
             </div>

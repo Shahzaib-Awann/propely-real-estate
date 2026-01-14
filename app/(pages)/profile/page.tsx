@@ -8,6 +8,8 @@ import { defaultAppSettings } from "@/lib/constants";
 import Link from "next/link";
 import LogoutUser from "@/components/pages/profile/logout-user";
 import { getUserById } from "@/lib/actions/user.action";
+import ListCard from "@/components/pages/properties/list-card";
+import { getMyPropertiesList } from "@/lib/actions/properties.action";
 
 export default async function Profile() {
   // === Authenticate user ===
@@ -24,6 +26,8 @@ export default async function Profile() {
     redirect("/sign-in?error=userDeleted")
   }
 
+  const myList = await getMyPropertiesList(Number(session.user.id))
+
   return (
     <main className="flex flex-col-reverse lg:flex-row h-[calc(100vh-80px)] px-4 overflow-y-auto lg:overflow-y-hidden scroll-smooth">
       {/* LEFT: User Posts and Saved List */}
@@ -33,14 +37,18 @@ export default async function Profile() {
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold">My List</h1>
             <Link href="/property/add">
-            <Button className="flex items-center gap-2 px-5 h-12 min-w-12 rounded-none text-primary-foreground bg-primary/90 font-medium hover:bg-primary transition-colors font-lato">
-              <Plus /> <span className="hidden md:inline">Add New property</span>
-            </Button>
+              <Button className="flex items-center gap-2 px-5 h-12 min-w-12 rounded-none text-primary-foreground bg-primary/90 font-medium hover:bg-primary transition-colors font-lato">
+                <Plus /> <span className="hidden md:inline">Add New property</span>
+              </Button>
             </Link>
           </div>
 
           {/* My List Component */}
-          <List />
+          <div className="grid grid-cols-1 gap-8">
+            {myList.map((item) => (
+              <ListCard key={item.id} item={item} editable={true} deleteable={true} />
+            ))}
+          </div>
 
           {/* Saved List Header */}
           <h1 className="text-2xl font-semibold">Saved List</h1>
@@ -57,7 +65,7 @@ export default async function Profile() {
             <h1 className="text-xl md:text-2xl">User Information</h1>
             <Link href="/profile/update">
               <Button className="px-5 h-12 min-w-12 rounded-none bg-primary text-white font-medium hover:bg-primary/90 transition-colors">
-              <Pencil /> <span className="hidden md:inline">Update Profile</span>
+                <Pencil /> <span className="hidden md:inline">Update Profile</span>
               </Button>
             </Link>
           </div>
@@ -73,12 +81,12 @@ export default async function Profile() {
               />
             </div>
             <div className="flex flex-col items-center">
-            <p className="text-lg md:text-xl">
-              Name: <b>{user.name}</b>
-            </p>
-            <p className="text-sm md:text-base">
-              Email: <b>{user.email}</b>
-            </p>
+              <p className="text-lg md:text-xl">
+                Name: <b>{user.name}</b>
+              </p>
+              <p className="text-sm md:text-base">
+                Email: <b>{user.email}</b>
+              </p>
             </div>
             <LogoutUser />
           </div>

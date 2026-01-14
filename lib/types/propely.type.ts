@@ -2,6 +2,12 @@ import { SerializedEditorState } from "lexical";
 
 
 
+export type PropertyTypes = "apartment" | "house" | "condo" | "land" 
+  export type ListingTypes = "buy" | "rent"
+  export type UtilitiesPolicyTypes = "owner" | "tenant" | "shared"
+  export type PetPolicyTypes = "allowed" | "not-allowed"
+
+
 /**
  * Query params for the properties page and filter component
  */
@@ -70,6 +76,7 @@ export interface PropertiesResponse {
  * Feature attached to a property
  */
 interface PostFeature {
+  id?: number;
   title: string;
   description: string;
 }
@@ -99,8 +106,8 @@ export interface SinglePostSEO {
   price: string;
   bedRooms: number;
   bathroom: number;
-  ptype: "apartment" | "house" | "condo" | "land";
-  ltype: "buy" | "rent";
+  ptype: PropertyTypes;
+  ltype: ListingTypes;
   images: string[];
 };
 
@@ -141,3 +148,51 @@ export interface SinglePostDetails {
   createdAt: string;
   updatedAt: string | null;
 }
+
+
+  /**
+   * Images attached to a property
+   */
+  export interface PostImages {
+    id?: number;
+    imageUrl: string;
+    publicId: string;
+  }
+
+  
+
+  /**
+   * Full Single property details response For Edit Page
+   */
+  export interface SinglePostDetailsForEdit {
+    id: string;
+    title: string;
+    description: string | SerializedEditorState;
+
+    price: string;
+    size: number;
+    state: string;
+
+    images: PostImages[];
+
+    bedRooms: number;
+    bathroom: number;
+    features: PostFeature[];
+
+    utilities: UtilitiesPolicyTypes;
+    petPolicy: PetPolicyTypes;
+    incomePolicy: string;
+
+    address: string;
+    city: string;
+    latitude: string;
+    longitude: string;
+    ptype: PropertyTypes;
+    ltype: ListingTypes;
+    school: number | null;
+    bus: number | null;
+    restaurant: number | null;
+    
+    createdAt: string;
+    updatedAt: string | null;
+  }

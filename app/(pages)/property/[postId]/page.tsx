@@ -2,7 +2,7 @@ import MapWrapper from "@/components/widgets/map/map-wrapper";
 import ImageSlider from "@/components/pages/view-property/image-slider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getPostDetailsById, getPostSEOById } from "@/lib/actions/properties.action";
+import { getPostDetailsById, getPostSEOById } from "@/lib/actions/property.action";
 import { formatMeters, getAvatarFallback } from "@/lib/utils/general";
 import {
   Bath,

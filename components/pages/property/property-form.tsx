@@ -32,28 +32,37 @@ import { createOrUpdatePostSchema } from "@/lib/zod/schema.zod";
 import { Trash, X } from "lucide-react";
 import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";
 import { cn } from "@/lib/utils/general";
+import { SinglePostDetailsForEdit } from "@/lib/types/propely.type";
+import { PropertyFormSkeleton } from "@/components/skeletons/property";
 
 
 
+/* === Props Definition === */
 type PropertyFormProps = {
   mode: "create" | "edit";
-  property?: Partial<z.output<typeof createOrUpdatePostSchema>>;
+  property?: SinglePostDetailsForEdit;
 };
 
 
 
 const PropertyForm = ({ mode, property }: PropertyFormProps) => {
 
+
+  /* === Hooks === */
+  const router = useRouter()
+
   /* === Local State === */
+  const [isFormHydrated, setIsFormHydrated] = useState(mode === "create");
+  const [images, setImages] = useState<{ id: number | null; imageUrl: string; publicId: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [imagesUploadLoading, setImagesUploadLoading] = useState(false);
-  const router = useRouter()
-  const [images, setImages] = useState<{ id: number | null; imageUrl: string; publicId: string }[]>([]);
   const [imageRemoveLoading, setImageRemoveLoading] = useState(false);
+
 
   /* === React Hook Form Setup === */
   const form = useForm<z.input<typeof createOrUpdatePostSchema>>({
     resolver: zodResolver(createOrUpdatePostSchema),
+    shouldUnregister: false,
     defaultValues: {
       postData: {
         id: null,
@@ -79,8 +88,8 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
         busDistance: 0,
         restaurantDistance: 0,
       },
-      postImages: property?.postImages ?? [],
-      postFeatures: property?.postFeatures ?? [{
+      postImages: [],
+      postFeatures: [{
         id: null,
         title: "",
         description: ""
@@ -94,15 +103,77 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
     name: "postFeatures",
   });
 
+
+  /* === Hydrate form & images in EDIT mode === */
+  useEffect(() => {
+    if (mode === "edit" && property) {
+
+      // Reset form with property values
+      form.reset({
+        postData: {
+          id: property?.id ?? null,
+          title: property?.title ?? "",
+          address: property?.address ?? "",
+          city: property?.city ?? "",
+          bedrooms: property?.bedRooms ?? 0,
+          bathrooms: property?.bathroom ?? 0,
+          latitude: Number(property?.latitude) ?? 0,
+          longitude: Number(property?.longitude) ?? 0,
+          price: Number(property?.price) ?? 0,
+          propertyType: property?.ptype,
+          listingType: property?.ltype,
+        },
+        postDetails: {
+          description: String(property?.description) ?? "",
+          state: property?.state ?? "",
+          areaSqft: property?.size ?? 0,
+          utilitiesPolicy: property?.utilities ?? "owner",
+          petPolicy: property?.petPolicy ?? "allowed",
+          incomePolicy: property.incomePolicy ?? "",
+          schoolDistance: property.school ?? 0,
+          busDistance: property.bus ?? 0,
+          restaurantDistance: property.restaurant ?? 0,
+        },
+        postImages: property.images ?? [],
+        postFeatures:
+          property.features?.length
+            ? property.features
+            : [{ id: null, title: "", description: "" }],
+      });
+
+      // Sync images into local state
+      setImages(
+        (property.images ?? []).map((img) => ({
+          id: img.id ?? null,
+          imageUrl: img.imageUrl,
+          publicId: img.publicId,
+        }))
+      );
+
+      // Prevent render until form state is fully hydrated
+      setIsFormHydrated(true);
+    }
+  }, [mode, property, form]);
+
+
   /* === Sync images with form state === */
   useEffect(() => {
     form.setValue("postImages", images);
   }, [images, form]);
 
+
+  /* === Prevent Early Render === */
+  if (!isFormHydrated) {
+    return <PropertyFormSkeleton />;
+  }
+
+
   /* === Submit Handler === */
   async function onSubmit(values: z.infer<typeof createOrUpdatePostSchema>) {
 
     const API_URL = "/api/property";
+
+    console.log("Form Values: ", values)
 
     const requestOptions = {
       method: mode === "create" ? "POST" : "PUT",
@@ -155,6 +226,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
     }
   }
 
+
   // === Remove image from Cloudinary and local state ===
   async function handleRemoveImage(index: number) {
     const img = images[index];
@@ -179,10 +251,12 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
     }
   }
 
+
   /* === Form Validation Error Handler === */
   const onError = () => {
     toast.error("All fields are required.");
   };
+
 
   return (
     <>
@@ -274,11 +348,15 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
                     render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error} >
                         <FieldLabel htmlFor="description" hidden>description</FieldLabel>
+
                         <RichTextEditor
+                          key={typeof field.value === "string" ? field.value : JSON.stringify(field.value)}
                           className="w-full h-72"
                           placeholder="Enter property description"
+                          value={field.value}
                           onChange={(value) => field.onChange(value)}
                         />
+
                         <FieldError
                           errors={fieldState.error ? [fieldState.error] : []}
                         />

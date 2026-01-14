@@ -23,7 +23,7 @@ export const UpdateUserProfileFormSchema = z.object({
  * Zod schema to validate Property (Post) main table inputs.
  */
 export const postSchema = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
 
   title: z.string("Title is required").min(3, "Title must be at least 3 characters").max(255, "Title must not exceed 255 characters"),
   address: z.string("Address is required").min(3, "Address must be at least 3 characters").max(255, "Address must not exceed 255 characters"),
@@ -46,7 +46,7 @@ export const postSchema = z.object({
  * Zod schema for Post Details table.
  */
 export const postDetailsSchema = z.object({
-  description: z.string("Description is required").min(10, "Description must be at least 10 characters").nullable(),
+  description: z.string("Description is required").min(10, "Description must be at least 10 characters"),
   state: z.string("State is required").min(2, "State must be at least 2 characters").max(100, "State must not exceed 100 characters"),
   areaSqft: z.number("Area (sqft) must be a number").positive("Area (sqft) must be greater than zero"),
 

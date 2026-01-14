@@ -8,34 +8,34 @@ import {
 } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
-import { Bath, BedDouble, MapPin, Bookmark, Pencil } from "lucide-react";
+import { Bath, BedDouble, MapPin, Bookmark, Pencil, Trash } from "lucide-react";
 import { ListPropertyInterface } from '@/lib/types/propely.type';
 import { Button } from "@/components/ui/button";
 
-const ListCard = ({ item }: { item: ListPropertyInterface }) => {
-  
+const ListCard = ({ item, editable = false, deleteable = false }: { item: ListPropertyInterface, editable?: boolean, deleteable?: boolean }) => {
+
   const propertyUrl = `/property/${item.id}`;
 
   return (
     <Card className="max-w-full p-4 m-0 flex flex-col sm:flex-row rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200">
-      
-        {/* Image Section */}
-        <CardContent className="relative w-full h-40 sm:w-40 sm:h-44 md:h-44 sm:flex-2 shrink-0 overflow-hidden rounded-lg shadow-md p-0">
-          <Link href={propertyUrl} className="relative block w-full h-full">
-              <Image
-                src={item.img || '/images/default-fallback-image.png'}
-                alt={item.title}
-                fill
-                sizes="(max-width: 640px) 100vw, 160px"
-                className="object-cover"
-                loading="eager"
-              />
-          </Link>
-        </CardContent>
+
+      {/* Image Section */}
+      <CardContent className="relative w-full h-40 sm:w-40 sm:h-44 md:h-44 sm:flex-2 shrink-0 overflow-hidden rounded-lg shadow-md p-0">
+        <Link href={propertyUrl} className="relative block w-full h-full">
+          <Image
+            src={item.img || '/images/default-fallback-image.png'}
+            alt={item.title}
+            fill
+            sizes="(max-width: 640px) 100vw, 160px"
+            className="object-cover"
+            loading="eager"
+          />
+        </Link>
+      </CardContent>
 
       {/* Content Section */}
       <div className="flex flex-col flex-3 justify-between gap-4">
-        
+
         <CardHeader className="p-0">
           <div className="flex flex-col gap-4">
 
@@ -97,24 +97,39 @@ const ListCard = ({ item }: { item: ListPropertyInterface }) => {
           <div className="flex flex-row gap-2">
 
             {/* Bookmark Button */}
-          <Button
-            type="button"
-            aria-label="Save property"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors"
+            <Button
+              type="button"
+              aria-label="Save property"
+              className="inline-flex size-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors"
             >
-            <Bookmark className="h-4 w-4 text-black" />
-          </Button>
+              <Bookmark className="size-4 text-black" />
+            </Button>
 
             {/* Edit Button */}
-            <Link href={`/property/edit/${item.id}`}>
-          <Button
-            type="button"
-            aria-label="Save property"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors"
-          >
-            <Pencil className="h-4 w-4 text-black" /> 
-          </Button>
-            </Link>
+            {editable &&
+              <Link href={`/property/edit/${item.id}`}>
+                <Button
+                  type="button"
+                  aria-label="Edit property"
+                  className="inline-flex size-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors"
+                >
+                  <Pencil className="size-4 text-black" />
+                </Button>
+              </Link>
+            }
+
+            {/* Delete Button */}
+            {deleteable &&
+              <Link href={`/property/delete/${item.id}`}>
+                <Button
+                  type="button"
+                  aria-label="Delete property"
+                  className="inline-flex size-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors"
+                >
+                  <Trash className="size-4 text-red-500" />
+                </Button>
+              </Link>
+            }
           </div>
 
         </CardFooter>
