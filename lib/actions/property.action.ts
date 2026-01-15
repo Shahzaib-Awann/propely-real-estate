@@ -6,7 +6,7 @@ import { v6 as uuidv6 } from 'uuid';
 import { parseLexicalContent } from "@/components/widgets/editor/plugins/utils";
 import { createOrUpdatePostSchema } from "../zod/schema.zod";
 import z from "zod";
-import { and, asc, eq, InferInsertModel } from "drizzle-orm";
+import { and, asc, eq, inArray, InferInsertModel, not } from "drizzle-orm";
 import { PostImages, SinglePostDetails, SinglePostDetailsForEdit, SinglePostSEO } from "../types/propely.type";
 import { SerializedEditorState } from "lexical";
 import { defaultAppSettings } from "../constants";
@@ -228,6 +228,173 @@ export const getPostByIdForEdit = async (postId: string, userId: number): Promis
 
   return normalize
 }
+
+
+
+/**
+ * === Edit an existing property post. ===
+ *
+ * Updates a property post and its related entities (details, images, and features)
+ * in a single atomic transaction. Only the owner (seller) of the property is allowed
+ * to perform the update.
+ *
+ * The operation includes:
+ * - Updating the base post information.
+ * - Updating extended property details.
+ * - Synchronizing images (update existing, insert new, remove missing).
+ * - Synchronizing features (update existing, insert new, remove missing).
+ *
+ * @param userId - ID of the property owner (seller).
+ * @param postData - Core post information, must include the property ID.
+ * @param postImages - Property image list to be synced with the database.
+ * @param postDetails - Additional property details.
+ * @param postFeatures - Property feature list to be synced with the database.
+ *
+ * @throws {Error} If the property ID is missing from `postData`.
+ *
+ * @returns {Promise<{ propertyId: string }>} Updated property ID.
+ */
+export const editProperty = async (
+  userId: number,
+  postData: PostDataInput,
+  postImages: PostImagesInput,
+  postDetails: PostDetailsInput,
+  postFeatures: PostFeaturesInput
+): Promise<{ propertyId: string }> => {
+
+  // === Get property ID ===
+  const propertyId = postData.id;
+
+  // === If Property ID not Found in data === 
+  if (!propertyId) {
+    throw new Error("Property ID is required for edit a property");
+  }
+
+  // === Normalize Lexical description to JSON-safe format ===
+  const normalizedDescription =
+    parseLexicalContent(postDetails.description, "to-json") ?? {};
+
+  return await db.transaction(async (tx) => {
+
+    // === Update base Post ===
+    const result = await tx
+      .update(postsTable)
+      .set({
+        title: postData.title,
+        address: postData.address,
+        city: postData.city,
+        bedrooms: postData.bedrooms,
+        bathrooms: postData.bathrooms,
+        latitude: String(postData.latitude),
+        longitude: String(postData.longitude),
+        price: String(postData.price),
+        propertyType: postData.propertyType,
+        listingType: postData.listingType,
+      })
+      .where(
+        and(eq(postsTable.id, propertyId), eq(postsTable.sellerId, userId))
+      );
+
+      // Get the number of rows affected by the update
+      const affected = result[0]?.affectedRows ?? 0;
+    
+      // No rows updated: unauthorized or post not found
+    if (affected === 0) {
+      throw new Error("You are not allowed to edit this property");
+    }     
+
+    // === Update Post Details ===
+    await tx
+      .update(postDetailsTable)
+      .set({
+        description: normalizedDescription,
+        state: postDetails.state,
+        areaSqft: postDetails.areaSqft,
+        utilitiesPolicy: postDetails.utilitiesPolicy,
+        schoolDistance: postDetails.schoolDistance,
+        busDistance: postDetails.busDistance,
+        restaurantDistance: postDetails.restaurantDistance,
+        petPolicy: postDetails.petPolicy,
+        incomePolicy: postDetails.incomePolicy,
+      })
+      .where(eq(postDetailsTable.postId, propertyId));
+
+    // === Handle Images ===
+    if (postImages?.length) {
+      const existingImageIds = postImages
+        .filter((i) => i.id)
+        .map((i) => i.id!) as number[];
+
+      // remove images that are no longer present in payload
+      if (existingImageIds.length) {
+        await tx.delete(postImagesTable).where(
+          and(
+            eq(postImagesTable.postId, propertyId),
+            not(inArray(postImagesTable.id, existingImageIds))
+          )
+        );
+      }
+
+      for (const img of postImages) {
+        if (img.id) {
+          // Update existing images
+          await tx
+            .update(postImagesTable)
+            .set({
+              imageUrl: img.imageUrl,
+              imagePublicId: img.publicId,
+            })
+            .where(and(eq(postImagesTable.id, img.id), eq(postImagesTable.postId, propertyId)));
+        } else {
+          // Insert new images
+          await tx.insert(postImagesTable).values({
+            postId: propertyId,
+            imageUrl: img.imageUrl,
+            imagePublicId: img.publicId,
+          });
+        }
+      }
+    }
+
+    // === Handle Features ===
+    if (postFeatures?.length) {
+      const existingFeatureIds = postFeatures
+        .filter((f) => f.id)
+        .map((f) => f.id!) as number[];
+
+      // remove features that are no longer present in payload
+      if (existingFeatureIds.length) {
+        await tx.delete(postFeaturesTable).where(
+          and(
+            eq(postFeaturesTable.postId, propertyId),
+            not(inArray(postFeaturesTable.id, existingFeatureIds))
+          ));
+      }
+
+      for (const f of postFeatures) {
+        if (f.id) {
+          // Update existing feature
+          await tx
+            .update(postFeaturesTable)
+            .set({
+              title: f.title,
+              description: f.description,
+            })
+            .where(and(eq(postFeaturesTable.id, f.id),eq(postFeaturesTable.postId, propertyId)));
+        } else {
+          // Insert new feature
+          await tx.insert(postFeaturesTable).values({
+            postId: propertyId,
+            title: f.title,
+            description: f.description,
+          });
+        }
+      }
+    }
+
+    return { propertyId };
+  });
+};
   
 
 

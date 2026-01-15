@@ -34,6 +34,7 @@ import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";
 import { cn } from "@/lib/utils/general";
 import { SinglePostDetailsForEdit } from "@/lib/types/propely.type";
 import { PropertyFormSkeleton } from "@/components/skeletons/property";
+import { defaultAppSettings } from "@/lib/constants";
 
 
 
@@ -172,11 +173,10 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
   async function onSubmit(values: z.infer<typeof createOrUpdatePostSchema>) {
 
     const API_URL = "/api/property";
-
-    console.log("Form Values: ", values)
+    const isEdit = mode === "edit";
 
     const requestOptions = {
-      method: mode === "create" ? "POST" : "PUT",
+      method: isEdit ? "PUT" : "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -184,7 +184,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
     }
 
     setLoading(true);
-    toast.loading("Saving property...", {
+    toast.loading(isEdit ? "Updating property..." : "Saving property...", {
       id: "property-loading",
     });
 
@@ -194,10 +194,12 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
 
       // Map HTTP status codes to error messages
       const errorMap: Record<number, string> = {
-        422: "Invalid Property data. Please check your inputs.",
+        400: result?.error ?? "Property ID is missing.",
         401: "Your session has expired. Please sign in again.",
-        409: result?.error ?? "This Property is already exits.",
-      };
+        403: result?.error ?? "You are not allowed to edit this property.",
+        409: result?.error ?? "This property already exists.",
+        422: "Invalid property data. Please check your inputs.",
+      };      
 
       // Handle error responses
       if (!response.ok) {
@@ -205,12 +207,17 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
           errorMap[response.status] ??
           result?.error ??
           "Unable to Save Property. Please try again.";
-        toast.error(message);
+        toast.error(message, { id: "property-loading" });
         return;
       }
 
       // === Success ===
-      toast.success(result?.message ?? "Property Saved successfully.");
+      toast.success(result?.message
+        ?? (isEdit
+          ? "Property updated successfully."
+          : "Property created successfully."
+        ), { id: "property-loading" });
+
       router.push(`/property/${result?.propertyId}`)
 
     } catch (error) {
@@ -853,7 +860,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
               {images?.map((img, index) => (
                 <div key={index} className="relative w-full aspect-video border rounded overflow-hidden shadow-sm">
                   <Image
-                    src={img.imageUrl}
+                    src={img.imageUrl ?? defaultAppSettings.placeholderPostImage}
                     alt="Property Image"
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 50vw"
