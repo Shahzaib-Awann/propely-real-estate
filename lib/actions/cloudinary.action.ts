@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { v2 as cloudinary } from "cloudinary";
 import { db } from "@/lib/db/connection";
 import { usersTable } from "@/lib/db/schema";
+import { CloudinaryDeleteResult } from "../types/cloudinary.type";
 
 
 
@@ -72,4 +73,35 @@ export async function updateUserAvatar({
     .where(eq(usersTable.id, userId));
 
     return { success: true, message: "Success" }
+}
+
+
+
+/**
+ * === Delete multiple Cloudinary assets by public IDs. ===
+ *
+ * Accepts an array of Cloudinary public IDs and deletes them in parallel.
+ * Used primarily during property deletion to clean up orphaned images.
+ *
+ * @param publicIds - Array of Cloudinary public IDs to delete.
+ * @returns {Promise<CloudinaryDeleteResult>} Deletion summary and raw Cloudinary responses.
+ *
+ * @throws - If input is not a non-empty array.
+ */
+export async function deleteCloudinaryAssets(
+  publicIds: string[]
+): Promise<CloudinaryDeleteResult> {
+  if (!Array.isArray(publicIds) || publicIds.length === 0) {
+    throw new Error("No valid public IDs provided");
+  }
+
+  const results = await Promise.all(
+    publicIds.map((id) => cloudinary.uploader.destroy(id))
+  );
+
+  return {
+    success: true,
+    deletedCount: results.length,
+    results,
+  };
 }

@@ -10,6 +10,9 @@ import { and, asc, eq, inArray, InferInsertModel, not } from "drizzle-orm";
 import { PostImages, SinglePostDetails, SinglePostDetailsForEdit, SinglePostSEO } from "../types/propely.type";
 import { SerializedEditorState } from "lexical";
 import { defaultAppSettings } from "../constants";
+import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
+import { deleteCloudinaryAssets } from "./cloudinary.action";
 
 
 
@@ -575,4 +578,89 @@ export const getPostDetailsById = async (postId: string): Promise<SinglePostDeta
   }
 
   return normalize
+}
+
+
+
+/**
+ * === Delete a single property (post) by post ID. ===
+ *
+ * Ensures the user is authenticated and owns the property,
+ * deletes associated Cloudinary images first,
+ * then removes the post from the database (with cascades).
+ *
+ * @param postId - ID of the post to delete.
+ * @returns {Promise<{ success: boolean }>} Deletion status.
+ *
+ * @throws UNAUTHORIZED - If the user is not logged in.
+ * @throws NOT_FOUND_OR_FORBIDDEN - If the post does not exist or user is not the owner.
+ * @throws DELETE_FAILED - If an unexpected error occurs.
+ */
+export async function deletePropertyById(postId: string): Promise<{ success: boolean }> {
+
+  // === Authenticate User ===
+  const session = await auth();
+  const userId = session?.user.id;
+
+  if (!userId) {
+    throw new Error("Unauthorized access");
+  }
+
+  // Fetch Cloudinary publicIds (ownership enforced)
+  try {
+    const images = await db
+      .select({ publicId: postImagesTable.imagePublicId })
+      .from(postImagesTable)
+      .innerJoin(postsTable, eq(postsTable.id, postImagesTable.postId))
+      .where(
+        and(
+          eq(postsTable.id, postId),
+          eq(postsTable.sellerId, Number(userId))
+        )
+      );
+
+    // Normalize valid Cloudinary public IDs
+    const publicIds = images
+      .map((i) => i.publicId)
+      .filter((id): id is string => typeof id === "string");
+
+    // Delete images from Cloudinary
+    if (publicIds.length > 0) {
+      try {
+        await deleteCloudinaryAssets(publicIds);
+      } catch (error) {
+        console.warn("Failed to delete property images from Cloudinary: ", error);
+        // Intentionally continue — DB delete still happens
+      }
+    }
+
+    // Delete post (DB cascades details, images, features)
+    const result = await db
+      .delete(postsTable)
+      .where(
+        and(
+          eq(postsTable.id, postId),
+          eq(postsTable.sellerId, Number(userId))
+        )
+      );
+
+    // If nothing was deleted, post doesn't exist or user isn't the owner
+    if (result[0].affectedRows === 0) {
+      throw new Error("Property not found or access denied");
+    }
+
+    // Revalidate
+    revalidatePath("/profile");
+
+    return { success: true };
+
+  } catch (error) {
+    console.error("Property deletion error: ", error);
+
+    if (error instanceof Error) {
+      throw error;
+    }
+
+    throw new Error("Failed to delete property");
+  }
 }

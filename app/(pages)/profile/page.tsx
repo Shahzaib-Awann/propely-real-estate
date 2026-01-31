@@ -8,8 +8,8 @@ import { defaultAppSettings } from "@/lib/constants";
 import Link from "next/link";
 import LogoutUser from "@/components/pages/profile/logout-user";
 import { getUserById } from "@/lib/actions/user.action";
-import ListCard from "@/components/pages/properties/list-card";
 import { getMyPropertiesList } from "@/lib/actions/properties.action";
+import ListClient from "@/components/pages/properties/list-client";
 
 export default async function Profile() {
   // === Authenticate user ===
@@ -45,9 +45,7 @@ export default async function Profile() {
 
           {/* My List Component */}
           <div className="grid grid-cols-1 gap-8">
-            {myList.map((item) => (
-              <ListCard key={item.id} item={item} editable={true} deleteable={true} />
-            ))}
+            <ListClient list={myList} /> 
           </div>
 
           {/* Saved List Header */}

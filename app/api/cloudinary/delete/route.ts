@@ -1,24 +1,15 @@
 // app/api/cloudinary/delete/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
 import { auth } from "@/auth";
-
-
-
-/** Cloudinary Configuration (Server-only) */
-cloudinary.config({
-    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { deleteCloudinaryAssets } from "@/lib/actions/cloudinary.action";
 
 
 
 /*===========================================================
 === [POST] Deletes a Cloudinary asset using its publicId. ===
 ========================================================== */
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest) { 
     try {
         // === Authenticate User ===
         const session = await auth();
@@ -46,11 +37,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Invalid publicId(s)" }, { status: 400 });
         }
 
-        // === Delete the assets from Cloudinary using the publicId in parallel. ===
-        const results = await Promise.all(idsToDelete.map((id) => cloudinary.uploader.destroy(id)));
+        // === Delete the assets from Cloudinary using the publicId. ===
+        const result = await deleteCloudinaryAssets(idsToDelete);
 
         // === Return Success ===
-        return NextResponse.json({ success: true, deletedCount: results.length, results });
+        return NextResponse.json(result);
     } catch (error) {
         console.error("Cloudinary delete failed:", error);
         return NextResponse.json(
