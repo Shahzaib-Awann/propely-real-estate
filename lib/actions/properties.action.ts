@@ -1,10 +1,11 @@
 "use server";
 
-import { postsTable, postImagesTable } from "@/lib/db/schema";
+import { postsTable, postImagesTable, savedPostsTable } from "@/lib/db/schema";
 import { and, eq, gte, lte, like, sql, desc, asc, inArray } from "drizzle-orm";
 import { db } from "../db/connection";
 import { ListPropertyInterface, PropertiesResponse } from "../types/propely.type";
 import { defaultAppSettings } from "../constants";
+import { auth } from "@/auth";
 
 
 
@@ -38,6 +39,11 @@ export const getProperties = async (
   property: string | undefined,
   bedroom: number | undefined
 ): Promise<PropertiesResponse> => {
+
+  const session = await auth();
+  const viewerUserId = session?.user?.id
+    ? Number(session.user.id)
+    : null;
 
   // Ensure pagination values are always valid
   const safePage = Math.max(page, 1);
@@ -131,11 +137,30 @@ for (const img of images) {
   }
 }
 
+  // Saved Posts (Bookmarks)
+
+let savedPostSet = new Set<string>();
+
+if (viewerUserId && postIds.length > 0) {
+  const saved = await db
+    .select({ postId: savedPostsTable.postId })
+    .from(savedPostsTable)
+    .where(
+      and(
+        eq(savedPostsTable.userId, viewerUserId),
+        inArray(savedPostsTable.postId, postIds)
+      )
+    );
+
+  savedPostSet = new Set(saved.map((s) => s.postId));
+}
+
 // 3) Attach image (or fallback)
-const normalizedItems = items.map((item) => ({
-  ...item,
-  img: imageMap.get(item.id) ?? defaultAppSettings.placeholderPostImage,
-}));
+ const normalizedItems = items.map((item) => ({
+    ...item,
+    img: imageMap.get(item.id) ?? defaultAppSettings.placeholderPostImage,
+    isSaved: viewerUserId ? savedPostSet.has(item.id) : false,
+  }));
 
   // Count total matching records (for pagination)
   const [{ total }] = await db
@@ -174,9 +199,12 @@ const normalizedItems = items.map((item) => ({
  * @returns {Promise<ListPropertyInterface[]>} A list of normalized property objects,
  * each containing property details and a representative image URL.
  */
-export const getMyPropertiesList = async (userId: number): Promise<ListPropertyInterface[]> => {
+export const getMyPropertiesList = async (
+  userId: number,
+  viewerUserId?: number | null
+): Promise<ListPropertyInterface[]> => {
 
-  // Fetch all properties for the user
+  // Fetch properties
   const items = await db
     .select({
       id: postsTable.id,
@@ -195,12 +223,13 @@ export const getMyPropertiesList = async (userId: number): Promise<ListPropertyI
     .where(eq(postsTable.sellerId, userId))
     .orderBy(desc(postsTable.createdAt));
 
-  // if no properties found
   if (items.length === 0) return [];
 
   const postIds = items.map((i) => i.id);
 
-  // Fetch first uploaded image for each property
+  /**
+   * === Images ===
+   */
   const images = await db
     .select({
       postId: postImagesTable.postId,
@@ -208,9 +237,8 @@ export const getMyPropertiesList = async (userId: number): Promise<ListPropertyI
     })
     .from(postImagesTable)
     .where(inArray(postImagesTable.postId, postIds))
-    .orderBy(asc(postImagesTable.id)); // FIFO
+    .orderBy(asc(postImagesTable.id));
 
-  // Build a map: postId -> first image
   const imageMap = new Map<string, string>();
   for (const img of images) {
     if (img.url && !imageMap.has(img.postId)) {
@@ -218,11 +246,70 @@ export const getMyPropertiesList = async (userId: number): Promise<ListPropertyI
     }
   }
 
-  // Attach image (or fallback)
+  /**
+   * === Saved Posts (only if logged in) ===
+   */
+  let savedPostSet = new Set<string>();
+
+  if (viewerUserId) {
+    const saved = await db
+      .select({ postId: savedPostsTable.postId })
+      .from(savedPostsTable)
+      .where(
+        and(
+          inArray(savedPostsTable.postId, postIds),
+          eq(savedPostsTable.userId, viewerUserId)
+        )
+      );
+
+    savedPostSet = new Set(saved.map((s) => s.postId));
+  }
+
+  /**
+   * === Normalize ===
+   */
   const normalizedItems: ListPropertyInterface[] = items.map((item) => ({
     ...item,
     img: imageMap.get(item.id) ?? defaultAppSettings.placeholderPostImage,
+    isSaved: viewerUserId ? savedPostSet.has(item.id) : false,
   }));
 
   return normalizedItems;
 };
+
+
+
+export async function toggleBookmark(postId: string): Promise<{ success: boolean, message: string }> {
+
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized access");
+  
+  const userId = Number(session.user.id);
+
+  const [existing] = await db.select().from(savedPostsTable).where(and(
+      eq(savedPostsTable.userId, userId),
+      eq(savedPostsTable.postId, postId)
+    ));
+
+  // Remove the Bookmark
+  if (existing) {
+    await db
+      .delete(savedPostsTable)
+      .where(
+        and(
+          eq(savedPostsTable.userId, userId),
+          eq(savedPostsTable.postId, postId)
+        )
+      );
+
+    return { success: true, message: "Property removed from saved list" };
+  }
+
+  // add bookmark
+  await db.insert(savedPostsTable).values({
+    userId,
+    postId,
+  });
+
+  return { success: true, message: "Property added to saved list" };
+}

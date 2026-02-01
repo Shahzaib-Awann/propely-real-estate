@@ -41,6 +41,7 @@ export interface ListPropertyInterface {
   ltype: string;
   latitude: string;
   longitude: string;
+  isSaved: boolean;
 }
 
 

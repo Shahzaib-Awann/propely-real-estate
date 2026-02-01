@@ -89,3 +89,12 @@ export const postFeaturesTable = mysqlTable('post_features', {
   title: varchar('title', { length: 50 }).notNull(),
   description: varchar('description', { length: 50 }).notNull(),
 });
+
+
+
+// Saved Posts Table
+export const savedPostsTable = mysqlTable('saved_posts', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
+  postId: char('post_id', { length: 36 }).notNull().references(() => postsTable.id, { onDelete: 'cascade' }), 
+});

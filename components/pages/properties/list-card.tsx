@@ -107,9 +107,14 @@ const ListCard = ({ item, actions }: { item: ListPropertyInterface, actions?: Li
               <Button
               type="button"
               aria-label="Save property"
-              className="inline-flex size-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors"
+              className={`inline-flex size-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors`}
+              onClick={() => actions.onBookmark!(item.id)}
               >
-              <Bookmark className="size-4 text-black" />
+              <Bookmark
+      className={`size-4 ${
+        item.isSaved ? "fill-black text-black" : "text-black"
+      }`}
+    />
             </Button>
             }
 

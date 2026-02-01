@@ -21,9 +21,9 @@ import { getUserById } from "@/lib/actions/user.action";
 
 const links = [
   { title: "Home", url: "/" },
+  { title: "Properties", url: "/properties" },
   { title: "About", url: "/about" },
   { title: "Contact", url: "/contact" },
-  { title: "Agents", url: "/agents" },
 ];
 
 
