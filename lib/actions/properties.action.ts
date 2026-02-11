@@ -201,7 +201,6 @@ if (viewerUserId && postIds.length > 0) {
  */
 export const getMyPropertiesList = async (
   userId: number,
-  viewerUserId?: number | null
 ): Promise<ListPropertyInterface[]> => {
 
   // Fetch properties
@@ -251,14 +250,14 @@ export const getMyPropertiesList = async (
    */
   let savedPostSet = new Set<string>();
 
-  if (viewerUserId) {
+  if (userId) {
     const saved = await db
       .select({ postId: savedPostsTable.postId })
       .from(savedPostsTable)
       .where(
         and(
           inArray(savedPostsTable.postId, postIds),
-          eq(savedPostsTable.userId, viewerUserId)
+          eq(savedPostsTable.userId, userId)
         )
       );
 
@@ -271,7 +270,7 @@ export const getMyPropertiesList = async (
   const normalizedItems: ListPropertyInterface[] = items.map((item) => ({
     ...item,
     img: imageMap.get(item.id) ?? defaultAppSettings.placeholderPostImage,
-    isSaved: viewerUserId ? savedPostSet.has(item.id) : false,
+    isSaved: userId ? savedPostSet.has(item.id) : false,
   }));
 
   return normalizedItems;

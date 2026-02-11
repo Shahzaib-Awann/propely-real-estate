@@ -664,3 +664,4 @@ export async function deletePropertyById(postId: string): Promise<{ success: boo
     throw new Error("Failed to delete property");
   }
 }
+
