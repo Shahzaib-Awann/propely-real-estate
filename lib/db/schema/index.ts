@@ -11,6 +11,7 @@ export const usersTable = mysqlTable('users', {
 
   name: varchar({ length: 50 }).notNull(),
   email: varchar({ length: 255 }).notNull().unique(),
+  username: varchar({ length: 50 }).notNull().unique(),
   password: varchar({ length: 255 }).notNull(),
   role: mysqlEnum(["user", "admin"]).default("user").notNull(),
 
@@ -75,7 +76,7 @@ export const postImagesTable = mysqlTable('post_images', {
   id: int('id').primaryKey().autoincrement(),
   postId: char('post_id', { length: 36 }).notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
   imageUrl: text('image_url'),
-  imagePublicId: varchar('image_public_id', { length: 255 }) 
+  imagePublicId: varchar('image_public_id', { length: 255 })
 });
 
 
@@ -96,5 +97,5 @@ export const postFeaturesTable = mysqlTable('post_features', {
 export const savedPostsTable = mysqlTable('saved_posts', {
   id: int('id').primaryKey().autoincrement(),
   userId: int('user_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
-  postId: char('post_id', { length: 36 }).notNull().references(() => postsTable.id, { onDelete: 'cascade' }), 
+  postId: char('post_id', { length: 36 }).notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
 });

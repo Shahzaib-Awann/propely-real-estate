@@ -1,12 +1,12 @@
 "use server";
 
-import { postsTable, postDetailsTable, postFeaturesTable, postImagesTable, usersTable } from "@/lib/db/schema";
+import { postsTable, postDetailsTable, postFeaturesTable, postImagesTable, usersTable, savedPostsTable } from "@/lib/db/schema";
 import { db } from "../db/connection";
 import { v6 as uuidv6 } from 'uuid';
 import { parseLexicalContent } from "@/components/widgets/editor/plugins/utils";
 import { createOrUpdatePostSchema } from "../zod/schema.zod";
 import z from "zod";
-import { and, asc, eq, inArray, InferInsertModel, not } from "drizzle-orm";
+import { and, asc, eq, inArray, InferInsertModel, not, sql } from "drizzle-orm";
 import { PostImages, SinglePostDetails, SinglePostDetailsForEdit, SinglePostSEO } from "../types/propely.type";
 import { SerializedEditorState } from "lexical";
 import { defaultAppSettings } from "../constants";
@@ -51,7 +51,7 @@ export const addNewProperty = async (
 
     // === Normalize Lexical description to JSON-safe format ===
     const normalizedDescription = parseLexicalContent(postDetails.description, "to-json") ?? {};;
-  
+
     return await db.transaction(async (tx) => {
       // === Insert base Post ===
       await tx.insert(postsTable).values({
@@ -68,7 +68,7 @@ export const addNewProperty = async (
         propertyType: postData.propertyType,
         listingType: postData.listingType,
       });
-  
+
       // === Insert Post Details ===
       const detailsValues: PostDetailsInsert = {
         postId: propertyId,
@@ -82,9 +82,9 @@ export const addNewProperty = async (
         petPolicy: postDetails.petPolicy,
         incomePolicy: postDetails.incomePolicy,
       };
-      
+
       await tx.insert(postDetailsTable).values(detailsValues);
-  
+
       // === Insert Images ===
       if (postImages?.length) {
         await tx.insert(postImagesTable).values(
@@ -95,7 +95,7 @@ export const addNewProperty = async (
           }))
         );
       }
-  
+
       // === Insert Features ===
       if (postFeatures?.length) {
         await tx.insert(postFeaturesTable).values(
@@ -106,7 +106,7 @@ export const addNewProperty = async (
           }))
         );
       }
-  
+
       return { propertyId };
     });
 };
@@ -189,7 +189,7 @@ export const getPostByIdForEdit = async (postId: string, userId: number): Promis
           publicId: "",
         },
       ];
-   
+
   // Normalize the return output
   const normalize: SinglePostDetailsForEdit = {
     id: post.id,
@@ -210,7 +210,7 @@ export const getPostByIdForEdit = async (postId: string, userId: number): Promis
     bedRooms: post.bedRooms,
     bathroom: post.bathroom,
     features: postFeatures ?? [],
-    
+
     utilities: post.utilities ?? 'shared',
     petPolicy: post.petPolicy ?? 'not-allowed',
     incomePolicy: post.incomePolicy ?? "none",
@@ -268,7 +268,7 @@ export const editProperty = async (
   // === Get property ID ===
   const propertyId = postData.id;
 
-  // === If Property ID not Found in data === 
+  // === If Property ID not Found in data ===
   if (!propertyId) {
     throw new Error("Property ID is required for edit a property");
   }
@@ -300,11 +300,11 @@ export const editProperty = async (
 
       // Get the number of rows affected by the update
       const affected = result[0]?.affectedRows ?? 0;
-    
+
       // No rows updated: unauthorized or post not found
     if (affected === 0) {
       throw new Error("You are not allowed to edit this property");
-    }     
+    }
 
     // === Update Post Details ===
     await tx
@@ -398,7 +398,7 @@ export const editProperty = async (
     return { propertyId };
   });
 };
-  
+
 
 
 /**
@@ -448,7 +448,7 @@ export const getPostSEOById = async (postId: string): Promise<SinglePostSEO | nu
     imagesArray.length > 0
       ? imagesArray
       : [defaultAppSettings.placeholderPostImage];
-   
+
   // Normalize the return output
   return {
     id: post.id,
@@ -475,110 +475,162 @@ export const getPostSEOById = async (postId: string): Promise<SinglePostSEO | nu
  * @param postId - ID of the post to retrieve.
  * @returns {Promise<SinglePostDetails | null>} Normalized post details or `null` if not found.
  */
-export const getPostDetailsById = async (postId: string): Promise<SinglePostDetails | null> => {
+export const getPostDetailsById = async (
+  postId: string,
+  userId?: number
+): Promise<SinglePostDetails | null> => {
+  // Fetch Post + Details + Save Status
+  const [post] = await db
+    .select({
+      id: postsTable.id,
+      sellerId: postsTable.sellerId,
 
-  // Fetch base post + details
-  const [post] = await db.select({
-    id: postsTable.id,
-    sellerId: postsTable.sellerId,
-    title: postsTable.title,
-    price: postsTable.price,
-    bedRooms: postsTable.bedrooms,
-    bathroom: postsTable.bathrooms,
-    size: postDetailsTable.areaSqft,
-    latitude: postsTable.latitude,
-    longitude: postsTable.longitude,
-    city: postsTable.city,
-    ptype: postsTable.propertyType,
-    ltype: postsTable.listingType,
-    utilities: postDetailsTable.utilitiesPolicy,
-    petPolicy: postDetailsTable.petPolicy,
-    incomePolicy: postDetailsTable.incomePolicy,
-    address: postsTable.address,
-    school: postDetailsTable.schoolDistance,
-    bus: postDetailsTable.busDistance,
-    restaurant: postDetailsTable.restaurantDistance,
-    description: postDetailsTable.description,
-    updatedAt: postsTable.updatedAt,
-    createdAt: postsTable.createdAt
-  })
+      title: postsTable.title,
+      price: postsTable.price,
+
+      bedRooms: postsTable.bedrooms,
+      bathroom: postsTable.bathrooms,
+
+      size: postDetailsTable.areaSqft,
+
+      latitude: postsTable.latitude,
+      longitude: postsTable.longitude,
+
+      city: postsTable.city,
+      ptype: postsTable.propertyType,
+      ltype: postsTable.listingType,
+
+      utilities: postDetailsTable.utilitiesPolicy,
+      petPolicy: postDetailsTable.petPolicy,
+      incomePolicy: postDetailsTable.incomePolicy,
+
+      address: postsTable.address,
+
+      school: postDetailsTable.schoolDistance,
+      bus: postDetailsTable.busDistance,
+      restaurant: postDetailsTable.restaurantDistance,
+
+      description: postDetailsTable.description,
+
+      createdAt: postsTable.createdAt,
+      updatedAt: postsTable.updatedAt,
+
+      savedId: savedPostsTable.id,
+    })
     .from(postsTable)
+    .leftJoin(
+      postDetailsTable,
+      eq(postDetailsTable.postId, postsTable.id)
+    )
+    .leftJoin(
+      savedPostsTable,
+      and(
+        eq(savedPostsTable.postId, postsTable.id),
+        userId
+          ? eq(savedPostsTable.userId, userId)
+          : sql`false`
+      )
+    )
     .where(eq(postsTable.id, postId))
-    .leftJoin(postDetailsTable, eq(postDetailsTable.postId, postId));
+    .limit(1);
 
-  // Return null if post not found
-  if (!post) return null;
+  if (!post) {
+    return null;
+  }
 
-  // Fetch related data [Post Images, Post Features, Seller Info] in parallel
+  // Fetch Related Data
   const [postImages, postFeatures, sellerInfo] = await Promise.all([
     db
-      .select({ url: postImagesTable.imageUrl })
+      .select({
+        url: postImagesTable.imageUrl,
+      })
       .from(postImagesTable)
       .where(eq(postImagesTable.postId, postId))
       .orderBy(postImagesTable.id),
-    db.select({
-      title: postFeaturesTable.title,
-      description: postFeaturesTable.description,
-    })
+
+    db
+      .select({
+        title: postFeaturesTable.title,
+        description: postFeaturesTable.description,
+      })
       .from(postFeaturesTable)
       .where(eq(postFeaturesTable.postId, postId)),
-    db.select({
-      id: usersTable.id,
-      avatar: usersTable.avatar,
-      name: usersTable.name,
-      email: usersTable.email,
-    })
+
+    db
+      .select({
+        id: usersTable.id,
+        avatar: usersTable.avatar,
+        name: usersTable.name,
+        email: usersTable.email,
+      })
       .from(usersTable)
-      .where(eq(usersTable.id, post.sellerId)),
+      .where(eq(usersTable.id, post.sellerId))
+      .limit(1),
   ]);
 
-  // Normalize image list (cover + gallery)
-  const imagesArray =
+  // Images
+  const images =
     postImages.length > 0
       ? postImages
           .map((img) => img.url)
-          .filter((url): url is string => typeof url === "string")
-      : [defaultAppSettings.placeholderPostImage]; 
-   
-  // Normalize the return output
-  const normalize: SinglePostDetails = {
+          .filter((url): url is string => Boolean(url))
+      : [defaultAppSettings.placeholderPostImage];
+
+  // Permissions
+  const isOwner = !!userId && post.sellerId === userId;
+  const isSaved = !!post.savedId;
+
+  return {
     id: post.id,
+
     title: post.title,
-    description: typeof post.description === "string"
-      ? post.description
-      : (post.description as SerializedEditorState),
+
+    description:
+      typeof post.description === "string"
+        ? post.description
+        : (post.description as SerializedEditorState),
 
     price: post.price,
     size: post.size ?? 0,
 
-    images: imagesArray,
+    images,
 
     bedRooms: post.bedRooms,
     bathroom: post.bathroom,
-    features: postFeatures ?? [],
-    
+
+    features: postFeatures,
+
     utilities: post.utilities ?? "none",
     petPolicy: post.petPolicy ?? "none",
     incomePolicy: post.incomePolicy ?? "none",
 
     address: post.address,
     city: post.city,
+
     latitude: post.latitude,
     longitude: post.longitude,
+
     ptype: post.ptype,
     ltype: post.ltype,
-    school: post.school,
-    bus: post.bus,
-    restaurant: post.restaurant,
+
+    school: post.school ?? 0,
+    bus: post.bus ?? 0,
+    restaurant: post.restaurant ?? 0,
 
     sellerInfo: sellerInfo[0] ?? null,
 
+    isSaved,
+
+    permissions: {
+      canBookmark: !isOwner,
+      canEdit: isOwner,
+      canDelete: isOwner,
+    },
+
     createdAt: post.createdAt,
     updatedAt: post.updatedAt,
-  }
-
-  return normalize
-}
+  };
+};
 
 
 

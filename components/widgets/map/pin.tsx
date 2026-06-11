@@ -4,7 +4,7 @@ import { Marker, Popup } from 'react-leaflet'
 import { ListPropertyInterface } from '@/lib/types/propely.type';
 
 // Pin: Renders one Marker with Popup
-const Pin = ({ item }: { item: ListPropertyInterface }) => {
+const Pin = ({ item }: { item: { id: string, title: string, price: string, bedRooms: number, latitude: string, longitude: string, img: string } }) => {
     return (
         // Marker positioned by item coordinates
         <Marker position={[Number(item.latitude), Number(item.longitude)]}>

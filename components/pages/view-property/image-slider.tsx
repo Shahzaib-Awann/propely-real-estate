@@ -10,7 +10,7 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import { cn } from "@/lib/utils/general";
+import { cn, safeImage } from "@/lib/utils/general";
 import { useCallback, useEffect, useState } from "react";
 
 export default function ImageSlider({ images, className }: { images: string[], className?: string }) {
@@ -51,7 +51,7 @@ export default function ImageSlider({ images, className }: { images: string[], c
                 <CardContent className="relative aspect-video p-0">
 
                   <Image
-                    src={src}
+                    src={safeImage(src)}
                     alt="image"
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -87,7 +87,7 @@ export default function ImageSlider({ images, className }: { images: string[], c
                     )}
                   >
                     <Image
-                      src={src}
+                      src={safeImage(src)}
                       alt="thumb"
                       fill
                       sizes="100px"

@@ -26,7 +26,7 @@ import { auth } from "@/auth";
  * @param bedroom - Bedroom count filter.
  *
  * @returns {Promise<PropertiesResponse>} - Paginated property results with metadata.
- * 
+ *
  */
 export const getProperties = async (
   search: string | undefined,
@@ -117,7 +117,7 @@ export const getProperties = async (
     .offset(offset);
 
     const postIds = items.map((i) => i.id);
-  
+
     // 2) Fetch FIFO images for those posts
   const images = postIds.length
   ? await db
@@ -159,21 +159,19 @@ if (viewerUserId && postIds.length > 0) {
 // 3) Attach image (or fallback)
   const normalizedItems = items.map((item) => {
     const isOwner = viewerUserId === item.sellerId;
-  
+
     return {
       ...item,
       img: imageMap.get(item.id) ?? defaultAppSettings.placeholderPostImage,
       isSaved: viewerUserId ? savedPostSet.has(item.id) : false,
-  
+
       permissions: {
-        canBookmark: !!viewerUserId,
+        canBookmark: !!viewerUserId && !isOwner,
         canEdit: !!viewerUserId && isOwner,
         canDelete: !!viewerUserId && isOwner,
       },
     };
   });
-
-  console.info(JSON.stringify(normalizedItems, null, 4))
 
   // Count total matching records (for pagination)
   const [{ total }] = await db
@@ -205,14 +203,14 @@ if (viewerUserId && postIds.length > 0) {
 /**
  * === Fetch a list of properties for a specific user. ===
  *
- * Retrieves all properties created by the given user with key details 
+ * Retrieves all properties created by the given user with key details
  * (bedrooms, bathrooms, price, address, location, type) and attaches the first image to each. Returns an empty array if none exist.
  *
  * @param {number} userId - ID of the user whose properties to fetch.
  * @returns {Promise<ListPropertyInterface[]>} A list of normalized property objects,
  * each containing property details and a representative image URL.
  */
-export const getMyPropertiesList = async (
+export const getPropertiesByUserId = async (
   userId: number,
 ): Promise<ListPropertyInterface[]> => {
 
@@ -221,6 +219,7 @@ export const getMyPropertiesList = async (
     .select({
       id: postsTable.id,
       title: postsTable.title,
+      sellerId: postsTable.sellerId,
       bedRooms: postsTable.bedrooms,
       bathRooms: postsTable.bathrooms,
       price: postsTable.price,
@@ -280,11 +279,115 @@ export const getMyPropertiesList = async (
   /**
    * === Normalize ===
    */
-  const normalizedItems: ListPropertyInterface[] = items.map((item) => ({
-    ...item,
-    img: imageMap.get(item.id) ?? defaultAppSettings.placeholderPostImage,
-    isSaved: userId ? savedPostSet.has(item.id) : false,
-  }));
+  const normalizedItems = items.map((item) => {
+    const isOwner = item.sellerId === userId;
+
+    return {
+      ...item,
+      img: imageMap.get(item.id) ?? defaultAppSettings.placeholderPostImage,
+      isSaved: savedPostSet.has(item.id),
+
+      permissions: {
+        canBookmark: false,
+        canEdit: isOwner,
+        canDelete: isOwner,
+      },
+    };
+  });
+
+  console.log(JSON.stringify(normalizedItems, null, 4))
+
+  return normalizedItems;
+};
+
+
+/**
+ * === Fetch all saved (bookmarked) properties for a specific user ===
+ *
+ * Returns full property details for all posts bookmarked by the user,
+ * including first image and normalized structure.
+ *
+ * @param {number} userId - ID of the user whose saved posts to fetch.
+ * @returns {Promise<ListPropertyInterface[]>}
+ */
+export const getSavedPropertiesByUserId = async (
+  userId: number,
+): Promise<ListPropertyInterface[]> => {
+
+  /**
+   * 1) Get saved post IDs for this user
+   */
+  const saved = await db
+    .select({ postId: savedPostsTable.postId })
+    .from(savedPostsTable)
+    .where(eq(savedPostsTable.userId, userId));
+
+  const postIds = saved.map((s) => s.postId);
+
+  if (postIds.length === 0) return [];
+
+  /**
+   * 2) Fetch posts
+   */
+  const items = await db
+    .select({
+      id: postsTable.id,
+      title: postsTable.title,
+      sellerId: postsTable.sellerId,
+      bedRooms: postsTable.bedrooms,
+      bathRooms: postsTable.bathrooms,
+      price: postsTable.price,
+      address: postsTable.address,
+      location: postsTable.city,
+      ptype: postsTable.propertyType,
+      ltype: postsTable.listingType,
+      latitude: postsTable.latitude,
+      longitude: postsTable.longitude,
+    })
+    .from(postsTable)
+    .where(inArray(postsTable.id, postIds))
+    .orderBy(desc(postsTable.createdAt));
+
+  /**
+   * 3) Fetch images
+   */
+  const images = await db
+    .select({
+      postId: postImagesTable.postId,
+      url: postImagesTable.imageUrl,
+    })
+    .from(postImagesTable)
+    .where(inArray(postImagesTable.postId, postIds))
+    .orderBy(asc(postImagesTable.id));
+
+  const imageMap = new Map<string, string>();
+
+  for (const img of images) {
+    if (img.url && !imageMap.has(img.postId)) {
+      imageMap.set(img.postId, img.url);
+    }
+  }
+
+  /**
+   * 4) Normalize response
+   */
+  const normalizedItems: ListPropertyInterface[] = items.map((item) => {
+    const isOwner = item.sellerId === userId;
+
+    return {
+      ...item,
+      img: imageMap.get(item.id) ?? defaultAppSettings.placeholderPostImage,
+
+      // these are ALL saved posts, so always true
+      isSaved: true,
+
+      permissions: {
+        canBookmark: !isOwner,
+        canEdit: isOwner,
+        canDelete: isOwner,
+      },
+    };
+  });
 
   return normalizedItems;
 };
@@ -295,7 +398,7 @@ export async function toggleBookmark(postId: string): Promise<{ success: boolean
 
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized access");
-  
+
   const userId = Number(session.user.id);
 
   const [existing] = await db.select().from(savedPostsTable).where(and(

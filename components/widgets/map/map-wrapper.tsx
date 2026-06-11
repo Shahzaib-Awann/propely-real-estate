@@ -6,7 +6,7 @@ import { useMemo } from 'react'
 import { MapSkeleton } from '../../skeletons';
 import { ListPropertyInterface } from '@/lib/types/propely.type';
 
-const MapWrapper = ({ items, className }: { items: ListPropertyInterface[] , className?: string }) => {
+const MapWrapper = ({ items, className }: { items: { id: string, title: string, price: string, bedRooms: number, latitude: string, longitude: string, img: string }[], className?: string }) => {
 
   // Dynamically import Map with no SSR and custom loading message
   const Map = useMemo(() => dynamic(

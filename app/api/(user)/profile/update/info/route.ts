@@ -26,12 +26,13 @@ export async function POST(req: NextRequest) {
 
     // === Parse & Validate Request Body ===
     const body = await req.json()
-    const { name, email } = UpdateUserProfileFormSchema.parse(body)
+    const { name, username, email } = UpdateUserProfileFormSchema.parse(body)
 
     // === Update user profile ===
     const result = await updateUserProfileInfo(
       Number(userId),
       name,
+      username,
       email
     )
 

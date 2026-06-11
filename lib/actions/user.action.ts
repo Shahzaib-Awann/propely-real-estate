@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, sql } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 import { db } from "../db/connection";
 import { usersTable } from "../db/schema";
 import { hashPassword } from "../utils/password-hasher";
@@ -62,21 +62,39 @@ export const getUserForSignin = async (email: string) => {
  * @throws "EMAIL_ALREADY_EXISTS" if email is already in use.
  * @returns Resolves when user is successfully created.
  */
-export const createUserForSignUp = async (name: string, email: string, password: string) => {
+export const createUserForSignUp = async (name: string, username: string, email: string, password: string) => {
 
     // === Check existing user ===
-    const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+    const existing = await db
+    .select()
+    .from(usersTable)
+    .where(
+      or(
+        eq(usersTable.email, email.trim()),
+        eq(usersTable.username, username.trim())
+      )
+    )
+    .limit(1);
 
-    // === Error if email already exists ===
+    // === Error if email or username already exists ===
     if (existing.length > 0) {
-        throw new Error("EMAIL_ALREADY_EXISTS");
+    const user = existing[0];
+
+    if (user.email === email.trim()) {
+      throw new Error("EMAIL_ALREADY_EXISTS");
     }
+
+    if (user.username === username.trim()) {
+      throw new Error("USERNAME_ALREADY_EXISTS");
+    }
+  }
 
     const hashedPassword = await hashPassword(password)
 
     // === Insert new user record ===
     await db.insert(usersTable).values({
         name,
+        username,
         email,
         password: hashedPassword,
         updatedAt: null
@@ -89,7 +107,7 @@ type MySqlCauseError = {
     code?: string
     errno?: number
   }
-  
+
 
 
 /**
@@ -105,53 +123,80 @@ type MySqlCauseError = {
  * @returns An object with `ok`, `status`, and `message` indicating the result.
  * @throws Re-throws unknown errors encountered during update.
  */
-  export const updateUserProfileInfo = async (
-    userId: number,
-    name: string,
-    email: string
-  ) => {
-    try {
+export const updateUserProfileInfo = async (
+  userId: number,
+  name: string,
+  username: string,
+  email: string
+) => {
+  try {
 
-        // === Update user in DB ===
-      const result = await db
-        .update(usersTable)
-        .set({
-          name,
-          email,
-          updatedAt: sql`CURRENT_TIMESTAMP`,
-        })
-        .where(eq(usersTable.id, userId))
-  
-      const affectedRows = result[0].affectedRows
-  
-      // === No user found ===
-      if (affectedRows === 0) {
-        return { ok: false, status: 404, message: "User not found", }
-      }
-      
-    // === Success ===
-      return { ok: true, status: 200, message: "Profile updated successfully", }
-    } catch (error: unknown) {
-      
-      if (error instanceof Error && "cause" in error && typeof error.cause === "object" && error.cause !== null) {
-        const cause = error.cause as MySqlCauseError
-  
-        // === Duplicate email ===
-        if (cause.code === "ER_DUP_ENTRY" || cause.errno === 1062) {
-          return { ok: false, status: 409, message: "Email already exists", }
-        }
-      }
-  
-      // === Re-throw unknown errors ===
-      throw error
+    // === Update user in DB ===
+    const result = await db
+      .update(usersTable)
+      .set({
+        name,
+        username,
+        email,
+      })
+      .where(eq(usersTable.id, userId))
+
+    const affectedRows = result[0].affectedRows
+
+    // === No user found ===
+    if (affectedRows === 0) {
+      return { ok: false, status: 404, message: "User not found", }
     }
+
+    // === Success ===
+    return { ok: true, status: 200, message: "Profile updated successfully", }
+  } catch (error: unknown) {
+
+    // === Handle known Error objects ===
+    if (error instanceof Error) {
+      const cause = (error as any).cause;
+
+      // === Handle MySQL duplicate entry error ===
+      if (cause?.code === "ER_DUP_ENTRY") {
+        const msg = cause.sqlMessage || "";
+
+        // === Username duplicate check ===
+        if (msg.includes("username")) {
+          return {
+            ok: false,
+            status: 409,
+            message: "Username already taken",
+          };
+        }
+
+        // === Email duplicate check ===
+        if (msg.includes("email")) {
+          return {
+            ok: false,
+            status: 409,
+            message: "Email already exists",
+          };
+        }
+
+        // === Generic duplicate entry fallback ===
+        return {
+          ok: false,
+          status: 409,
+          message: "Duplicate value already exists",
+        };
+      }
+    }
+
+    // === Re-throw unknown errors ===
+    throw error;
   }
+}
 
 
 
 /**
  * === Fetch a user by ID from the database. ===
- * 
+ *
  * @param id - User ID to fetch
  * @param safe - If true, password will be omitted from the returned object (default: true)
  * @returns User object (safe or full) or null if not found
@@ -175,6 +220,7 @@ export const getUserById = async (id: number, safe: boolean = true) => {
     avatar: row.avatar,
     avatarPublicId: row.avatarPublicId,
     name: row.name,
+    username: row.username,
     email: row.email,
     role: row.role,
     createdAt: row.createdAt,

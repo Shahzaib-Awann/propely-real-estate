@@ -23,7 +23,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // Main Map Component
-const Map = ({ items }: { items: ListPropertyInterface[] }) => {
+const Map = ({ items }: { items: { id: string, title: string, price: string, bedRooms: number, latitude: string, longitude: string, img: string }[] }) => {
 
   // first item's coordinates or default [51.505, -0.09] (London)
   const initialPosition: [number, number] = items.length

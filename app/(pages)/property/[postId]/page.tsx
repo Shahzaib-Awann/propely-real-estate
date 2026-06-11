@@ -2,12 +2,18 @@ import MapWrapper from "@/components/widgets/map/map-wrapper";
 import ImageSlider from "@/components/pages/view-property/image-slider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getPostDetailsById, getPostSEOById } from "@/lib/actions/property.action";
-import { formatMeters, getAvatarFallback } from "@/lib/utils/general";
+import {
+  getPostDetailsById,
+  getPostSEOById,
+} from "@/lib/actions/property.action";
+import {
+  formatMeters,
+  getAvatarFallback,
+  safeImage,
+} from "@/lib/utils/general";
 import {
   Bath,
   BedDouble,
-  Bookmark,
   Building,
   Bus,
   CircleDollarSign,
@@ -21,22 +27,25 @@ import {
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import LexicalViewer from "@/components/widgets/editor/LexicalViewer";
-
-
+import BookmarkButton from "./bookmark-button";
+import { auth } from "@/auth";
 
 /**
  * Generate SEO metadata dynamically based on search filters
  */
-export async function generateMetadata(
-  { params }: { params: Promise<{ postId: string }> }
-): Promise<Metadata> {
-
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ postId: string }>;
+}): Promise<Metadata> {
   const { postId } = await params;
 
   // Fallback metadata if postId is invalid
   if (!postId) {
     return {
-      metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+      metadataBase: new URL(
+        process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+      ),
       title: "Property Not Found",
       description: "The property you are looking for does not exist.",
     };
@@ -47,13 +56,25 @@ export async function generateMetadata(
   // Fallback if post not found
   if (!post) {
     return {
-      metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+      metadataBase: new URL(
+        process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+      ),
       title: "Property Not Found",
       description: "The property you are looking for does not exist.",
     };
   }
 
-  const { title, city, images, bedRooms, bathroom, ptype, ltype, address, price } = post;
+  const {
+    title,
+    city,
+    images,
+    bedRooms,
+    bathroom,
+    ptype,
+    ltype,
+    address,
+    price,
+  } = post;
 
   const typeLabel = ptype.charAt(0).toUpperCase() + ptype.slice(1);
   const action = ltype === "rent" ? "for rent" : "for sale";
@@ -61,14 +82,17 @@ export async function generateMetadata(
   const description = `${title} — A ${bedRooms}-bedroom, ${bathroom}-bathroom ${typeLabel.toLowerCase()} ${action} in ${city}. Located at ${address}, this property offers comfortable living at a price of $${price}. Ideal for families or professionals looking for a modern home in a prime location.`;
 
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+    metadataBase: new URL(
+      process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+    ),
     title: `${title} in ${city} | Real Estate Listing`,
     description,
     openGraph: {
       title: `${title} in ${city} | Real Estate Listing`,
       description,
       siteName: "Propely Real Estate",
-      images: images.length > 0 ? [{ url: images[0], width: 1200, height: 630 }] : [],
+      images:
+        images.length > 0 ? [{ url: images[0], width: 1200, height: 630 }] : [],
       locale: "en_US",
       type: "website",
     },
@@ -81,37 +105,36 @@ export async function generateMetadata(
   };
 }
 
-
-
-
 /**
  * View Single Property Page (Server Component)
  */
-export default async function ViewProperty({ params }: { params: Promise<{ postId: string }> }) {
-
+export default async function ViewProperty({
+  params,
+}: {
+  params: Promise<{ postId: string }>;
+}) {
   const { postId } = await params;
+  const session = await auth();
+  const userId = session?.user?.id ? Number(session.user.id) : undefined;
 
   // 404 if post not found
   if (!postId) {
-    redirect('/properties');
+    redirect("/properties");
   }
 
-  const post = await getPostDetailsById(postId)
+  const post = await getPostDetailsById(postId, userId);
 
   // 404 if post not found
   if (!post) {
-    return <div>Not Found</div>
+    return <div>Not Found</div>;
   }
 
   return (
     <main className="flex flex-col lg:flex-row flex-1 px-4 pb-20 lg:pb-0 max-h-[calc(100vh-80px)] bg-transparent overflow-y-scroll lg:overflow-y-hidden scroll-smooth">
-
       {/* LEFT: Main Post Content */}
       <section className="flex-3 max-h-full lg:overflow-y-auto scroll-smooth">
-
         {/* Post Content Container */}
         <div className="w-full h-full flex flex-col gap-10 lg:pr-10">
-
           {/* Image Slider */}
           <div>
             <ImageSlider images={post.images} />
@@ -119,17 +142,16 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
 
           {/* Details Wrapper */}
           <div className="pb-12">
-
             {/* Top Section: Title + User Info */}
             <div className="flex flex-col md:flex-row justify-between gap-10">
-
               {/* Property Info */}
               <div className="flex flex-col gap-3">
                 <h1 className="text-xl sm:text-2xl xl:text-3xl font-semibold">
                   {post.title}
                 </h1>
                 <p className="flex items-center gap-1 text-sm">
-                  <MapPin className="size-4 text-muted-foreground" /> {post.address}
+                  <MapPin className="size-4 text-muted-foreground" />{" "}
+                  {post.address}
                 </p>
                 <p className="inline-flex items-center bg-side-panel w-fit px-2.5 py-1 text-lg sm:text-xl font-semibold text-primary rounded-sm">
                   ${post.price}
@@ -138,10 +160,14 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
 
               {/* Seller Card */}
               <div className="flex flex-row md:flex-col items-center justify-center px-12 py-5 bg-side-panel rounded-lg gap-5">
-
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={post.sellerInfo?.avatar ?? undefined} alt={post.sellerInfo?.name ?? "user avatar"} />
-                  <AvatarFallback>{getAvatarFallback(post.sellerInfo?.name ?? "")}</AvatarFallback>
+                  <AvatarImage
+                    src={post.sellerInfo?.avatar ?? undefined}
+                    alt={post.sellerInfo?.name ?? "user avatar"}
+                  />
+                  <AvatarFallback>
+                    {getAvatarFallback(post.sellerInfo?.name ?? "")}
+                  </AvatarFallback>
                 </Avatar>
 
                 <span className="text-center">{post.sellerInfo?.name}</span>
@@ -151,7 +177,9 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
             {/* Extra Features */}
             {post.features && post.features.length > 0 && (
               <div className="mt-6">
-                <h1 className="text-2xl font-semibold mb-4 border-b pb-2">Features</h1>
+                <h1 className="text-2xl font-semibold mb-4 border-b pb-2">
+                  Features
+                </h1>
                 <div className="flex flex-wrap gap-2 w-full">
                   {post.features.map((feature, idx) => (
                     <div
@@ -160,8 +188,12 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
                     >
                       <div className="shrink-0 size-4 rounded-full bg-transparent border-2 border-primary" />
                       <div>
-                        <h2 className="font-bold text-sm md:text-base">{feature.title}</h2>
-                        <p className="text-xs md:text-sm">{feature.description}</p>
+                        <h2 className="font-bold text-sm md:text-base">
+                          {feature.title}
+                        </h2>
+                        <p className="text-xs md:text-sm">
+                          {feature.description}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -179,14 +211,11 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
 
       {/* RIGHT: Sidebar */}
       <aside className="flex-2 max-h-full lg:overflow-y-auto bg-side-panel rounded-lg lg:rounded-none">
-
         {/* Sidebar Content */}
         <div className="w-full p-5 flex flex-col gap-6">
-
           {/* General Info */}
           <h3 className="font-bold">General</h3>
           <div className="bg-white/75 p-4 rounded-lg space-y-4 shadow-sm">
-
             {/* Utilities */}
             <div className="flex items-center gap-3">
               <ToolCase className="text-primary" />
@@ -218,13 +247,10 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
           {/* Sizes Section */}
           <h3 className="font-bold">Sizes</h3>
           <div className="w-full flex flex-wrap gap-4">
-
             {/* Area */}
             <div className="flex items-center gap-3 bg-white/75 p-2 rounded-lg shadow-sm">
               <Ruler className="text-primary" />
-              <p className="text-sm font-semibold">
-                {post.size} sqft
-              </p>
+              <p className="text-sm font-semibold">{post.size} sqft</p>
             </div>
 
             {/* Bedrooms */}
@@ -243,7 +269,6 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
           {/* Nearby Places Section */}
           <h3 className="font-bold">Nearby Places</h3>
           <div className="bg-white/75 p-4 rounded-lg shadow-sm flex flex-col sm:flex-row justify-between gap-5">
-
             {/* School */}
             <div className="flex items-center gap-3">
               <School className="text-primary" />
@@ -275,32 +300,33 @@ export default async function ViewProperty({ params }: { params: Promise<{ postI
           {/* Location Map */}
           <h3 className="font-bold">Location</h3>
           <div className="h-48 w-full">
-            <MapWrapper items={[{
-              id: post.id,
-              title: post.title,
-              img: post.images[0],
-              bedRooms: post.bedRooms,
-              bathRooms: post.bathroom,
-              price: post.price,
-              address: post.address,
-              latitude: post.latitude,
-              longitude: post.longitude,
-              location: post.city,
-              ptype: post.ptype,
-              ltype: post.ltype,
-            }]} className="rounded-lg shadow-sm" />
+            <MapWrapper
+              items={[
+                {
+                  id: post.id,
+                  title: post.title,
+                  img: post.images[0],
+                  bedRooms: post.bedRooms,
+                  price: post.price,
+                  latitude: post.latitude,
+                  longitude: post.longitude,
+                },
+              ]}
+              className="rounded-lg shadow-sm"
+            />
           </div>
 
           {/* Action Buttons */}
           <div className="flex justify-between">
-            <Button className="p-6 bg-white" variant="secondary">
+            <Button className="p-6 bg-white text-black hover:text-white">
               <MessageSquareText /> Send a message
             </Button>
-            <Button className="p-6 bg-white" variant="secondary">
-              <Bookmark /> Save the place
-            </Button>
+            <BookmarkButton
+              initialSaved={post.isSaved}
+              propertyId={post.id}
+              canBookmark={post.permissions.canBookmark}
+            />
           </div>
-
         </div>
       </aside>
     </main>

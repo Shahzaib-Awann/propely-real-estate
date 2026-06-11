@@ -21,34 +21,36 @@ interface UpdateUserInfoProps {
   info: {
     name: string;
     email: string;
+    username: string;
   };
 }
 
 export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
   /* === Local State === */
   const [loading, setLoading] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
   /* === React Hook Form Setup === */
   const form = useForm<z.infer<typeof UpdateUserProfileFormSchema>>({
     resolver: zodResolver(UpdateUserProfileFormSchema),
     defaultValues: {
       name: info.name,
+      username: info.username,
       email: info.email,
     },
   });
 
   /* === Submit Handler === */
   async function onSubmit(values: z.infer<typeof UpdateUserProfileFormSchema>) {
-    
     const isUnchanged =
-    values.name?.trim() === info.name?.trim() &&
-    values.email?.trim().toLowerCase() === info.email?.trim().toLowerCase();
+      values.name?.trim() === info.name?.trim() &&
+      values.email?.trim().toLowerCase() === info.email?.trim().toLowerCase() &&
+      values.username?.trim() === info.username?.trim();
 
     if (isUnchanged) {
-        toast("No changes detected.", {
-          icon: "⚠️",
-        });
+      toast("No changes detected.", {
+        icon: "⚠️",
+      });
       return;
     }
 
@@ -57,7 +59,6 @@ export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
     toast.loading("Updating profile...", {
       id: "profile-update-loading",
     });
-
 
     try {
       const response = await fetch("/api/profile/update/info", {
@@ -89,12 +90,12 @@ export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
 
       // === Success ===
       toast.success(result?.message ?? "Profile updated successfully.");
-      router.push('/profile')
+      router.push("/profile");
     } catch (error) {
       console.error("Profile update failed:", error);
 
       toast.error(
-        "Network error occurred. Please check your connection and try again."
+        "Network error occurred. Please check your connection and try again.",
       );
     } finally {
       setLoading(false);
@@ -121,6 +122,27 @@ export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
                 <Input
                   id="name"
                   placeholder="example123@xyz.com"
+                  variant="primary"
+                  className="h-14"
+                  {...field}
+                />
+                <FieldError
+                  errors={fieldState.error ? [fieldState.error] : []}
+                />
+              </Field>
+            )}
+          />
+
+          {/* Username */}
+          <Controller
+            name="username"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={!!fieldState.error}>
+                <FieldLabel htmlFor="username">Username</FieldLabel>
+                <Input
+                  id="username"
+                  placeholder="enter username"
                   variant="primary"
                   className="h-14"
                   {...field}

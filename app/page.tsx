@@ -1,5 +1,6 @@
 import Navbar from "@/components/layout/navbar/navbar";
 import SearchBar from "@/components/pages/landing-page/searchBar";
+import { safeImage } from "@/lib/utils/general";
 import Image from "next/image";
 
 export default function Home() {
@@ -65,7 +66,7 @@ export default function Home() {
                   className={img.className}
                 >
                   <Image
-                    src={img.src}
+                    src={safeImage(img.src)}
                     fill
                     alt={`img-${idx + 1}`}
                     sizes="(max-width: 1000px) 0px, 50vw"

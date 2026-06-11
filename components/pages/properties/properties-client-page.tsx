@@ -7,6 +7,7 @@ import ListCard from "./list-card";
 import MapWrapper from "@/components/widgets/map/map-wrapper";
 import { Button } from "@/components/ui/button";
 import { buildSearchParams } from "@/lib/utils/general";
+import ListClient from "./list-client";
 
 
 
@@ -76,9 +77,7 @@ export default function PropertiesClient({
                                 No results found
                             </div>
                         ) : (
-                            items.map(item => (
-                                <ListCard key={item.id} item={item} />
-                            ))
+                            <ListClient list={items} />
                         )}
                     </div>
 

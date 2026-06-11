@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import React from "react";
 
 const UpdateProfilePage = async () => {
-  
+
   // === Authenticate user ===
   const session = await auth()
 
@@ -20,6 +20,8 @@ const UpdateProfilePage = async () => {
   if (!user) {
     redirect("/sign-in?error=userDeleted")
   }
+
+  console.log({user})
 
   return (
     <main className="flex flex-col-reverse lg:flex-row h-[calc(100vh-80px)] px-4 overflow-y-auto lg:overflow-y-hidden scroll-smooth">

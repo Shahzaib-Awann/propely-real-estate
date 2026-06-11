@@ -85,3 +85,18 @@ export function formatMeters(meters: number | null | undefined): string {
   // Remove trailing .0 for whole kilometers
   return `${km % 1 === 0 ? km : km.toFixed(1)}km`;
 }
+
+
+/**
+ * Returns a safe image URL fallback if the provided source is missing or invalid.
+ * Ensures UI never breaks due to broken or empty image URLs.
+ */
+export const safeImage = (src?: string | null) => {
+  if (!src || src === "") {
+    return "/images/default-fallback-image.png";
+  }
+
+  if (src.startsWith("http")) return src;
+
+  return "/images/default-fallback-image.png";
+};

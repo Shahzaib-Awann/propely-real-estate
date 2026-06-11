@@ -6,6 +6,7 @@ import { useState } from "react";
 import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
+import { safeImage } from "@/lib/utils/general";
 
 
 
@@ -58,7 +59,7 @@ const UpdateUserAvatar = ({ avatar: image }: { avatar: string | null }) => {
       {/* === Avatar Preview === */}
       <div className="size-48 rounded-lg overflow-hidden relative shadow">
         <Image
-          src={avatar ?? defaultAppSettings.placeholderPostImage}
+          src={safeImage(avatar)}
           alt="Avatar"
           fill
           sizes="192px"
@@ -79,8 +80,8 @@ const UpdateUserAvatar = ({ avatar: image }: { avatar: string | null }) => {
         uploadPreset="propely-real-estate"
         onQueuesStart={() => {
           setIsUploading(true);
-          toast.loading("Uploading avatar...", { 
-            id: "avatar-upload" 
+          toast.loading("Uploading avatar...", {
+            id: "avatar-upload"
           });
         }}
         onSuccess={(results) => {

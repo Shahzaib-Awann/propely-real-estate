@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 
 
 
-export default function ListClient({ list: initialList }: { list: ListPropertyInterface[] }) {
+export default function ListClient({ list: initialList, refreshList }: { list: ListPropertyInterface[], refreshList?: boolean }) {
   const [list, setList] = useState(initialList);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -46,7 +46,7 @@ export default function ListClient({ list: initialList }: { list: ListPropertyIn
       // rollback UI
       setList(previousList);
 
-      // error normalization 
+      // error normalization
       if (error instanceof Error) {
         // Known server / runtime error
         toast.error(error.message || "Failed to delete property");
@@ -61,10 +61,10 @@ export default function ListClient({ list: initialList }: { list: ListPropertyIn
       setPendingDeleteId(null);
     }
   };
-  
+
   const handleBookmark = async (id: string) => {
     const previousList = list;
-  
+
     // optimistic UI
     setList((prev) =>
       prev.map((item) =>
@@ -73,10 +73,14 @@ export default function ListClient({ list: initialList }: { list: ListPropertyIn
           : item
       )
     );
-  
+
     try {
 
       const result = await toggleBookmark(id);
+
+      if(refreshList) {
+        setList((prev) => prev.filter((p) => p.id !== id));
+      }
 
       toast.success( result.message ?? "")
     } catch (error: any) {

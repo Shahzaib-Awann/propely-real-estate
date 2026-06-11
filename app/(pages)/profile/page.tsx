@@ -8,8 +8,9 @@ import { defaultAppSettings } from "@/lib/constants";
 import Link from "next/link";
 import LogoutUser from "@/components/pages/profile/logout-user";
 import { getUserById } from "@/lib/actions/user.action";
-import { getMyPropertiesList } from "@/lib/actions/properties.action";
+import { getPropertiesByUserId } from "@/lib/actions/properties.action";
 import ListClient from "@/components/pages/properties/list-client";
+import { safeImage } from "@/lib/utils/general";
 
 export default async function Profile() {
   // === Authenticate user ===
@@ -26,7 +27,7 @@ export default async function Profile() {
     redirect("/sign-in?error=userDeleted")
   }
 
-  const myList = await getMyPropertiesList(Number(session.user.id))
+  const myList = await getPropertiesByUserId(Number(session.user.id))
 
   return (
     <main className="flex flex-col-reverse lg:flex-row h-[calc(100vh-80px)] px-4 overflow-y-auto lg:overflow-y-hidden scroll-smooth">
@@ -45,7 +46,7 @@ export default async function Profile() {
 
           {/* My List Component */}
           <div className="grid grid-cols-1 gap-8">
-            <ListClient list={myList} /> 
+            <ListClient list={myList} />
           </div>
 
           {/* Saved List Header */}
@@ -71,7 +72,7 @@ export default async function Profile() {
           <div className="h-full flex flex-col items-center justify-center gap-5">
             <div className="size-48 rounded-lg overflow-hidden relative shadow">
               <Image
-                src={user.avatar ?? defaultAppSettings.placeholderPostImage}
+                src={safeImage(user.avatar)}
                 alt="Avatar"
                 fill
                 sizes="192px"

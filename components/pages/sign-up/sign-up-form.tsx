@@ -38,6 +38,7 @@ export default function SignUpForm() {
     resolver: zodResolver(SignUpFormSchema),
     defaultValues: {
       name: "",
+      username: "",
       email: "",
       password: "",
     },
@@ -57,26 +58,26 @@ export default function SignUpForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-  
+
       const result = await res.json();
-  
-      /* Handle auto-login failure */
-      if (result?.error === "AUTO_LOGIN_FAILED") {
-        toast.error("Account created. Please sign in.");
-        router.push(`/sign-in?email=${values.email}`);
-        return;
-      }
-  
-      /** Handle submission errors */
+
+      /* Handle errors: duplicate email/username or auto-login failure */
       if (!res.ok) {
+        if (result.error === "AUTO_LOGIN_FAILED") {
+          toast.success("Account created. Please sign in.");
+
+          router.push(`/sign-in?email=${values.email}`);
+          return;
+        }
+
         toast.error(result.error || "Sign-up failed");
         return;
       }
-  
+
       /** Success handling */
       toast.success("Account created and logged in!");
       window.location.href = "/properties";
-  
+
     } catch (e) {
       console.error(e);
       toast.error("Unexpected error");
@@ -85,7 +86,7 @@ export default function SignUpForm() {
       toast.dismiss("signup-loading")
     }
   }
-  
+
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-80 w-full mx-auto">
@@ -103,6 +104,27 @@ export default function SignUpForm() {
                 <Input
                   id="name"
                   placeholder="John Doe"
+                  variant="primary"
+                  className="h-14"
+                  {...field}
+                />
+
+                <FieldError errors={[fieldState.error]} />
+              </Field>
+            )}
+          />
+
+          {/* USERNAME */}
+          <Controller
+            name="username"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="username">Username</FieldLabel>
+
+                <Input
+                  id="username"
+                  placeholder="username"
                   variant="primary"
                   className="h-14"
                   {...field}

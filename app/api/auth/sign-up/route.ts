@@ -15,10 +15,10 @@ export async function POST(req: NextRequest) {
 
     // === Parse & Validate Request Body ===
     const body = await req.json();
-    const { name, email, password } = SignUpFormSchema.parse(body);
+    const { name, username, email, password } = SignUpFormSchema.parse(body);
 
     // === Adds a new user to the database, errors if email exists ===
-    await createUserForSignUp(name, email, password);
+    await createUserForSignUp(name, username, email, password);
 
     // === Tries auto-login after sign-up, returns AUTO_LOGIN_FAILED on failure ===
     try {
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         // signup succeeded, auto-login failed
         return NextResponse.json(
           { error: "AUTO_LOGIN_FAILED" },
-          { status: 200 }
+          { status: 401 }
         );
       }
 
@@ -41,10 +41,9 @@ export async function POST(req: NextRequest) {
 
     // === Success Response ===
     return NextResponse.json({ success: true }, { status: 201 });
-
   } catch (error: unknown) {
 
-    // === Handles errors: 409 for duplicate email, 400 for others ===
+    // === Handles errors: 409 for duplicate email ===
     if (error instanceof Error && error.message === "EMAIL_ALREADY_EXISTS") {
       return NextResponse.json(
         { error: "Email already registered" },
@@ -52,9 +51,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // === Handles errors: 409 for duplicate username ===
+    if (error instanceof Error && error.message === "USERNAME_ALREADY_EXISTS") {
+      return NextResponse.json(
+        { error: "Username already registered" },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Something went wrong" },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }

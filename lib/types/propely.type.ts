@@ -2,7 +2,7 @@ import { SerializedEditorState } from "lexical";
 
 
 
-export type PropertyTypes = "apartment" | "house" | "condo" | "land" 
+export type PropertyTypes = "apartment" | "house" | "condo" | "land"
   export type ListingTypes = "buy" | "rent"
   export type UtilitiesPolicyTypes = "owner" | "tenant" | "shared"
   export type PetPolicyTypes = "allowed" | "not-allowed"
@@ -25,8 +25,8 @@ export interface PropertiesQueryParamsInterface {
 
 
 
-/** 
- * A single property item from the properties API. 
+/**
+ * A single property item from the properties API.
  */
 export interface ListPropertyInterface {
   id: string;
@@ -53,7 +53,7 @@ export interface ListPropertyInterface {
 
 
 
-/** 
+/**
  * Pagination and filter metadata returned with property listings.
  */
 export interface ListPropertiesMeta {
@@ -152,7 +152,15 @@ export interface SinglePostDetails {
   restaurant: number | null;
 
   sellerInfo: PostSelletInfo | null
-  
+
+  isSaved: boolean;
+
+  permissions: {
+    canEdit: boolean;
+    canDelete: boolean;
+    canBookmark: boolean;
+  };
+
   createdAt: string;
   updatedAt: string | null;
 }
@@ -167,7 +175,7 @@ export interface SinglePostDetails {
     publicId: string;
   }
 
-  
+
 
   /**
    * Full Single property details response For Edit Page
@@ -200,7 +208,7 @@ export interface SinglePostDetails {
     school: number | null;
     bus: number | null;
     restaurant: number | null;
-    
+
     createdAt: string;
     updatedAt: string | null;
   }
