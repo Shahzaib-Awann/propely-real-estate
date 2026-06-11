@@ -16,6 +16,7 @@ import toast from "react-hot-toast";
 import { Trash } from "lucide-react";
 import { deletePropertyById } from "@/lib/actions/property.action";
 import { toggleBookmark } from "@/lib/actions/properties.action";
+import { useRouter } from "next/navigation";
 
 
 
@@ -23,6 +24,8 @@ export default function ListClient({ list: initialList }: { list: ListPropertyIn
   const [list, setList] = useState(initialList);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const router = useRouter()
 
   const confirmDelete = async () => {
     if (!pendingDeleteId || isDeleting) return;
@@ -76,7 +79,11 @@ export default function ListClient({ list: initialList }: { list: ListPropertyIn
       const result = await toggleBookmark(id);
 
       toast.success( result.message ?? "")
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.message === "Unauthorized access") {
+        router.push("/sign-in");
+        return;
+      }
       // rollback
       setList(previousList);
       toast.error("Failed to update bookmark");
@@ -93,7 +100,6 @@ export default function ListClient({ list: initialList }: { list: ListPropertyIn
             key={item.id}
             item={item}
             actions={{
-              onEdit: true,
               onDelete: setPendingDeleteId,
               onBookmark: handleBookmark,
             }}

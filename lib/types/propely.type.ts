@@ -30,6 +30,7 @@ export interface PropertiesQueryParamsInterface {
  */
 export interface ListPropertyInterface {
   id: string;
+  sellerId: number;
   title: string;
   img: string | null;
   bedRooms: number;
@@ -42,6 +43,12 @@ export interface ListPropertyInterface {
   latitude: string;
   longitude: string;
   isSaved: boolean;
+
+  permissions: {
+    canEdit: boolean;
+    canDelete: boolean;
+    canBookmark: boolean;
+  };
 }
 
 

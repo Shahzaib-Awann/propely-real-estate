@@ -13,7 +13,6 @@ import { ListPropertyInterface } from '@/lib/types/propely.type';
 import { Button } from "@/components/ui/button";
 
 type ListCardActions = {
-  onEdit?: boolean;
   onDelete?: (id: string) => void;
   onBookmark?: (id: string) => void;
 };
@@ -103,23 +102,22 @@ const ListCard = ({ item, actions }: { item: ListPropertyInterface, actions?: Li
           <div className="flex flex-row gap-2">
 
             {/* Bookmark Button */}
-            {actions?.onBookmark &&
+            {item.permissions?.canBookmark &&
               <Button
-              type="button"
-              aria-label="Save property"
-              className={`inline-flex size-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors`}
-              onClick={() => actions.onBookmark!(item.id)}
+                type="button"
+                aria-label="Save property"
+                className={`inline-flex size-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors`}
+                onClick={() => actions?.onBookmark!(item.id)}
               >
-              <Bookmark
-      className={`size-4 ${
-        item.isSaved ? "fill-black text-black" : "text-black"
-      }`}
-    />
-            </Button>
+                <Bookmark
+                  className={`size-4 ${item.isSaved ? "fill-black text-black" : "text-black"
+                    }`}
+                />
+              </Button>
             }
 
             {/* Edit Button */}
-            {actions?.onEdit &&
+            {item.permissions?.canEdit &&
               <Link href={`/property/edit/${item.id}`}>
                 <Button
                   type="button"
@@ -132,15 +130,15 @@ const ListCard = ({ item, actions }: { item: ListPropertyInterface, actions?: Li
             }
 
             {/* Delete Button */}
-            {actions?.onDelete &&
-                <Button
-                  type="button"
-                  aria-label="Delete property"
-                  className="inline-flex size-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors"
-                  onClick={() => actions.onDelete!(item.id)}
-                >
-                  <Trash className="size-4 text-red-500" />
-                </Button>
+            {item.permissions?.canDelete &&
+              <Button
+                type="button"
+                aria-label="Delete property"
+                className="inline-flex size-8 items-center justify-center rounded-full border bg-background hover:bg-muted transition-colors"
+                onClick={() => actions?.onDelete!(item.id)}
+              >
+                <Trash className="size-4 text-red-500" />
+              </Button>
             }
           </div>
 

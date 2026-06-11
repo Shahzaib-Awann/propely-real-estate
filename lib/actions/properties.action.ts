@@ -98,6 +98,7 @@ export const getProperties = async (
   const items = await db
     .select({
       id: postsTable.id,
+      sellerId: postsTable.sellerId,
       title: postsTable.title,
       bedRooms: postsTable.bedrooms,
       bathRooms: postsTable.bathrooms,
@@ -156,11 +157,23 @@ if (viewerUserId && postIds.length > 0) {
 }
 
 // 3) Attach image (or fallback)
- const normalizedItems = items.map((item) => ({
-    ...item,
-    img: imageMap.get(item.id) ?? defaultAppSettings.placeholderPostImage,
-    isSaved: viewerUserId ? savedPostSet.has(item.id) : false,
-  }));
+  const normalizedItems = items.map((item) => {
+    const isOwner = viewerUserId === item.sellerId;
+  
+    return {
+      ...item,
+      img: imageMap.get(item.id) ?? defaultAppSettings.placeholderPostImage,
+      isSaved: viewerUserId ? savedPostSet.has(item.id) : false,
+  
+      permissions: {
+        canBookmark: !!viewerUserId,
+        canEdit: !!viewerUserId && isOwner,
+        canDelete: !!viewerUserId && isOwner,
+      },
+    };
+  });
+
+  console.info(JSON.stringify(normalizedItems, null, 4))
 
   // Count total matching records (for pagination)
   const [{ total }] = await db
