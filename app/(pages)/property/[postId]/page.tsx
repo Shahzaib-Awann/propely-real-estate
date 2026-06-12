@@ -1,16 +1,11 @@
 import MapWrapper from "@/components/widgets/map/map-wrapper";
 import ImageSlider from "@/components/pages/view-property/image-slider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   getPostDetailsById,
   getPostSEOById,
 } from "@/lib/actions/property.action";
-import {
-  formatMeters,
-  getAvatarFallback,
-  safeImage,
-} from "@/lib/utils/general";
+import { formatMeters, getAvatarFallback } from "@/lib/utils/general";
 import {
   Bath,
   BedDouble,
@@ -29,6 +24,7 @@ import { redirect } from "next/navigation";
 import LexicalViewer from "@/components/widgets/editor/LexicalViewer";
 import BookmarkButton from "./bookmark-button";
 import { auth } from "@/auth";
+import Link from "next/link";
 
 /**
  * Generate SEO metadata dynamically based on search filters
@@ -128,6 +124,22 @@ export default async function ViewProperty({
   if (!post) {
     return <div>Not Found</div>;
   }
+
+  const isOwner = userId === post.sellerInfo?.id;
+
+  const chatHref = post.sellerInfo?.id
+    ? {
+        pathname: "/chats",
+        query: {
+          messageTo: post.sellerInfo.id,
+          property: post.id,
+        },
+      }
+    : null;
+
+  const signInHref = `/sign-in?callbackUrl=${encodeURIComponent(
+    `/chats?messageTo=${post.sellerInfo?.id}&propertyId=${post.id}`,
+  )}`;
 
   return (
     <main className="flex flex-col lg:flex-row flex-1 px-4 pb-20 lg:pb-0 max-h-[calc(100vh-80px)] bg-transparent overflow-y-scroll lg:overflow-y-hidden scroll-smooth">
@@ -318,13 +330,20 @@ export default async function ViewProperty({
 
           {/* Action Buttons */}
           <div className="flex justify-between">
-            <Button className="p-6 bg-white text-black hover:text-white">
-              <MessageSquareText /> Send a message
-            </Button>
+            {post.sellerInfo?.id && !isOwner && (
+              <Link
+                href={userId ? chatHref! : signInHref}
+                className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-all shrink-0 outline-none hover:bg-primary/90 px-4 py-3.5 bg-white text-black hover:text-white"
+              >
+                <MessageSquareText className="size-4" />
+                Send a message
+              </Link>
+            )}
             <BookmarkButton
               initialSaved={post.isSaved}
               propertyId={post.id}
               canBookmark={post.permissions.canBookmark}
+              isLoggedIn={!!userId}
             />
           </div>
         </div>

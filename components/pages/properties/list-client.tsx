@@ -18,14 +18,18 @@ import { deletePropertyById } from "@/lib/actions/property.action";
 import { toggleBookmark } from "@/lib/actions/properties.action";
 import { useRouter } from "next/navigation";
 
-
-
-export default function ListClient({ list: initialList, refreshList }: { list: ListPropertyInterface[], refreshList?: boolean }) {
+export default function ListClient({
+  list: initialList,
+  refreshList,
+}: {
+  list: ListPropertyInterface[];
+  refreshList?: boolean;
+}) {
   const [list, setList] = useState(initialList);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const router = useRouter()
+  const router = useRouter();
 
   const confirmDelete = async () => {
     if (!pendingDeleteId || isDeleting) return;
@@ -37,7 +41,6 @@ export default function ListClient({ list: initialList, refreshList }: { list: L
     setIsDeleting(true);
 
     try {
-
       await deletePropertyById(pendingDeleteId);
       setList((prev) => prev.filter((p) => p.id !== pendingDeleteId));
 
@@ -68,28 +71,37 @@ export default function ListClient({ list: initialList, refreshList }: { list: L
     // optimistic UI
     setList((prev) =>
       prev.map((item) =>
-        item.id === id
-          ? { ...item, isSaved: !item.isSaved }
-          : item
-      )
+        item.id === id ? { ...item, isSaved: !item.isSaved } : item,
+      ),
     );
 
     try {
-
       const result = await toggleBookmark(id);
 
-      if(refreshList) {
+      if (!result.success) {
+        // rollback
+        setList(previousList);
+
+        if (result.code === "UNAUTHORIZED") {
+          router.push(
+            `/sign-in?callbackUrl=${encodeURIComponent(`/property/${id}`)}`,
+          );
+          return;
+        }
+
+        toast.error(result.message);
+        return;
+      }
+
+      if (refreshList) {
         setList((prev) => prev.filter((p) => p.id !== id));
       }
 
-      toast.success( result.message ?? "")
-    } catch (error: any) {
-      if (error?.message === "Unauthorized access") {
-        router.push("/sign-in");
-        return;
-      }
+      toast.success(result.message);
+    } catch (error) {
       // rollback
       setList(previousList);
+
       toast.error("Failed to update bookmark");
       console.error(error);
     }
@@ -132,7 +144,8 @@ export default function ListClient({ list: initialList, refreshList }: { list: L
             </div>
 
             <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
-              Are you sure you want to <strong>delete this property?</strong> This action cannot be undone.
+              Are you sure you want to <strong>delete this property?</strong>{" "}
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
 
@@ -155,9 +168,7 @@ export default function ListClient({ list: initialList, refreshList }: { list: L
               className="flex w-1/2 items-center justify-center gap-2 h-12 rounded-none font-medium font-lato"
             >
               <Trash className="h-4 w-4" />
-              <span>
-                {isDeleting ? "Deleting…" : "Delete Property"}
-              </span>
+              <span>{isDeleting ? "Deleting…" : "Delete Property"}</span>
             </Button>
           </DialogFooter>
         </DialogContent>

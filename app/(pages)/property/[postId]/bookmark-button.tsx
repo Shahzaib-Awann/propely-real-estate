@@ -7,27 +7,40 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-// ⚠️ assume this is your API function
-// import { toggleBookmark } from "@/lib/actions/bookmark.action";
-
 type BookmarkButtonProps = {
   propertyId: string;
   initialSaved?: boolean;
   canBookmark: boolean;
+  isLoggedIn: boolean;
 };
 
 const BookmarkButton = ({
   propertyId,
   initialSaved = false,
-  canBookmark
+  canBookmark,
+  isLoggedIn,
 }: BookmarkButtonProps) => {
   const router = useRouter();
 
   const [isSaved, setIsSaved] = useState(initialSaved);
   const [loading, setLoading] = useState(false);
 
+  const redirectToLogin = () => {
+    router.push(
+      `/sign-in?callbackUrl=${encodeURIComponent(`/property/${propertyId}`)}`,
+    );
+  };
+
   const handleBookmark = async () => {
-    if(!canBookmark) return;
+    if (!isLoggedIn) {
+      redirectToLogin();
+      return;
+    }
+
+    if (!canBookmark) {
+      toast.error("You cannot bookmark your own property");
+      return;
+    }
 
     const previousState = isSaved;
 
@@ -38,15 +51,23 @@ const BookmarkButton = ({
     try {
       const result = await toggleBookmark(propertyId);
 
-      toast.success(result?.message || "Updated bookmark");
-    } catch (error: any) {
-      // rollback
-      setIsSaved(previousState);
+      if (!result.success) {
+        // rollback optimistic update
+        setIsSaved(previousState);
 
-      if (error?.message === "Unauthorized access") {
-        router.push("/sign-in");
+        if (result.code === "UNAUTHORIZED") {
+          redirectToLogin();
+          return;
+        }
+
+        toast.error(result.message);
         return;
       }
+
+      toast.success(result.message);
+    } catch (error) {
+      // rollback optimistic update
+      setIsSaved(previousState);
 
       toast.error("Failed to update bookmark");
       console.error(error);
@@ -55,7 +76,9 @@ const BookmarkButton = ({
     }
   };
 
-  if(!canBookmark) return null
+  if (isLoggedIn && !canBookmark) {
+    return null;
+  }
 
   return (
     <Button
@@ -64,9 +87,7 @@ const BookmarkButton = ({
       className="p-6 bg-white text-black hover:text-white"
     >
       <Bookmark
-        className={`transition text-black ${
-          isSaved ? "fill-black" : ""
-        }`}
+        className={`transition text-black ${isSaved ? "fill-black" : ""}`}
       />
 
       {isSaved ? "Saved" : "Save"}

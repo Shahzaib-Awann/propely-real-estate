@@ -561,6 +561,7 @@ export const getPostDetailsById = async (
         id: usersTable.id,
         avatar: usersTable.avatar,
         name: usersTable.name,
+        username: usersTable.username,
         email: usersTable.email,
       })
       .from(usersTable)
@@ -577,8 +578,9 @@ export const getPostDetailsById = async (
       : [defaultAppSettings.placeholderPostImage];
 
   // Permissions
-  const isOwner = !!userId && post.sellerId === userId;
   const isSaved = !!post.savedId;
+  const isLoggedIn = !!userId;
+  const isOwner = isLoggedIn && post.sellerId === userId;
 
   return {
     id: post.id,
@@ -622,7 +624,7 @@ export const getPostDetailsById = async (
     isSaved,
 
     permissions: {
-      canBookmark: !isOwner,
+      canBookmark: isLoggedIn && !isOwner,
       canEdit: isOwner,
       canDelete: isOwner,
     },

@@ -3,11 +3,12 @@
 import { postsTable, postImagesTable, savedPostsTable } from "@/lib/db/schema";
 import { and, eq, gte, lte, like, sql, desc, asc, inArray } from "drizzle-orm";
 import { db } from "../db/connection";
-import { ListPropertyInterface, PropertiesResponse } from "../types/propely.type";
+import {
+  ListPropertyInterface,
+  PropertiesResponse,
+} from "../types/propely.type";
 import { defaultAppSettings } from "../constants";
 import { auth } from "@/auth";
-
-
 
 /**
  * === Fetch paginated property listings with optional filters. ===
@@ -37,13 +38,10 @@ export const getProperties = async (
   minPrice: string | undefined,
   maxPrice: string | undefined,
   property: string | undefined,
-  bedroom: number | undefined
+  bedroom: number | undefined,
 ): Promise<PropertiesResponse> => {
-
   const session = await auth();
-  const viewerUserId = session?.user?.id
-    ? Number(session.user.id)
-    : null;
+  const viewerUserId = session?.user?.id ? Number(session.user.id) : null;
 
   // Ensure pagination values are always valid
   const safePage = Math.max(page, 1);
@@ -66,16 +64,26 @@ export const getProperties = async (
   // Filter by listing type (buy | rent)
   if (type) {
     const t = type.toLowerCase().trim();
-    if (['buy', 'rent'].includes(t)) {
-      conditions.push(eq(postsTable.listingType, t as typeof postsTable.listingType.enumValues[number]));
+    if (["buy", "rent"].includes(t)) {
+      conditions.push(
+        eq(
+          postsTable.listingType,
+          t as (typeof postsTable.listingType.enumValues)[number],
+        ),
+      );
     }
   }
 
   // Filter by property type (apartment, house, etc.)
   if (property) {
     const p = property.toLowerCase().trim();
-    if (['apartment', 'house', 'condo', 'land'].includes(p)) {
-      conditions.push(eq(postsTable.propertyType, p as typeof postsTable.propertyType.enumValues[number]));
+    if (["apartment", "house", "condo", "land"].includes(p)) {
+      conditions.push(
+        eq(
+          postsTable.propertyType,
+          p as (typeof postsTable.propertyType.enumValues)[number],
+        ),
+      );
     }
   }
 
@@ -116,47 +124,47 @@ export const getProperties = async (
     .limit(safeLimit)
     .offset(offset);
 
-    const postIds = items.map((i) => i.id);
+  const postIds = items.map((i) => i.id);
 
-    // 2) Fetch FIFO images for those posts
+  // 2) Fetch FIFO images for those posts
   const images = postIds.length
-  ? await db
-      .select({
-        postId: postImagesTable.postId,
-        url: postImagesTable.imageUrl,
-      })
-      .from(postImagesTable)
-      .where(inArray(postImagesTable.postId, postIds))
-      .orderBy(postImagesTable.id) // FIFO
-  : [];
+    ? await db
+        .select({
+          postId: postImagesTable.postId,
+          url: postImagesTable.imageUrl,
+        })
+        .from(postImagesTable)
+        .where(inArray(postImagesTable.postId, postIds))
+        .orderBy(postImagesTable.id) // FIFO
+    : [];
 
-// Build a map: postId -> first image
-const imageMap = new Map<string, string>();
-for (const img of images) {
-  if (img.url && !imageMap.has(img.postId)) {
-    imageMap.set(img.postId, img.url);
+  // Build a map: postId -> first image
+  const imageMap = new Map<string, string>();
+  for (const img of images) {
+    if (img.url && !imageMap.has(img.postId)) {
+      imageMap.set(img.postId, img.url);
+    }
   }
-}
 
   // Saved Posts (Bookmarks)
 
-let savedPostSet = new Set<string>();
+  let savedPostSet = new Set<string>();
 
-if (viewerUserId && postIds.length > 0) {
-  const saved = await db
-    .select({ postId: savedPostsTable.postId })
-    .from(savedPostsTable)
-    .where(
-      and(
-        eq(savedPostsTable.userId, viewerUserId),
-        inArray(savedPostsTable.postId, postIds)
-      )
-    );
+  if (viewerUserId && postIds.length > 0) {
+    const saved = await db
+      .select({ postId: savedPostsTable.postId })
+      .from(savedPostsTable)
+      .where(
+        and(
+          eq(savedPostsTable.userId, viewerUserId),
+          inArray(savedPostsTable.postId, postIds),
+        ),
+      );
 
-  savedPostSet = new Set(saved.map((s) => s.postId));
-}
+    savedPostSet = new Set(saved.map((s) => s.postId));
+  }
 
-// 3) Attach image (or fallback)
+  // 3) Attach image (or fallback)
   const normalizedItems = items.map((item) => {
     const isOwner = viewerUserId === item.sellerId;
 
@@ -198,8 +206,6 @@ if (viewerUserId && postIds.length > 0) {
   };
 };
 
-
-
 /**
  * === Fetch a list of properties for a specific user. ===
  *
@@ -213,7 +219,6 @@ if (viewerUserId && postIds.length > 0) {
 export const getPropertiesByUserId = async (
   userId: number,
 ): Promise<ListPropertyInterface[]> => {
-
   // Fetch properties
   const items = await db
     .select({
@@ -269,8 +274,8 @@ export const getPropertiesByUserId = async (
       .where(
         and(
           inArray(savedPostsTable.postId, postIds),
-          eq(savedPostsTable.userId, userId)
-        )
+          eq(savedPostsTable.userId, userId),
+        ),
       );
 
     savedPostSet = new Set(saved.map((s) => s.postId));
@@ -295,11 +300,10 @@ export const getPropertiesByUserId = async (
     };
   });
 
-  console.log(JSON.stringify(normalizedItems, null, 4))
+  console.log(JSON.stringify(normalizedItems, null, 4));
 
   return normalizedItems;
 };
-
 
 /**
  * === Fetch all saved (bookmarked) properties for a specific user ===
@@ -313,7 +317,6 @@ export const getPropertiesByUserId = async (
 export const getSavedPropertiesByUserId = async (
   userId: number,
 ): Promise<ListPropertyInterface[]> => {
-
   /**
    * 1) Get saved post IDs for this user
    */
@@ -392,19 +395,29 @@ export const getSavedPropertiesByUserId = async (
   return normalizedItems;
 };
 
-
-
-export async function toggleBookmark(postId: string): Promise<{ success: boolean, message: string }> {
-
+export async function toggleBookmark(
+  postId: string,
+): Promise<{ success: boolean; code?: string; message: string }> {
   const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized access");
+  if (!session?.user?.id) {
+    return {
+      success: false,
+      code: "UNAUTHORIZED",
+      message: "Please sign in to save properties",
+    };
+  }
 
   const userId = Number(session.user.id);
 
-  const [existing] = await db.select().from(savedPostsTable).where(and(
-      eq(savedPostsTable.userId, userId),
-      eq(savedPostsTable.postId, postId)
-    ));
+  const [existing] = await db
+    .select()
+    .from(savedPostsTable)
+    .where(
+      and(
+        eq(savedPostsTable.userId, userId),
+        eq(savedPostsTable.postId, postId),
+      ),
+    );
 
   // Remove the Bookmark
   if (existing) {
@@ -413,8 +426,8 @@ export async function toggleBookmark(postId: string): Promise<{ success: boolean
       .where(
         and(
           eq(savedPostsTable.userId, userId),
-          eq(savedPostsTable.postId, postId)
-        )
+          eq(savedPostsTable.postId, postId),
+        ),
       );
 
     return { success: true, message: "Property removed from saved list" };
