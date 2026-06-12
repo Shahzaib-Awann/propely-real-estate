@@ -1,4 +1,4 @@
-import { int, mysqlTable, varchar, text, mysqlEnum, timestamp, decimal, char, json } from 'drizzle-orm/mysql-core';
+import { int, mysqlTable, varchar, text, mysqlEnum, timestamp, decimal, char, json, boolean } from 'drizzle-orm/mysql-core';
 
 
 
@@ -98,4 +98,33 @@ export const savedPostsTable = mysqlTable('saved_posts', {
   id: int('id').primaryKey().autoincrement(),
   userId: int('user_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
   postId: char('post_id', { length: 36 }).notNull().references(() => postsTable.id, { onDelete: 'cascade' }),
+});
+
+// Conversations Table
+export const conversationsTable = mysqlTable("conversations", {
+  id: char("id", { length: 36 }).primaryKey(),
+
+  postId: char("post_id", { length: 36 }).notNull().references(() => postsTable.id, { onDelete: "cascade" }),
+  buyerId: int("buyer_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  sellerId: int("seller_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+
+  lastMessageAt: timestamp("last_message_at", { mode: "string" }),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).onUpdateNow(),
+});
+
+// Messages Table
+export const messagesTable = mysqlTable("messages", {
+  id: char("id", { length: 36 }).primaryKey(),
+
+  conversationId: char("conversation_id", { length: 36 }).notNull().references(() => conversationsTable.id, { onDelete: "cascade" }),
+  senderId: int("sender_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+
+  message: text("message").notNull(),
+
+  seenAt: timestamp("seen_at", { mode: "string" }),
+
+  isDeleted: boolean("is_deleted").default(false).notNull(),
+  deletedAt: timestamp("deleted_at", { mode: "string" }),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
 });

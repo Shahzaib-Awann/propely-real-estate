@@ -129,7 +129,7 @@ export default async function ViewProperty({
 
   const chatHref = post.sellerInfo?.id
     ? {
-        pathname: "/chats",
+        pathname: "/chat",
         query: {
           messageTo: post.sellerInfo.id,
           property: post.id,
@@ -138,7 +138,7 @@ export default async function ViewProperty({
     : null;
 
   const signInHref = `/sign-in?callbackUrl=${encodeURIComponent(
-    `/chats?messageTo=${post.sellerInfo?.id}&propertyId=${post.id}`,
+    `/chat?messageTo=${post.sellerInfo?.id}&propertyId=${post.id}`,
   )}`;
 
   return (
