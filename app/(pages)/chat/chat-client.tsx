@@ -1,4 +1,4 @@
-"use client";
+// @/app/(pages)/chat/chat-client.tsx
 
 import ConversationList from "@/components/pages/chat/conversation-list";
 import ConversationView from "@/components/pages/chat/conversation-view";
@@ -6,10 +6,12 @@ import EmptyState from "@/components/pages/chat/empty-state";
 
 interface ChatClientProps {
   activeConversationId?: string;
+  userId: number;
 }
 
 export default function ChatClient({
   activeConversationId,
+  userId
 }: ChatClientProps) {
   return (
     <main className="h-[calc(100vh-80px)] flex">
@@ -22,7 +24,7 @@ export default function ChatClient({
           ${activeConversationId ? "hidden lg:block" : ""}
         `}
       >
-        <ConversationList />
+        <ConversationList userId={userId} activeConversationId={activeConversationId} />
       </aside>
 
       {/* Right Content */}
@@ -35,6 +37,7 @@ export default function ChatClient({
         {activeConversationId ? (
           <ConversationView
             conversationId={activeConversationId}
+            userId={userId}
           />
         ) : (
           <EmptyState />

@@ -1,3 +1,5 @@
+// @/components/pages/chat/empty-state.tsx
+
 export default function EmptyState() {
   return (
     <div className="flex flex-1 items-center justify-center">

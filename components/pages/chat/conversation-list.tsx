@@ -1,21 +1,18 @@
+// @/components/pages/chat/conversation-list.tsx
+
+import { getUserConversations } from "@/lib/actions/chat.action";
+import { formatLastMessageTime } from "@/lib/utils/general";
 import Link from "next/link";
 
-const conversations = [
-  {
-    id: "conv-1",
-    seller: "Ahmed Khan",
-    property: "House DHA Karachi",
-    lastMessage: "Still available?",
-  },
-  {
-    id: "conv-2",
-    seller: "Bilal Ahmed",
-    property: "Apartment Clifton",
-    lastMessage: "Can I visit tomorrow?",
-  },
-];
+interface ConversationListProps {
+  userId: number;
+  activeConversationId?: string;
+}
 
-export default function ConversationList() {
+const ConversationList = async ({userId, activeConversationId}: ConversationListProps) => {
+
+  const conversations = await getUserConversations(Number(userId))
+
   return (
     <div className="h-full flex flex-col">
       <div className="border-b p-4">
@@ -25,26 +22,50 @@ export default function ConversationList() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {conversations.map((conversation) => (
-          <Link
-            key={conversation.id}
-            href={`/chat/${conversation.id}`}
-            className="block border-b p-4 hover:bg-muted"
-          >
-            <h3 className="font-semibold">
-              {conversation.seller}
-            </h3>
+        {conversations.map((conversation) => {
+          const isActive =
+            activeConversationId === conversation.id;
 
-            <p className="text-sm text-muted-foreground">
-              {conversation.property}
-            </p>
+          return (
+            <Link
+              key={conversation.id}
+              href={`/chat/${conversation.id}`}
+              className={`block border-b p-4 transition ${
+                isActive ? "bg-muted" : "hover:bg-muted"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">
+                  {conversation.otherUserName}
+                </h3>
 
-            <p className="text-sm truncate">
-              {conversation.lastMessage}
-            </p>
-          </Link>
-        ))}
+                <span className="text-xs text-muted-foreground">
+                  {formatLastMessageTime(conversation.lastMessageAt!)}
+                </span>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                {conversation.propertyTitle}
+              </p>
+
+              <div className="flex items-center justify-between">
+                <p className="text-sm truncate max-w-[80%]">
+                  {conversation.lastMessage}
+                </p>
+
+                {/* Unread badge */}
+                {conversation.unreadCount > 0 && (
+                  <span className="ml-2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
+                    {conversation.unreadCount}
+                  </span>
+                )}
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
 }
+
+export default ConversationList;

@@ -92,7 +92,7 @@ export default async function Navbar() {
 
               {/* Desktop: show name + profile button */}
               <div className="flex items-center gap-4 font-semibold">
-                <Link href="/chats">
+                <Link href="/chat">
                   <Button className="px-5 h-12 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/80 transition-colors font-lato relative">
                     <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs shadow-sm">
                       3

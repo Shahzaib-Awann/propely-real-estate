@@ -4,7 +4,6 @@ import Image from "next/image";
 import { Pencil, Plus } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { defaultAppSettings } from "@/lib/constants";
 import Link from "next/link";
 import LogoutUser from "@/components/pages/profile/logout-user";
 import { getUserById } from "@/lib/actions/user.action";

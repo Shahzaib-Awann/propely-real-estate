@@ -1,3 +1,6 @@
+// @/app/(pages)/chat/[conversationId]/page.tsx
+
+import { auth } from "@/auth";
 import ChatClient from "../chat-client";
 
 interface PageProps {
@@ -11,9 +14,13 @@ export default async function ConversationPage({
 }: PageProps) {
   const { conversationId } = await params;
 
+  const session = await auth()
+  const userId = session?.user?.id;
+
   return (
     <ChatClient
       activeConversationId={conversationId}
+      userId={Number(userId)}
     />
   );
 }

@@ -300,8 +300,6 @@ export const getPropertiesByUserId = async (
     };
   });
 
-  console.log(JSON.stringify(normalizedItems, null, 4));
-
   return normalizedItems;
 };
 

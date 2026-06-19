@@ -1,5 +1,10 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import {
+  isToday,
+  isYesterday,
+  format,
+} from "date-fns";
 
 
 
@@ -100,3 +105,48 @@ export const safeImage = (src?: string | null) => {
 
   return "/images/default-fallback-image.png";
 };
+
+/**
+ * === Format last message time ===
+ *
+ * Formats the last message time into a human-readable string (e.g., "now", "2m", "3h", "Yesterday", "5d").
+ *
+ * @param {string} dateString - The date string of the last message (e.g., "2026-06-19 13:08:43").
+ * @returns {string} - The formatted time string.
+ */
+export function formatLastMessageTime(dateString: string) {
+
+  if (!dateString) {
+    return "";
+  }
+
+  const date = new Date(dateString.replace(" ", "T") + "Z");
+  const now = new Date();
+
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "now";
+  if (diffMins < 60) return `${diffMins}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays}d`;
+
+  return date.toLocaleDateString();
+}
+
+export function getDateLabel(dateString: string) {
+  const date = new Date(dateString);
+
+  if (isToday(date)) {
+    return "Today";
+  }
+
+  if (isYesterday(date)) {
+    return "Yesterday";
+  }
+
+  return format(date, "MMM d, yyyy");
+}
