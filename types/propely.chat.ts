@@ -14,8 +14,10 @@ export interface ConversationListItem {
   unreadCount: number;
 }
 
-export interface ChatMessage {
+export interface RealtimeMessage {
   id: string;
+
+  conversationId: string;
 
   senderId: number;
 

@@ -4,6 +4,7 @@ import {
   isToday,
   isYesterday,
   format,
+  isValid,
 } from "date-fns";
 
 
@@ -137,16 +138,52 @@ export function formatLastMessageTime(dateString: string) {
   return date.toLocaleDateString();
 }
 
-export function getDateLabel(dateString: string) {
-  const date = new Date(dateString);
+export function formatDateFns(
+  dateString?: string | null,
+  type: "time"
+  | "date"
+  | "full"
+  | "smart" = "smart"
+) {
+  if (!dateString) return "";
 
-  if (isToday(date)) {
-    return "Today";
+  // Fix MySQL format: "2026-06-21 22:00:16" → ISO compatible
+  const date = new Date(
+    dateString.replace(" ", "T")
+  );
+
+  if (!isValid(date)) return "";
+
+  switch (type) {
+    /**
+     * ⏰ 09:45 PM
+     */
+    case "time":
+      return format(date, "hh:mm a");
+
+    /**
+     * 📅 Jun 21, 2026
+     */
+    case "date":
+      return format(date, "MMM d, yyyy");
+
+    /**
+     * 📅⏰ Jun 21, 2026 • 09:45 PM
+     */
+    case "full":
+      return `${format(
+        date,
+        "MMM d, yyyy"
+      )} • ${format(date, "hh:mm a")}`;
+
+    /**
+     * 💬 Smart chat format:
+     * Today / Yesterday / Jun 21, 2026
+     */
+    case "smart":
+    default:
+      if (isToday(date)) return "Today";
+      if (isYesterday(date)) return "Yesterday";
+      return format(date, "MMM d, yyyy");
   }
-
-  if (isYesterday(date)) {
-    return "Yesterday";
-  }
-
-  return format(date, "MMM d, yyyy");
 }

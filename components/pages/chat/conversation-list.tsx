@@ -1,17 +1,99 @@
+"use client";
+
+import { socket } from "@/lib/socket";
+import { SOCKET_EVENTS } from "@/lib/socket-events";
 // @/components/pages/chat/conversation-list.tsx
 
-import { getUserConversations } from "@/lib/actions/chat.action";
 import { formatLastMessageTime } from "@/lib/utils/general";
+import { ConversationListItem, RealtimeMessage } from "@/types/propely.chat";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 interface ConversationListProps {
   userId: number;
   activeConversationId?: string;
+  conversations: ConversationListItem[];
 }
 
-const ConversationList = async ({userId, activeConversationId}: ConversationListProps) => {
+const ConversationList = ({userId, activeConversationId, conversations}: ConversationListProps) => {
 
-  const conversations = await getUserConversations(Number(userId))
+  const [items, setItems] = useState(conversations);
+
+  useEffect(() => {
+  setItems(conversations);
+}, [conversations]);
+
+useEffect(() => {
+  const handleMessageSeen = ({
+    conversationId,
+  }: {
+    conversationId: string;
+  }) => {
+    setItems((prev) =>
+      prev.map((conversation) => {
+        if (conversation.id !== conversationId) {
+          return conversation;
+        }
+
+        return {
+          ...conversation,
+          unreadCount: 0,
+        };
+      })
+    );
+  };
+
+  socket.on(
+    SOCKET_EVENTS.MESSAGE_SEEN,
+    handleMessageSeen
+  );
+
+  return () => {
+    socket.off(
+      SOCKET_EVENTS.MESSAGE_SEEN,
+      handleMessageSeen
+    );
+  };
+}, []);
+
+useEffect(() => {
+  const handleNewMessage = (message: RealtimeMessage) => {
+    setItems((prev) => {
+      const updated = prev.map((conversation) => {
+        if (conversation.id !== message.conversationId) {
+          return conversation;
+        }
+
+        const isActive =
+          activeConversationId === conversation.id;
+
+        return {
+          ...conversation,
+          lastMessage: message.message,
+          lastMessageAt: message.createdAt,
+
+          // 🔥 IMPORTANT FIX
+          unreadCount: isActive
+            ? 0
+            : (conversation.unreadCount ?? 0) + 1,
+        };
+      });
+
+      // IMPORTANT: sort AFTER mapping
+      return [...updated].sort(
+        (a, b) =>
+          new Date(b.lastMessageAt ?? 0).getTime() -
+          new Date(a.lastMessageAt ?? 0).getTime()
+      );
+    });
+  };
+
+  socket.on(SOCKET_EVENTS.NEW_MESSAGE, handleNewMessage);
+
+  return () => {
+    socket.off(SOCKET_EVENTS.NEW_MESSAGE, handleNewMessage);
+  };
+}, [activeConversationId]);
 
   return (
     <div className="h-full flex flex-col">
@@ -22,7 +104,7 @@ const ConversationList = async ({userId, activeConversationId}: ConversationList
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {conversations.map((conversation) => {
+        {items?.map((conversation) => {
           const isActive =
             activeConversationId === conversation.id;
 

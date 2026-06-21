@@ -12,7 +12,7 @@ import {
   messagesTable,
 } from "../db/schema";
 
-import { ConversationListItem } from "@/types/chat";
+import { ConversationListItem } from "@/types/propely.chat";
 
 export async function getUserConversations(
   userId: number
@@ -245,6 +245,7 @@ export async function getConversationMessages({
   const messages = await db
     .select({
       id: messagesTable.id,
+      conversationId: messagesTable.conversationId,
       senderId: messagesTable.senderId,
       message: messagesTable.message,
       seenAt: messagesTable.seenAt,
@@ -318,8 +319,9 @@ export async function sendMessage({
       })
       .where(eq(conversationsTable.id, conversationId));
 
-    const createdMessage = await tx.select({
+    const [createdMessage] = await tx.select({
       id: messagesTable.id,
+      conversationId: messagesTable.conversationId,
       senderId: messagesTable.senderId,
       message: messagesTable.message,
       seenAt: messagesTable.seenAt,
