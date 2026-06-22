@@ -1,7 +1,12 @@
-// lib/socket.ts
+import { io, Socket } from "socket.io-client";
 
-import { io } from "socket.io-client";
+let socket: Socket;
 
-export const socket = io("http://localhost:3000", {
-  autoConnect: false,
-});
+if (typeof window !== "undefined") {
+  socket = io(process.env.NEXT_PUBLIC_APP_URL!, {
+    transports: ["websocket"],
+    autoConnect: true,
+  });
+}
+
+export { socket };

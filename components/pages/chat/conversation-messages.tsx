@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Ban, Check, CheckCheck, Send } from "lucide-react";
 
-import { sendMessage } from "@/lib/actions/chat.action";
+import { markConversationAsSeen, sendMessage } from "@/lib/actions/chat.action";
 import { formatDateFns } from "@/lib/utils/general";
 import { socket } from "@/lib/socket";
 import { SOCKET_EVENTS } from "@/lib/socket-events";
@@ -35,43 +35,51 @@ export default function ConversationMessages({
     });
   }, [chatMessages]);
 
+  useEffect(() => {
+  setChatMessages(messages);
+}, [messages]);
+
+useEffect(() => {
+  socket.on("connect", () => {
+    console.log("SOCKET CONNECTED:", socket.id);
+  });
+
+  socket.onAny((event, data) => {
+    console.log("SOCKET EVENT:", event, data);
+  });
+
+  return () => {
+    socket.off("connect");
+    socket.offAny();
+  };
+}, []);
+
 
   useEffect(() => {
-  const handleNewMessage = (
-    message: RealtimeMessage
-  ) => {
+  if (!socket.connected) {
+    socket.connect();
+  }
 
+  const handleNewMessage = (message: RealtimeMessage) => {
     setChatMessages((prev) => {
-
-      const exists = prev.some(
-        (m) => m.id === message.id
-      );
-
-      if (exists) {
-        return prev;
-      }
-
+      const exists = prev.some((m) => m.id === message.id);
+      if (exists) return prev;
       return [...prev, message];
     });
 
     if (message.senderId !== userId) {
+      void markConversationAsSeen(conversationId, userId);
+
       socket.emit(SOCKET_EVENTS.MESSAGE_SEEN, {
         conversationId,
       });
     }
   };
 
-
-  socket.on(
-    SOCKET_EVENTS.NEW_MESSAGE,
-    handleNewMessage
-  );
+  socket.on(SOCKET_EVENTS.NEW_MESSAGE, handleNewMessage);
 
   return () => {
-    socket.off(
-      SOCKET_EVENTS.NEW_MESSAGE,
-      handleNewMessage
-    );
+    socket.off(SOCKET_EVENTS.NEW_MESSAGE, handleNewMessage);
   };
 }, [conversationId, userId]);
 
@@ -124,7 +132,7 @@ useEffect(() => {
     if (!savedMessage) return;
 
     socket.emit(
-      SOCKET_EVENTS.NEW_MESSAGE,
+      SOCKET_EVENTS.SEND_MESSAGE,
       savedMessage
     );
 

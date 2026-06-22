@@ -1,5 +1,7 @@
 "use server";
 
+// @/lib/actions/chat.action.ts
+
 import { and, asc, desc, eq, isNull, ne, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/mysql-core";
 import { v6 as uuidv6 } from 'uuid';
@@ -319,17 +321,37 @@ export async function sendMessage({
       })
       .where(eq(conversationsTable.id, conversationId));
 
-    const [createdMessage] = await tx.select({
-      id: messagesTable.id,
-      conversationId: messagesTable.conversationId,
-      senderId: messagesTable.senderId,
-      message: messagesTable.message,
-      seenAt: messagesTable.seenAt,
-      isDeleted: messagesTable.isDeleted,
-      createdAt: messagesTable.createdAt,
-    }).from(messagesTable).where(eq(messagesTable.id, messageId));
+    const [createdMessage] = await tx
+  .select({
+    id: messagesTable.id,
+    conversationId: messagesTable.conversationId,
+    senderId: messagesTable.senderId,
 
-    return createdMessage;
+    // derive receiver properly from conversation
+    buyerId: conversationsTable.buyerId,
+    sellerId: conversationsTable.sellerId,
+
+    message: messagesTable.message,
+    seenAt: messagesTable.seenAt,
+    isDeleted: messagesTable.isDeleted,
+    createdAt: messagesTable.createdAt,
+  })
+  .from(messagesTable)
+  .innerJoin(
+    conversationsTable,
+    eq(messagesTable.conversationId, conversationsTable.id)
+  )
+  .where(eq(messagesTable.id, messageId));
+
+  const receiverId =
+  createdMessage.senderId === createdMessage.buyerId
+    ? createdMessage.sellerId
+    : createdMessage.buyerId;
+
+    return {
+  ...createdMessage,
+  receiverId,
+};
   });
 }
 
@@ -337,7 +359,7 @@ export async function sendMessage({
 
 export async function markConversationAsSeen({
   conversationId,
-  viewerId,
+  viewerId
 }: {
   conversationId: string;
   viewerId: number;

@@ -57,29 +57,25 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  const handleNewMessage = (message: RealtimeMessage) => {
+  const handleSidebarUpdate = (payload: any) => {
     setItems((prev) => {
       const updated = prev.map((conversation) => {
-        if (conversation.id !== message.conversationId) {
+        if (conversation.id !== payload.conversationId) {
           return conversation;
         }
 
-        const isActive =
-          activeConversationId === conversation.id;
+        const isActive = activeConversationId === conversation.id;
 
         return {
           ...conversation,
-          lastMessage: message.message,
-          lastMessageAt: message.createdAt,
-
-          // 🔥 IMPORTANT FIX
+          lastMessage: payload.lastMessage,
+          lastMessageAt: payload.lastMessageAt,
           unreadCount: isActive
             ? 0
             : (conversation.unreadCount ?? 0) + 1,
         };
       });
 
-      // IMPORTANT: sort AFTER mapping
       return [...updated].sort(
         (a, b) =>
           new Date(b.lastMessageAt ?? 0).getTime() -
@@ -88,10 +84,10 @@ useEffect(() => {
     });
   };
 
-  socket.on(SOCKET_EVENTS.NEW_MESSAGE, handleNewMessage);
+  socket.on(SOCKET_EVENTS.SIDEBAR_UPDATE, handleSidebarUpdate);
 
   return () => {
-    socket.off(SOCKET_EVENTS.NEW_MESSAGE, handleNewMessage);
+    socket.off(SOCKET_EVENTS.SIDEBAR_UPDATE, handleSidebarUpdate);
   };
 }, [activeConversationId]);
 

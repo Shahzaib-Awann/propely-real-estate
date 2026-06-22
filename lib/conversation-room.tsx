@@ -4,6 +4,7 @@
 
 import { useEffect } from "react";
 import { socket } from "./socket";
+import { SOCKET_EVENTS } from "./socket-events";
 
 interface Props {
   conversationId: string;
@@ -14,10 +15,10 @@ export default function ConversationRoom({
 }: Props) {
 
   useEffect(() => {
-    socket.emit("join-conversation", conversationId);
+    socket.emit(SOCKET_EVENTS.JOIN_CONVERSATION, conversationId);
 
     return () => {
-      socket.emit("leave-conversation", conversationId);
+      socket.emit(SOCKET_EVENTS.LEAVE_CONVERSATION, conversationId);
     };
   }, [conversationId]);
 

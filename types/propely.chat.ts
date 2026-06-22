@@ -16,16 +16,16 @@ export interface ConversationListItem {
 
 export interface RealtimeMessage {
   id: string;
-
   conversationId: string;
-
   senderId: number;
+  receiverId: number;
+
+  buyerId: number;
+  sellerId: number;
 
   message: string;
-
   seenAt: string | null;
-
   isDeleted: boolean;
-
   createdAt: string;
+
 }
