@@ -44,15 +44,24 @@ useEffect(() => {
     console.log("SOCKET CONNECTED:", socket.id);
   });
 
-  socket.onAny((event, data) => {
-    console.log("SOCKET EVENT:", event, data);
-  });
-
   return () => {
     socket.off("connect");
-    socket.offAny();
   };
 }, []);
+
+useEffect(() => {
+  if (!conversationId) return;
+
+  if (!socket.connected) {
+    socket.connect();
+  }
+
+  socket.emit(SOCKET_EVENTS.MESSAGE_SEEN, {
+    conversationId,
+    viewerId: userId,
+  });
+
+}, [conversationId]);
 
 
   useEffect(() => {
@@ -68,7 +77,10 @@ useEffect(() => {
     });
 
     if (message.senderId !== userId) {
-      void markConversationAsSeen(conversationId, userId);
+      void markConversationAsSeen({
+  conversationId,
+  viewerId: userId,
+});
 
       socket.emit(SOCKET_EVENTS.MESSAGE_SEEN, {
         conversationId,

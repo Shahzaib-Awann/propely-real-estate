@@ -20,6 +20,14 @@ const ConversationList = ({userId, activeConversationId, conversations}: Convers
   const [items, setItems] = useState(conversations);
 
   useEffect(() => {
+    console.log(
+    "CONVERSATIONS PROP UPDATED",
+    conversations.map((c) => ({
+      id: c.id,
+      unreadCount: c.unreadCount,
+      lastMessage: c.lastMessage,
+    }))
+  );
   setItems(conversations);
 }, [conversations]);
 
@@ -58,6 +66,7 @@ useEffect(() => {
 
 useEffect(() => {
   const handleSidebarUpdate = (payload: any) => {
+
     setItems((prev) => {
       const updated = prev.map((conversation) => {
         if (conversation.id !== payload.conversationId) {

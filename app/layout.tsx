@@ -35,7 +35,7 @@ export default async function RootLayout({
 }>) {
 
   const session = await auth();
-  const userId = Number(session?.user?.id);
+  const userId = session?.user?.id;
 
   return (
     <html lang="en">
@@ -43,7 +43,8 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${lato.variable} antialiased`}
       >
         <SocketProvider />
-        {userId && <UserSocketMount userId={userId} />}
+        {userId && <UserSocketMount userId={Number(userId)} />}
+
         {/* Client component handles all query-to-toast logic */}
         <QueryToastHandler />
 

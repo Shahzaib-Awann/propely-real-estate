@@ -2,6 +2,7 @@ import { createServer } from "http";
 import next from "next";
 import { Server } from "socket.io";
 import { SOCKET_EVENTS } from "./lib/socket-events";
+import { markConversationAsSeen } from "./lib/actions/chat.action";
 
 
 const dev = process.env.NODE_ENV !== "production";
@@ -39,30 +40,39 @@ app.prepare().then(() => {
       io.to(room).emit(SOCKET_EVENTS.NEW_MESSAGE, message);
 
       // sidebar update for sender + receiver
-  io.to(`user-${message.senderId}`).emit(
-    SOCKET_EVENTS.SIDEBAR_UPDATE,
-    {
-      conversationId: message.conversationId,
-      message,
-    }
-  );
+  const sidebarPayload = {
+  conversationId: message.conversationId,
+  lastMessage: message.message,
+  lastMessageAt: message.createdAt,
+};
 
-  io.to(`user-${message.receiverId}`).emit(
-    SOCKET_EVENTS.SIDEBAR_UPDATE,
-    {
-      conversationId: message.conversationId,
-      lastMessage: message.message,
-      lastMessageAt: message.createdAt,
-    }
-  );
+io.to(`user-${message.senderId}`).emit(
+  SOCKET_EVENTS.SIDEBAR_UPDATE,
+  sidebarPayload
+);
+
+io.to(`user-${message.receiverId}`).emit(
+  SOCKET_EVENTS.SIDEBAR_UPDATE,
+  sidebarPayload
+);
 
     });
 
-    socket.on(SOCKET_EVENTS.MESSAGE_SEEN, ({ conversationId }) => {
-      io.to(`conversation-${conversationId}`).emit(SOCKET_EVENTS.MESSAGE_SEEN, {
-        conversationId,
-      });
-    });
+    socket.on(SOCKET_EVENTS.MESSAGE_SEEN, async ({ conversationId, viewerId }) => {
+  await markConversationAsSeen({
+    conversationId,
+    viewerId,
+  });
+
+  // notify ALL participants (including sender)
+  io.to(`conversation-${conversationId}`).emit(
+    SOCKET_EVENTS.MESSAGE_SEEN,
+    {
+      conversationId,
+      viewerId,
+    }
+  );
+});
 
     socket.on("disconnect", () => {
       console.log("Disconnected:", socket.id);
