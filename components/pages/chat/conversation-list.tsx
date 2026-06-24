@@ -5,7 +5,7 @@ import { SOCKET_EVENTS } from "@/lib/socket-events";
 // @/components/pages/chat/conversation-list.tsx
 
 import { formatLastMessageTime } from "@/lib/utils/general";
-import { ConversationListItem, RealtimeMessage } from "@/types/propely.chat";
+import { ConversationListItem } from "@/types/propely.chat";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -15,7 +15,7 @@ interface ConversationListProps {
   conversations: ConversationListItem[];
 }
 
-const ConversationList = ({userId, activeConversationId, conversations}: ConversationListProps) => {
+const ConversationList = ({ userId, activeConversationId, conversations }: ConversationListProps) => {
 
   const [items, setItems] = useState(conversations);
 

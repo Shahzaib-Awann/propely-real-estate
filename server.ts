@@ -1,9 +1,10 @@
+import "dotenv/config";
+
 import { createServer } from "http";
 import next from "next";
 import { Server } from "socket.io";
 import { SOCKET_EVENTS } from "./lib/socket-events";
 import { markConversationAsSeen } from "./lib/actions/chat.action";
-
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
