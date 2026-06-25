@@ -38,6 +38,17 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     console.log(`${socket.id} un-registered ${getUserRoom(userId)}`);
   });
 
+  socket.on(SOCKET_EVENTS.TYPING_START, ({ conversationId, userId }: { conversationId: string; userId: number }) => {
+  const room = getConversationRoom(conversationId);
+  // Broadcast to everyone else in the conversation room
+  socket.to(room).emit(SOCKET_EVENTS.TYPING_START, { conversationId, userId });
+});
+
+socket.on(SOCKET_EVENTS.TYPING_STOP, ({ conversationId, userId }: { conversationId: string; userId: number }) => {
+  const room = getConversationRoom(conversationId);
+  socket.to(room).emit(SOCKET_EVENTS.TYPING_STOP, { conversationId, userId });
+});
+
   socket.on(SOCKET_EVENTS.JOIN_CONVERSATION, (conversationId: string) => {
     socket.join(getConversationRoom(conversationId));
 

@@ -29,3 +29,16 @@ export interface RealtimeMessage {
   createdAt: string;
 
 }
+
+export interface ConversationHeader {
+  id: string;
+  property: {
+    id: string;
+    title: string;
+  };
+  otherUser: {
+    id: number;
+    name: string;
+    avatar: string | null;
+  };
+}

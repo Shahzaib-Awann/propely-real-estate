@@ -15,4 +15,7 @@ export const SOCKET_EVENTS = {
 
   ONLINE_PRESENCE: "online-presence",
 
+  TYPING_START: "typing-start", // client -> server -> client
+  TYPING_STOP: "typing-stop",   // client -> server -> client
+
 } as const;

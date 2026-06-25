@@ -19,7 +19,11 @@ interface ConversationListProps {
   conversations: ConversationListItem[];
 }
 
-const ConversationList = ({ userId , activeConversationId, conversations }: ConversationListProps) => {
+const ConversationList = ({
+  userId,
+  activeConversationId,
+  conversations,
+}: ConversationListProps) => {
   const [items, setItems] = useState<ConversationListItem[]>(conversations);
 
   // Keep track of the active ID in a mutable ref to prevent socket listener teardowns
@@ -31,19 +35,25 @@ const ConversationList = ({ userId , activeConversationId, conversations }: Conv
 
   // Combined and permanent real-time socket updates
   useEffect(() => {
-    const handleMessageSeen = ({ conversationId, viewerId }: { conversationId: string; viewerId: number }) => {
-  setItems((prev) =>
-    prev.map((conv) => {
-      if (conv.id === conversationId) {
-        if (Number(viewerId) === Number(userId) && conv.unreadCount > 0) {
-          useChatStore.getState().reduceUnreadCount(conv.unreadCount);
-        }
-        return { ...conv, unreadCount: 0 };
-      }
-      return conv;
-    })
-  );
-};
+    const handleMessageSeen = ({
+      conversationId,
+      viewerId,
+    }: {
+      conversationId: string;
+      viewerId: number;
+    }) => {
+      setItems((prev) =>
+        prev.map((conv) => {
+          if (conv.id === conversationId) {
+            if (Number(viewerId) === Number(userId) && conv.unreadCount > 0) {
+              useChatStore.getState().reduceUnreadCount(conv.unreadCount);
+            }
+            return { ...conv, unreadCount: 0 };
+          }
+          return conv;
+        }),
+      );
+    };
 
     const handleSidebarUpdate = (payload: SideBarUpdatePayload) => {
       setItems((prev) => {
@@ -59,14 +69,14 @@ const ConversationList = ({ userId , activeConversationId, conversations }: Conv
             ...conversation,
             lastMessage: payload.lastMessage,
             lastMessageAt: payload.lastMessageAt,
-            unreadCount: isActive
-              ? 0
-              : (conversation.unreadCount ?? 0) + 1,
+            unreadCount: isActive ? 0 : (conversation.unreadCount ?? 0) + 1,
           };
         });
 
         return [...updated].sort(
-          (a, b) => new Date(b.lastMessageAt ?? 0).getTime() - new Date(a.lastMessageAt ?? 0).getTime()
+          (a, b) =>
+            new Date(b.lastMessageAt ?? 0).getTime() -
+            new Date(a.lastMessageAt ?? 0).getTime(),
         );
       });
     };
@@ -88,21 +98,18 @@ const ConversationList = ({ userId , activeConversationId, conversations }: Conv
 
       <div className="flex-1 overflow-y-auto">
         {items?.map((conversation) => (
-  <ConversationRow
-    key={conversation.id}
-    conversation={conversation}
-    isActive={
-      activeConversationId === conversation.id
-    }
-  />
-))}
+          <ConversationRow
+            key={conversation.id}
+            conversation={conversation}
+            isActive={activeConversationId === conversation.id}
+          />
+        ))}
       </div>
     </div>
   );
 };
 
 export default ConversationList;
-
 
 function ConversationRow({
   conversation,
@@ -111,9 +118,8 @@ function ConversationRow({
   conversation: ConversationListItem;
   isActive: boolean;
 }) {
-
   const isOnline = usePresenceStore((state) =>
-    state.isUserOnline(conversation.otherUserId)
+    state.isUserOnline(conversation.otherUserId),
   );
 
   return (
@@ -122,28 +128,19 @@ function ConversationRow({
       className={`
         flex items-center gap-3 px-4 py-3 group border-b
         transition-all duration-200
-        ${
-          isActive
-            ? "bg-muted"
-            : "hover:bg-muted/60"
-        }
+        ${isActive ? "bg-muted" : "hover:bg-muted/60"}
       `}
     >
       {/* Avatar */}
       <div className="relative shrink-0">
         <Avatar className="h-12 w-12 shadow-sm">
           <AvatarImage
-            src={
-              conversation.otherUserAvatar ??
-              undefined
-            }
+            src={conversation.otherUserAvatar ?? undefined}
             alt={conversation.otherUserName}
             className="group-hover:scale-110 transition-all duration-300"
           />
           <AvatarFallback>
-            {conversation.otherUserName
-              ?.slice(0, 2)
-              .toUpperCase() ?? "GU"}
+            {conversation.otherUserName?.slice(0, 2).toUpperCase() ?? "GU"}
           </AvatarFallback>
         </Avatar>
 
@@ -167,9 +164,7 @@ function ConversationRow({
 
           <span className="shrink-0 text-xs text-muted-foreground">
             {conversation.lastMessageAt
-              ? formatLastMessageTime(
-                  conversation.lastMessageAt
-                )
+              ? formatLastMessageTime(conversation.lastMessageAt)
               : ""}
           </span>
         </div>
@@ -181,9 +176,7 @@ function ConversationRow({
 
           {conversation.unreadCount > 0 && (
             <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-medium text-primary-foreground">
-              {conversation.unreadCount > 99
-                ? "99+"
-                : conversation.unreadCount}
+              {conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}
             </span>
           )}
         </div>

@@ -14,7 +14,7 @@ import {
   messagesTable,
 } from "../db/schema";
 
-import { ConversationListItem, RealtimeMessage } from "@/types/propely.chat";
+import { ConversationHeader, ConversationListItem, RealtimeMessage } from "@/types/propely.chat";
 
 export async function getUserConversations(
   userId: number
@@ -204,7 +204,7 @@ export async function createOrGetConversation({
 }
 
 
-export async function getConversationById(conversationId: string, userId: number) {
+export async function getConversationById(conversationId: string, userId: number): Promise<ConversationHeader | null> {
   const result = await db
     .select({
       id: conversationsTable.id,

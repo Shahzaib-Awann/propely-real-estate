@@ -26,6 +26,8 @@ export default function ConversationMessages({
   const [text, setText] = useState("");
   const [isPending, startTransition] = useTransition();
   const [chatMessages, setChatMessages] = useState<RealtimeMessage[]>(messages);
+  const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
+const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -81,14 +83,51 @@ export default function ConversationMessages({
     }
   };
 
+  const handleTypingStart = (payload: { conversationId: string; userId: number }) => {
+    if (payload.conversationId === conversationId && Number(payload.userId) !== Number(userId)) {
+      setIsOtherUserTyping(true);
+    }
+  };
+
+  const handleTypingStop = (payload: { conversationId: string; userId: number }) => {
+    if (payload.conversationId === conversationId && Number(payload.userId) !== Number(userId)) {
+      setIsOtherUserTyping(false);
+    }
+  };
+
     socket.on(SOCKET_EVENTS.NEW_MESSAGE, handleNewMessage);
     socket.on(SOCKET_EVENTS.MESSAGE_SEEN, handleMessageSeen);
+    socket.on(SOCKET_EVENTS.TYPING_START, handleTypingStart);
+  socket.on(SOCKET_EVENTS.TYPING_STOP, handleTypingStop);
 
     return () => {
       socket.off(SOCKET_EVENTS.NEW_MESSAGE, handleNewMessage);
       socket.off(SOCKET_EVENTS.MESSAGE_SEEN, handleMessageSeen);
+      socket.off(SOCKET_EVENTS.TYPING_START, handleTypingStart);
+    socket.off(SOCKET_EVENTS.TYPING_STOP, handleTypingStop);
     };
   }, [conversationId, userId]);
+
+  // Create a handler function for the input field's onChange event
+const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  setText(e.target.value);
+
+  // 1. If this is the first keystroke, notify the server instantly
+  if (!typingTimeoutRef.current) {
+    socket.emit(SOCKET_EVENTS.TYPING_START, { conversationId, userId });
+  }
+
+  // 2. Clear any existing timeout countdown
+  if (typingTimeoutRef.current) {
+    clearTimeout(typingTimeoutRef.current);
+  }
+
+  // 3. Set a new timeout to declare the user has stopped typing after 2 seconds
+  typingTimeoutRef.current = setTimeout(() => {
+    socket.emit(SOCKET_EVENTS.TYPING_STOP, { conversationId, userId });
+    typingTimeoutRef.current = null;
+  }, 2000);
+};
 
   async function handleSend() {
     if (!text.trim()) return;
@@ -164,18 +203,33 @@ export default function ConversationMessages({
           );
         })}
 
+        {isOtherUserTyping && (
+        <div className="flex justify-start items-center gap-2 text-sm text-muted-foreground transition-all duration-300 animate-pulse">
+          <div className="bg-muted rounded-xl px-4 py-4 flex items-center gap-1">
+            <span className="size-1.5 bg-muted-foreground rounded-full animate-bounce delay-100" />
+            <span className="size-1.5 bg-muted-foreground rounded-full animate-bounce delay-200" />
+            <span className="size-1.5 bg-muted-foreground rounded-full animate-bounce delay-300" />
+          </div>
+        </div>
+      )}
+
         <div ref={messagesEndRef} />
       </div>
       <div className="border-t p-4">
         <div className="flex gap-2">
           <input
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !isPending) {
-                handleSend();
+            if (e.key === "Enter" && !isPending) {
+              if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+                socket.emit(SOCKET_EVENTS.TYPING_STOP, { conversationId, userId });
+                typingTimeoutRef.current = null;
               }
-            }}
+              handleSend();
+            }
+          }}
             placeholder="Type a message..."
             className="flex-1 rounded-md border px-3 py-2"
           />
