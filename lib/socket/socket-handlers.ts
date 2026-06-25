@@ -59,6 +59,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       conversationId: message.conversationId,
       lastMessage: message.message,
       lastMessageAt: message.createdAt,
+      senderId: message.senderId,
     };
 
     io.to(getUserRoom(message.senderId)).emit(

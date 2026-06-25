@@ -8,17 +8,20 @@ import { formatDateFns } from "@/lib/utils/general";
 import { socket } from "@/lib/socket/client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket-events";
 import { RealtimeMessage } from "@/types/propely.chat";
+import { useChatStore } from "@/lib/store/use-chat-store";
 
 interface Props {
   messages: RealtimeMessage[];
   conversationId: string;
   userId: number;
+  unReadMessages: number;
 }
 
 export default function ConversationMessages({
   messages,
   conversationId,
   userId,
+  unReadMessages : unreadCount,
 }: Props) {
   const [text, setText] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -30,6 +33,13 @@ export default function ConversationMessages({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
+
+  useEffect(() => {
+    if (unreadCount > 0) {
+      // Deduct this specific conversation's count from the global badge total
+      useChatStore.getState().reduceUnreadCount(unreadCount);
+    }
+  }, [unreadCount]);
 
   // Consolidated Real-time Socket Event Listeners
   useEffect(() => {

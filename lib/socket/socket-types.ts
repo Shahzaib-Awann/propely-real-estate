@@ -16,4 +16,5 @@ export interface SideBarUpdatePayload {
   conversationId: string;
   lastMessage: string;
   lastMessageAt: string;
+  senderId: number;
 }

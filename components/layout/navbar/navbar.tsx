@@ -10,12 +10,14 @@ import {
   SheetClose,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Menu, MessageCircleMore, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Button } from "../../ui/button";
 import { auth } from "@/auth";
 import { getAvatarFallback } from "@/lib/utils/general";
 import { getUserById } from "@/lib/actions/user.action";
+import ChatBadge from "@/components/pages/chat/chat-badge";
+import { getTotalUnreadMessages } from "@/lib/actions/chat.action";
 
 
 
@@ -31,12 +33,14 @@ const links = [
 export default async function Navbar() {
 
   let user = null;
-
+  let initialUnreadCount = 0;
   // === Authenticate user ===
   const session = await auth()
 
   if (session?.user?.id) {
     user = await getUserById(Number(session.user.id))
+
+    initialUnreadCount = await getTotalUnreadMessages({ userId: Number(session.user.id), scope: "all" })
   }
 
   return (
@@ -94,11 +98,7 @@ export default async function Navbar() {
               <div className="flex items-center gap-4 font-semibold">
                 <Link href="/chat">
                   <Button className="px-5 h-12 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/80 transition-colors font-lato relative">
-                    <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs shadow-sm">
-                      3
-                    </span>
-                    <MessageCircleMore className="md:hidden block" />
-                    <span className="hidden md:block">Chats</span>
+                    <ChatBadge initialCount={initialUnreadCount} />
                   </Button>
                 </Link>
               </div>

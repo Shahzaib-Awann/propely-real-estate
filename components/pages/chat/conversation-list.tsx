@@ -11,6 +11,7 @@ import { ConversationListItem } from "@/types/propely.chat";
 import { SideBarUpdatePayload } from "@/lib/socket/socket-types";
 import { usePresenceStore } from "@/lib/store/use-presence-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useChatStore } from "@/lib/store/use-chat-store";
 
 interface ConversationListProps {
   userId: number;
@@ -30,13 +31,19 @@ const ConversationList = ({ userId , activeConversationId, conversations }: Conv
 
   // Combined and permanent real-time socket updates
   useEffect(() => {
-    const handleMessageSeen = ({ conversationId }: { conversationId: string }) => {
-      setItems((prev) =>
-        prev.map((conv) =>
-          conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
-        )
-      );
-    };
+    const handleMessageSeen = ({ conversationId, viewerId }: { conversationId: string; viewerId: number }) => {
+  setItems((prev) =>
+    prev.map((conv) => {
+      if (conv.id === conversationId) {
+        if (Number(viewerId) === Number(userId) && conv.unreadCount > 0) {
+          useChatStore.getState().reduceUnreadCount(conv.unreadCount);
+        }
+        return { ...conv, unreadCount: 0 };
+      }
+      return conv;
+    })
+  );
+};
 
     const handleSidebarUpdate = (payload: SideBarUpdatePayload) => {
       setItems((prev) => {

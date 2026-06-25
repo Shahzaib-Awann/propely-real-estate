@@ -3,6 +3,7 @@
 import {
   getConversationById,
   getConversationMessages,
+  getTotalUnreadMessages,
   markConversationAsSeen,
 } from "@/lib/actions/chat.action";
 import { ArrowLeft } from "lucide-react";
@@ -19,6 +20,8 @@ export default async function ConversationView({
   userId,
 }: Props) {
   const conversation = await getConversationById(conversationId, userId);
+
+  const unReadMessages = await getTotalUnreadMessages({ conversationId, userId, scope: "single" })
 
   await markConversationAsSeen(conversationId, userId);
 
@@ -46,6 +49,7 @@ export default async function ConversationView({
         messages={messages}
         conversationId={conversationId}
         userId={userId}
+        unReadMessages={unReadMessages}
       />
     </div>
   );

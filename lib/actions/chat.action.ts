@@ -98,6 +98,45 @@ export async function getUserConversations(
   return rows;
 }
 
+export async function getTotalUnreadMessages({
+  userId,
+  conversationId,
+  scope,
+}: {
+  userId: number;
+  conversationId?: string;
+  scope: "all" | "single";
+}): Promise<number> {
+
+  // 1. Build core base conditions
+  const conditions = [
+    or(
+      eq(conversationsTable.buyerId, userId),
+      eq(conversationsTable.sellerId, userId)
+    ),
+    ne(messagesTable.senderId, userId),
+    isNull(messagesTable.seenAt),
+  ];
+
+  // 2. If scope is 'single' and a conversationId is provided, narrow the search
+  if (scope === "single" && conversationId) {
+    conditions.push(eq(messagesTable.conversationId, conversationId));
+  }
+
+  const result = await db
+    .select({
+      count: sql<number>`COUNT(*)`,
+    })
+    .from(messagesTable)
+    .innerJoin(
+      conversationsTable,
+      eq(messagesTable.conversationId, conversationsTable.id)
+    )
+    .where(and(...conditions));
+
+  return Number(result[0]?.count ?? 0);
+}
+
 export async function createOrGetConversation({
   buyerId,
   postId,
