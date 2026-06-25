@@ -9,6 +9,8 @@ import { SOCKET_EVENTS } from "@/lib/socket/socket-events";
 import { formatLastMessageTime } from "@/lib/utils/general";
 import { ConversationListItem } from "@/types/propely.chat";
 import { SideBarUpdatePayload } from "@/lib/socket/socket-types";
+import { usePresenceStore } from "@/lib/store/use-presence-store";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ConversationListProps {
   userId: number;
@@ -78,40 +80,107 @@ const ConversationList = ({ userId , activeConversationId, conversations }: Conv
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {items?.map((conversation) => {
-          const isActive = activeConversationId === conversation.id;
-
-          return (
-            <Link
-              key={conversation.id}
-              href={`/chat/${conversation.id}`}
-              className={`block border-b p-4 transition ${
-                isActive ? "bg-muted" : "hover:bg-muted"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">{conversation.otherUserName}</h3>
-                <span className="text-xs text-muted-foreground">
-                  {conversation.lastMessageAt ? formatLastMessageTime(conversation.lastMessageAt) : ""}
-                </span>
-              </div>
-
-              <p className="text-sm text-muted-foreground">{conversation.propertyTitle}</p>
-
-              <div className="flex items-center justify-between">
-                <p className="text-sm truncate max-w-[80%]">{conversation.lastMessage}</p>
-                {conversation.unreadCount > 0 && (
-                  <span className="ml-2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
-                    {conversation.unreadCount}
-                  </span>
-                )}
-              </div>
-            </Link>
-          );
-        })}
+        {items?.map((conversation) => (
+  <ConversationRow
+    key={conversation.id}
+    conversation={conversation}
+    isActive={
+      activeConversationId === conversation.id
+    }
+  />
+))}
       </div>
     </div>
   );
 };
 
 export default ConversationList;
+
+
+function ConversationRow({
+  conversation,
+  isActive,
+}: {
+  conversation: ConversationListItem;
+  isActive: boolean;
+}) {
+
+  const isOnline = usePresenceStore((state) =>
+    state.isUserOnline(conversation.otherUserId)
+  );
+
+  return (
+    <Link
+      href={`/chat/${conversation.id}`}
+      className={`
+        flex items-center gap-3 px-4 py-3 group border-b
+        transition-all duration-200
+        ${
+          isActive
+            ? "bg-muted"
+            : "hover:bg-muted/60"
+        }
+      `}
+    >
+      {/* Avatar */}
+      <div className="relative shrink-0">
+        <Avatar className="h-12 w-12 shadow-sm">
+          <AvatarImage
+            src={
+              conversation.otherUserAvatar ??
+              undefined
+            }
+            alt={conversation.otherUserName}
+            className="group-hover:scale-110 transition-all duration-300"
+          />
+          <AvatarFallback>
+            {conversation.otherUserName
+              ?.slice(0, 2)
+              .toUpperCase() ?? "GU"}
+          </AvatarFallback>
+        </Avatar>
+
+        {isOnline && (
+          <span className="absolute bottom-0 size-4 transition-all duration-500 right-0 rounded-full border-2 border-background bg-green-500" />
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="truncate font-medium">
+              {conversation.otherUserName}
+            </h3>
+
+            <p className="truncate text-xs text-muted-foreground">
+              {conversation.propertyTitle}
+            </p>
+          </div>
+
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {conversation.lastMessageAt
+              ? formatLastMessageTime(
+                  conversation.lastMessageAt
+                )
+              : ""}
+          </span>
+        </div>
+
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <p className="truncate text-sm text-muted-foreground">
+            {conversation.lastMessage}
+          </p>
+
+          {conversation.unreadCount > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-medium text-primary-foreground">
+              {conversation.unreadCount > 99
+                ? "99+"
+                : conversation.unreadCount}
+            </span>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}

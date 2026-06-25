@@ -12,4 +12,7 @@ export const SOCKET_EVENTS = {
 
   MESSAGE_SEEN: "message-seen",
   SIDEBAR_UPDATE: "sidebar-update",
+
+  ONLINE_PRESENCE: "online-presence",
+
 } as const;
