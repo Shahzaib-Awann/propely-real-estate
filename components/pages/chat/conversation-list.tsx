@@ -1,7 +1,7 @@
 "use client";
 
-import { socket } from "@/lib/socket";
-import { SOCKET_EVENTS } from "@/lib/socket-events";
+import { socket } from "@/lib/socket/client";
+import { SOCKET_EVENTS } from "@/lib/socket/socket-events";
 // @/components/pages/chat/conversation-list.tsx
 
 import { formatLastMessageTime } from "@/lib/utils/general";

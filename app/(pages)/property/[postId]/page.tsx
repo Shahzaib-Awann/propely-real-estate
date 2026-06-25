@@ -22,7 +22,7 @@ import {
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import LexicalViewer from "@/components/widgets/editor/LexicalViewer";
-import BookmarkButton from "./bookmark-button";
+import BookmarkButton from "../../../../components/pages/property/bookmark-button";
 import { auth } from "@/auth";
 import Link from "next/link";
 

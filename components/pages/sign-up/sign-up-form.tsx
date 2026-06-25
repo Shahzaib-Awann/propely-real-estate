@@ -38,7 +38,6 @@ export default function SignUpForm() {
     resolver: zodResolver(SignUpFormSchema),
     defaultValues: {
       name: "",
-      username: "",
       email: "",
       password: "",
     },
@@ -104,27 +103,6 @@ export default function SignUpForm() {
                 <Input
                   id="name"
                   placeholder="John Doe"
-                  variant="primary"
-                  className="h-14"
-                  {...field}
-                />
-
-                <FieldError errors={[fieldState.error]} />
-              </Field>
-            )}
-          />
-
-          {/* USERNAME */}
-          <Controller
-            name="username"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="username">Username</FieldLabel>
-
-                <Input
-                  id="username"
-                  placeholder="username"
                   variant="primary"
                   className="h-14"
                   {...field}

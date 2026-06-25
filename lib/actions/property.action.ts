@@ -561,8 +561,7 @@ export const getPostDetailsById = async (
         id: usersTable.id,
         avatar: usersTable.avatar,
         name: usersTable.name,
-        username: usersTable.username,
-        email: usersTable.email,
+        email: usersTable.email
       })
       .from(usersTable)
       .where(eq(usersTable.id, post.sellerId))

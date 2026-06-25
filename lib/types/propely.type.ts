@@ -98,7 +98,6 @@ interface PostSelletInfo {
   id: number;
   avatar: string | null;
   name: string;
-  username: string;
   email: string;
 }
 

@@ -1,7 +1,7 @@
 // @/app/(pages)/chat/[conversationId]/page.tsx
 
 import { auth } from "@/auth";
-import ChatClient from "../chat-client";
+import ChatContainer from "../chat-container";
 
 interface PageProps {
   params: Promise<{
@@ -18,7 +18,7 @@ export default async function ConversationPage({
   const userId = session?.user?.id;
 
   return (
-    <ChatClient
+    <ChatContainer
       activeConversationId={conversationId}
       userId={Number(userId)}
     />

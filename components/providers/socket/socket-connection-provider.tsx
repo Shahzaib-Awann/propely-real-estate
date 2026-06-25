@@ -1,11 +1,11 @@
 "use client";
 
-// @/lib/socket-provider.tsx
+import { socket } from "@/lib/socket/client";
+// @/components/providers/socket/socket-connection-provider.tsx
 
 import { useEffect } from "react";
-import { socket } from "./socket";
 
-export default function SocketProvider() {
+export default function SocketConnectionProvider() {
   useEffect(() => {
     socket.connect();
 

@@ -21,7 +21,6 @@ interface UpdateUserInfoProps {
   info: {
     name: string;
     email: string;
-    username: string;
   };
 }
 
@@ -35,7 +34,6 @@ export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
     resolver: zodResolver(UpdateUserProfileFormSchema),
     defaultValues: {
       name: info.name,
-      username: info.username,
       email: info.email,
     },
   });
@@ -44,8 +42,7 @@ export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
   async function onSubmit(values: z.infer<typeof UpdateUserProfileFormSchema>) {
     const isUnchanged =
       values.name?.trim() === info.name?.trim() &&
-      values.email?.trim().toLowerCase() === info.email?.trim().toLowerCase() &&
-      values.username?.trim() === info.username?.trim();
+      values.email?.trim().toLowerCase() === info.email?.trim().toLowerCase()
 
     if (isUnchanged) {
       toast("No changes detected.", {
@@ -122,27 +119,6 @@ export function UpdateUserInfo({ info }: UpdateUserInfoProps) {
                 <Input
                   id="name"
                   placeholder="example123@xyz.com"
-                  variant="primary"
-                  className="h-14"
-                  {...field}
-                />
-                <FieldError
-                  errors={fieldState.error ? [fieldState.error] : []}
-                />
-              </Field>
-            )}
-          />
-
-          {/* Username */}
-          <Controller
-            name="username"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={!!fieldState.error}>
-                <FieldLabel htmlFor="username">Username</FieldLabel>
-                <Input
-                  id="username"
-                  placeholder="enter username"
                   variant="primary"
                   className="h-14"
                   {...field}

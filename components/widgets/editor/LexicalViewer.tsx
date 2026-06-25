@@ -54,7 +54,7 @@ export default function LexicalViewer({ value }: { value: LexicalValue }) {
         },
       }}
     >
-      
+
       {/* Render rich-text content */}
       <RichTextPlugin
         contentEditable={<ContentEditable className="outline-none" />}

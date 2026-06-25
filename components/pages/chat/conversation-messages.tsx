@@ -5,8 +5,8 @@ import { Ban, Check, CheckCheck, Send } from "lucide-react";
 
 import { markConversationAsSeen, sendMessage } from "@/lib/actions/chat.action";
 import { formatDateFns } from "@/lib/utils/general";
-import { socket } from "@/lib/socket";
-import { SOCKET_EVENTS } from "@/lib/socket-events";
+import { socket } from "@/lib/socket/client";
+import { SOCKET_EVENTS } from "@/lib/socket/socket-events";
 import { RealtimeMessage } from "@/types/propely.chat";
 
 

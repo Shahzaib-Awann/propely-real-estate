@@ -1,5 +1,7 @@
 "use client";
 
+// @/app/(pages)/property/[postId]/bookmark-button.tsx
+
 import { Button } from "@/components/ui/button";
 import { toggleBookmark } from "@/lib/actions/properties.action";
 import { Bookmark } from "lucide-react";

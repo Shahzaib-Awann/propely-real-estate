@@ -8,62 +8,70 @@ import { ZodError } from "zod";
 
 
 
-/*========================================================================
-=== [POST] Updates user profile information with auth & error handling ===
-======================================================================= */
+/*========================================================
+=== [POST] Update user profile info
+========================================================*/
 export async function POST(req: NextRequest) {
   try {
     // === Authenticate User ===
-    const session = await auth()
-    const userId = session?.user.id
+    const session = await auth();
+    const userId = session?.user.id;
 
     if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized access" },
-        { status: 401 }
-      )
+        { status: 401 },
+      );
     }
 
     // === Parse & Validate Request Body ===
-    const body = await req.json()
-    const { name, username, email } = UpdateUserProfileFormSchema.parse(body)
+    const body = await req.json();
+    const { name, email } = UpdateUserProfileFormSchema.parse(body);
 
     // === Update user profile ===
-    const result = await updateUserProfileInfo(
-      Number(userId),
-      name,
-      username,
-      email
-    )
-
-    // === Handle DB-layer result (includes duplicate email) ===
-    if (!result.ok) {
-      return NextResponse.json(
-        { error: result.message },
-        { status: result.status } // 404 | 409
-      )
-    }
+    await updateUserProfileInfo(Number(userId), name, email);
 
     // === Success ===
     return NextResponse.json(
-      { message: result.message },
-      { status: 200 }
-    )
+      { message: "Profile updated successfully" },
+      { status: 200 },
+    );
   } catch (error: unknown) {
-
     // === Validation errors ===
     if (error instanceof ZodError) {
       return NextResponse.json(
         { error: "Invalid form data." },
-        { status: 422 }
-      )
+        { status: 422 },
+      );
+    }
+
+    // === Known service errors ===
+    if (error instanceof Error) {
+      if (error.message === "USER_NOT_FOUND") {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      if (error.message === "EMAIL_ALREADY_EXISTS") {
+        return NextResponse.json(
+          { error: "Email already exists" },
+          { status: 409 },
+        );
+      }
+
+      if (error.message === "DUPLICATE_VALUE") {
+        return NextResponse.json(
+          { error: "Duplicate value exists" },
+          { status: 409 },
+        );
+      }
     }
 
     // === Unexpected error ===
-    console.error("Profile update failed:", error)
+    console.error("[PROFILE_UPDATE_ERROR]", error);
+
     return NextResponse.json(
       { error: "Something went wrong. Please try again." },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

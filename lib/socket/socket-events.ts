@@ -1,8 +1,9 @@
-// @/lib/socket-events.ts
+// @/lib/socket/socket-events.ts
 
 export const SOCKET_EVENTS = {
 
   REGISTER_USER: "register-user",
+  UNREGISTER_USER: "unregister-user",
   JOIN_CONVERSATION: "join-conversation",
   LEAVE_CONVERSATION: "leave-conversation",
 

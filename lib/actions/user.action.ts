@@ -1,198 +1,152 @@
 "use server";
 
-import { eq, or, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../db/connection";
 import { usersTable } from "../db/schema";
 import { hashPassword } from "../utils/password-hasher";
-
-
+import { FullUser, SafeUser, SignInUser } from "../types/user.type";
 
 /**
- * === Fetch User for Sign-In ===
+ * === Fetch user by email for authentication. ===
  *
- * - Checks credentials by matching email and password.
+ * Used during sign-in to retrieve the user's
+ * account information and hashed password.
  *
- * @param email - The email address used to log in.
- * @param password - The raw password (ideally already hashed).
- * @returns A user object with role info, or null if no match.
- * @error If a database error occurs during sign-in.
+ * @param email - User email address.
+ * @returns User record if found, otherwise null.
  */
-export const getUserForSignin = async (email: string) => {
-    try {
-        // === Query: Match user by email and password ===
-        const [row] = await db
-            .select()
-            .from(usersTable)
-            .where(eq(usersTable.email, email))
-            .limit(1);
+export const getUserForSignin = async (
+  email: string,
+): Promise<SignInUser | null> => {
+  try {
 
-        // === If no match found, return null ===
-        if (!row) {
-            return null;
-        }
+    const normalizedEmail = email.trim().toLowerCase();
 
-        // === Format and normalize user data ===
-        return {
-            id: String(row.id),
-            avatar: row.avatar,
-            name: row.name,
-            email: row.email,
-            password: row.password,
-            role: row.role,
-            updatedAt: row.updatedAt,
-            createdAt: row.createdAt,
-        };
+    // === Query: Match user by email and password ===
+    const [user] = await db
+      .select({
+        id: usersTable.id,
+        avatar: usersTable.avatar,
+        name: usersTable.name,
+        email: usersTable.email,
+        password: usersTable.password,
+        role: usersTable.role,
+        createdAt: usersTable.createdAt,
+        updatedAt: usersTable.updatedAt,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.email, normalizedEmail))
+      .limit(1);
 
-    } catch (error) {
-        console.error("Signin error:", error);
-        return null
-    }
+    return user ?? null;
+  } catch (error) {
+    console.error("[getUserForSignin] Failed to fetch user:", error);
+
+    return null;
+  }
 };
 
-
-
 /**
- * === Create New User For Sign-Up ===
+ * === Create new user account ===
  *
- * - Creates a new user with hashed password; errors if email exists.
+ * Registers a new user with hashed password.
+ * Relies on DB unique constraint for email validation.
  *
- * @param name - Full name of the user.
- * @param email - Unique email address.
- * @param password - Plaintext password to hash and store.
- * @throws "EMAIL_ALREADY_EXISTS" if email is already in use.
- * @returns Resolves when user is successfully created.
+ * @param name - Full name of user
+ * @param email - Unique email address
+ * @param password - Plain password (will be hashed)
+ * @throws EMAIL_ALREADY_EXISTS if email already exists
  */
-export const createUserForSignUp = async (name: string, username: string, email: string, password: string) => {
+export const createUserForSignUp = async (
+  name: string,
+  email: string,
+  password: string,
+): Promise<void> => {
+  // === Normalize email ===
+  const normalizedEmail = email.trim().toLowerCase();
 
-    // === Check existing user ===
-    const existing = await db
-    .select()
-    .from(usersTable)
-    .where(
-      or(
-        eq(usersTable.email, email.trim()),
-        eq(usersTable.username, username.trim())
-      )
-    )
-    .limit(1);
+  // === Check existing user ===
+  const [existing] = await db
+  .select({
+    id: usersTable.id,
+    email: usersTable.email,
+  })
+  .from(usersTable)
+  .where(eq(usersTable.email, normalizedEmail))
+  .limit(1);
 
-    // === Error if email or username already exists ===
-    if (existing.length > 0) {
-    const user = existing[0];
-
-    if (user.email === email.trim()) {
-      throw new Error("EMAIL_ALREADY_EXISTS");
-    }
-
-    if (user.username === username.trim()) {
-      throw new Error("USERNAME_ALREADY_EXISTS");
-    }
+  // === Error if email or username already exists ===
+  if (existing) {
+    throw new Error("EMAIL_ALREADY_EXISTS");
   }
 
-    const hashedPassword = await hashPassword(password)
+  const hashedPassword = await hashPassword(password);
 
-    // === Insert new user record ===
-    await db.insert(usersTable).values({
-        name,
-        username,
-        email,
-        password: hashedPassword,
-        updatedAt: null
-    });
+  // === Insert new user record ===
+  await db.insert(usersTable).values({
+    name: name.trim(),
+    email: normalizedEmail,
+    password: hashedPassword,
+  });
 };
 
-
-
-type MySqlCauseError = {
-    code?: string
-    errno?: number
-  }
-
-
-
 /**
- * === Update User Profile Info ===
+ * === Update User Profile ===
  *
- * - Updates the name and email of an existing user.
- * - Returns 404 if the user does not exist.
- * - Returns 409 if the email is already in use.
+ * Updates user name and email.
+ * Enforces email uniqueness via DB constraint.
  *
- * @param userId - ID of the user to update.
- * @param name - New full name of the user.
- * @param email - New unique email address.
- * @returns An object with `ok`, `status`, and `message` indicating the result.
- * @throws Re-throws unknown errors encountered during update.
+ * @throws USER_NOT_FOUND
+ * @throws EMAIL_ALREADY_EXISTS
  */
 export const updateUserProfileInfo = async (
   userId: number,
   name: string,
-  username: string,
-  email: string
+  email: string,
 ) => {
   try {
+    const normalizedName = name.trim();
+    const normalizedEmail = email.trim().toLowerCase();
 
     // === Update user in DB ===
     const result = await db
       .update(usersTable)
       .set({
-        name,
-        username,
-        email,
+        name: normalizedName,
+        email: normalizedEmail,
       })
-      .where(eq(usersTable.id, userId))
+      .where(eq(usersTable.id, userId));
 
-    const affectedRows = result[0].affectedRows
+    const affectedRows = result[0].affectedRows;
 
     // === No user found ===
     if (affectedRows === 0) {
-      return { ok: false, status: 404, message: "User not found", }
+      throw new Error("USER_NOT_FOUND");
     }
-
-    // === Success ===
-    return { ok: true, status: 200, message: "Profile updated successfully", }
   } catch (error: unknown) {
+    const err = error as Error & {
+      cause?: {
+        code?: string;
+        sqlMessage?: string;
+      };
+    };
 
-    // === Handle known Error objects ===
-    if (error instanceof Error) {
-      const cause = (error as any).cause;
+    const cause = err.cause;
 
-      // === Handle MySQL duplicate entry error ===
-      if (cause?.code === "ER_DUP_ENTRY") {
-        const msg = cause.sqlMessage || "";
+    // === MySQL duplicate email ===
+    if (cause?.code === "ER_DUP_ENTRY") {
+      const msg = cause.sqlMessage?.toLowerCase() || "";
 
-        // === Username duplicate check ===
-        if (msg.includes("username")) {
-          return {
-            ok: false,
-            status: 409,
-            message: "Username already taken",
-          };
-        }
-
-        // === Email duplicate check ===
-        if (msg.includes("email")) {
-          return {
-            ok: false,
-            status: 409,
-            message: "Email already exists",
-          };
-        }
-
-        // === Generic duplicate entry fallback ===
-        return {
-          ok: false,
-          status: 409,
-          message: "Duplicate value already exists",
-        };
+      if (msg.includes("email")) {
+        throw new Error("EMAIL_ALREADY_EXISTS");
       }
+
+      throw new Error("DUPLICATE_VALUE");
     }
 
-    // === Re-throw unknown errors ===
     throw error;
   }
-}
-
-
+};
 
 /**
  * === Fetch a user by ID from the database. ===
@@ -201,36 +155,38 @@ export const updateUserProfileInfo = async (
  * @param safe - If true, password will be omitted from the returned object (default: true)
  * @returns User object (safe or full) or null if not found
  */
-export const getUserById = async (id: number, safe: boolean = true) => {
-  // === Query: match user by ID ===
-  const [row] = await db
-    .select()
+export const getUserById = async (
+  id: number,
+  safe: boolean = true,
+): Promise<SafeUser | FullUser | null> => {
+  // === Fetch only required fields ===
+  const [user] = await db
+    .select({
+      id: usersTable.id,
+      avatar: usersTable.avatar,
+      avatarPublicId: usersTable.avatarPublicId,
+      name: usersTable.name,
+      email: usersTable.email,
+      password: usersTable.password,
+      role: usersTable.role,
+      createdAt: usersTable.createdAt,
+      updatedAt: usersTable.updatedAt,
+    })
     .from(usersTable)
     .where(eq(usersTable.id, id))
     .limit(1);
 
   // === If no match found, return null ===
-  if (!row) {
+  if (!user) {
     return null;
   }
 
-  // === Format user data ===
-  const baseUser = {
-    id: String(row.id),
-    avatar: row.avatar,
-    avatarPublicId: row.avatarPublicId,
-    name: row.name,
-    username: row.username,
-    email: row.email,
-    role: row.role,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-  };
+  // === Return safe version ===
+  if (safe) {
+    const { password, ...safeUser } = user;
+    return safeUser;
+  }
 
-  if (safe) return baseUser;
-
-  return {
-    ...baseUser,
-    password: row.password,
-  };
+  // === Return full version ===
+  return user;
 };

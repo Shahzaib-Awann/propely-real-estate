@@ -1,7 +1,7 @@
 // @/app/(pages)/chat/page.tsx
 
 import { auth } from "@/auth";
-import ChatClient from "./chat-client";
+import ChatContainer from "./chat-container";
 import { createOrGetConversation } from "@/lib/actions/chat.action";
 import { redirect } from "next/navigation";
 
@@ -21,7 +21,7 @@ export default async function ChatPage({
   const { property } = await searchParams;
 
   if (!property) {
-    return <ChatClient userId={userId} />;
+    return <ChatContainer userId={userId} />;
   }
 
   const { conversationId } = await createOrGetConversation({
@@ -33,5 +33,5 @@ export default async function ChatPage({
     redirect(`/chat/${conversationId}`);
   }
 
-  return <ChatClient userId={userId} />;
+  return <ChatContainer userId={userId} />;
 }
