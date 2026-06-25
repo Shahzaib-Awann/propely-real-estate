@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Ban, Check, CheckCheck, Send } from "lucide-react";
 
-import { markConversationAsSeen, sendMessage } from "@/lib/actions/chat.action";
+import { sendMessage } from "@/lib/actions/chat.action";
 import { formatDateFns } from "@/lib/utils/general";
 import { socket } from "@/lib/socket/client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket-events";
@@ -56,20 +56,30 @@ export default function ConversationMessages({
 
       // If someone else sent it, automatically mark it seen locally and notify server
       if (message.senderId !== userId) {
-        void markConversationAsSeen(conversationId, userId);
         socket.emit(SOCKET_EVENTS.MESSAGE_SEEN, { conversationId, viewerId: userId });
       }
     };
 
-    const handleMessageSeen = ({ conversationId: id }: { conversationId: string }) => {
+    const handleMessageSeen = ({
+    conversationId: id,
+    viewerId,
+  }: {
+    conversationId: string;
+    viewerId: number;
+  }) => {
+    // ⚠️ Only update UI if OTHER user is viewing the chat
+    if (Number(viewerId) !== Number(userId)) {
       if (id !== conversationId) return;
+
       setChatMessages((prev) =>
         prev.map((msg) => ({
           ...msg,
-          seenAt: msg.seenAt ?? new Date().toISOString(),
+          seenAt:
+            msg.seenAt ?? new Date().toISOString(),
         }))
       );
-    };
+    }
+  };
 
     socket.on(SOCKET_EVENTS.NEW_MESSAGE, handleNewMessage);
     socket.on(SOCKET_EVENTS.MESSAGE_SEEN, handleMessageSeen);
