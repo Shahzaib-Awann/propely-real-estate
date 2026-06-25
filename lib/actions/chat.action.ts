@@ -2,7 +2,7 @@
 
 // @/lib/actions/chat.action.ts
 
-import { and, asc, desc, eq, isNull, ne, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/mysql-core";
 import { v6 as uuidv6 } from 'uuid';
 
@@ -399,8 +399,6 @@ export async function sendMessage({
   });
 }
 
-
-
 export async function markConversationAsSeen(conversationId: string, viewerId: number) {
   // 1. Validate conversation + access
   const [conversation] = await db.select({ id: conversationsTable.id, buyerId: conversationsTable.buyerId, sellerId: conversationsTable.sellerId })
@@ -434,4 +432,37 @@ export async function markConversationAsSeen(conversationId: string, viewerId: n
     );
 
   return { success: true };
+}
+
+export async function deleteMessages({ messageIds, userId, conversationId }: {
+  messageIds: string[];
+  userId: number;
+  conversationId: string;
+}) {
+  try {
+    if (!messageIds.length) return { success: false, error: "No messages selected" };
+
+    // Format ISO string format cleanly to MySQL standard: YYYY-MM-DD HH:MM:SS
+    const mysqlTimestamp = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+    // Update messages in DB: Only allow deleting your own messages in this conversation
+    await db
+      .update(messagesTable)
+      .set({
+        isDeleted: true,
+        deletedAt: mysqlTimestamp,
+      })
+      .where(
+        and(
+          eq(messagesTable.conversationId, conversationId),
+          eq(messagesTable.senderId, userId),
+          inArray(messagesTable.id, messageIds)
+        )
+      );
+
+    return { success: true, messageIds };
+  } catch (error) {
+    console.error("Failed to delete messages:", error);
+    return { success: false, error: "Internal server error" };
+  }
 }

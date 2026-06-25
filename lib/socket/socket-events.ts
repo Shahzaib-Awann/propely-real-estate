@@ -9,6 +9,7 @@ export const SOCKET_EVENTS = {
 
   SEND_MESSAGE: "send-message",   // client → server
   NEW_MESSAGE: "new-message",     // server → clients
+  MESSAGES_DELETED: "messages-deleted",
 
   MESSAGE_SEEN: "message-seen",
   SIDEBAR_UPDATE: "sidebar-update",

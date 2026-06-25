@@ -49,6 +49,12 @@ socket.on(SOCKET_EVENTS.TYPING_STOP, ({ conversationId, userId }: { conversation
   socket.to(room).emit(SOCKET_EVENTS.TYPING_STOP, { conversationId, userId });
 });
 
+socket.on(SOCKET_EVENTS.MESSAGES_DELETED, ({ conversationId, messageIds }: { conversationId: string; messageIds: string[] }) => {
+  const room = getConversationRoom(conversationId);
+  // Broadcast to everyone in the room (including the sender's open tabs)
+  io.to(room).emit(SOCKET_EVENTS.MESSAGES_DELETED, { conversationId, messageIds });
+});
+
   socket.on(SOCKET_EVENTS.JOIN_CONVERSATION, (conversationId: string) => {
     socket.join(getConversationRoom(conversationId));
 

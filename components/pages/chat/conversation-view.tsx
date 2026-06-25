@@ -7,7 +7,6 @@ import {
   markConversationAsSeen,
 } from "@/lib/actions/chat.action";
 import ConversationMessages from "./conversation-messages";
-import ConversationMessageHeader from "./conversation-message-header";
 
 interface Props {
   conversationId: string;
@@ -28,13 +27,12 @@ export default async function ConversationView({
 
   return (
     <div className="flex flex-col flex-1">
-      <ConversationMessageHeader conversation={conversation} />
-
       <ConversationMessages
         messages={messages}
         conversationId={conversationId}
         userId={userId}
         unReadMessages={unReadMessages}
+        conversation={conversation}
       />
     </div>
   );
