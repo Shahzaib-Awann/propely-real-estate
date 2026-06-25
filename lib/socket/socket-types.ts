@@ -11,3 +11,9 @@ export interface MessageSeenPayload {
   conversationId: string;
   viewerId: number;
 }
+
+export interface SideBarUpdatePayload {
+  conversationId: string;
+  lastMessage: string;
+  lastMessageAt: string;
+}

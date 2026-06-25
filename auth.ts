@@ -14,7 +14,7 @@ import { verifyPassword } from './lib/utils/password-hasher';
 
 /**
  * === NextAuth Authentication Configuration ===
- * 
+ *
  * - Uses Credentials provider with custom user verification logic.
  * - JWT-based session management.
  * - Populates session and token with custom user fields.
@@ -32,7 +32,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   /**
    * === Providers ===
-   * 
+   *
    * Auth Providers (custom credentials-based)
    */
   providers: [
@@ -40,9 +40,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       /**
        * === Authorize User Credentials ===
-       * 
+       *
        * Validates and authenticates user based on email and password.
-       * 
+       *
        * @param credentials - Credentials from the sign-in form.
        * @returns - Authenticated user object or null.
        */
@@ -66,7 +66,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Return user without password
           const { password: _, ...safeUser } = user;  // eslint-disable-line
 
-          return safeUser;
+          return {
+            ...safeUser,
+            id: String(safeUser.id)
+          } as User;
         }
 
         return null;
@@ -77,16 +80,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   /**
    * === Callbacks ===
-   * 
+   *
    * Customize the token and session structure.
    */
   callbacks: {
 
     /**
      * === JWT Callback ===
-     * 
+     *
      * Adds user fields to the token during sign-in.
-     * 
+     *
      * @param {Object} param
      * @param {JWT} param.token - Current JWT token.
      * @param {User} [param.user] - User object on first login.
@@ -107,7 +110,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     /**
      * === Session Callback ===
      * Populates session with additional fields from the token.
-     * 
+     *
      * @param {Object} param
      * @param {Session} param.session - Current session object.
      * @param {JWT} param.token - JWT token containing user info.
@@ -129,7 +132,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   /**
    * === Session Configuration ===
-   * 
+   *
    * - JWT-based strategy.
    * - Sessions last 24 hours.
    */

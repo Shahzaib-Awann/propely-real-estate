@@ -14,16 +14,16 @@ export function registerSocketHandlers(
   io: Server,
   socket: Socket
 ) {
-  socket.on(
-    SOCKET_EVENTS.REGISTER_USER,
-    (userId: number) => {
+  socket.on(SOCKET_EVENTS.REGISTER_USER, (userId: number) => {
       socket.join(getUserRoom(userId));
-
-      console.log(
-        `${socket.id} joined ${getUserRoom(userId)}`
-      );
+      console.log(`${socket.id} joined ${getUserRoom(userId)}`);
     }
   );
+
+  socket.on(SOCKET_EVENTS.UNREGISTER_USER, (userId: number) => {
+    socket.leave(getUserRoom(userId));
+    console.log(`${socket.id} left ${getUserRoom(userId)}`);
+  });
 
   socket.on(
     SOCKET_EVENTS.JOIN_CONVERSATION,
@@ -95,10 +95,7 @@ export function registerSocketHandlers(
       conversationId,
       viewerId,
     }) => {
-      await markConversationAsSeen({
-        conversationId,
-        viewerId,
-      });
+      await markConversationAsSeen(conversationId, viewerId);
 
       io.to(
         getConversationRoom(

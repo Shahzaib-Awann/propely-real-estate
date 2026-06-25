@@ -4,8 +4,7 @@ import "./globals.css";
 import { Toaster } from 'react-hot-toast';
 import QueryToastHandler from "@/components/widgets/query-toast-handler";
 import { auth } from "@/auth";
-import SocketConnectionProvider from "@/components/providers/socket/socket-connection-provider";
-import UserSocketMount from "@/components/providers/socket/user-socket-register";
+import SocketProvider from "@/components/providers/socket/socket-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,8 +41,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${lato.variable} antialiased`}
       >
-        <SocketConnectionProvider />
-        {userId && <UserSocketMount userId={Number(userId)} />}
+        <SocketProvider userId={userId ? Number(userId) : undefined} />
 
         {/* Client component handles all query-to-toast logic */}
         <QueryToastHandler />
@@ -54,6 +52,7 @@ export default async function RootLayout({
           position="top-right"
           reverseOrder={false}
         />
+
       </body>
     </html>
   );

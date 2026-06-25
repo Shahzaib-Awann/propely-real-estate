@@ -18,19 +18,11 @@ export default async function ConversationView({
   conversationId,
   userId,
 }: Props) {
-  const conversation = await getConversationById({
-    conversationId,
-    userId,
-  });
+  const conversation = await getConversationById(conversationId, userId);
 
-  await markConversationAsSeen({
-    conversationId,
-    viewerId: userId,
-  });
+  await markConversationAsSeen(conversationId, userId);
 
-  const messages = await getConversationMessages({
-    conversationId,
-  });
+  const messages = await getConversationMessages(conversationId);
 
   return (
     <div className="flex flex-col flex-1">
@@ -51,7 +43,7 @@ export default async function ConversationView({
       </header>
 
       <ConversationMessages
-        messages={messages ?? []}
+        messages={messages}
         conversationId={conversationId}
         userId={userId}
       />

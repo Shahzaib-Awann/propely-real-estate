@@ -1,26 +1,37 @@
 "use client";
 
 import { cn } from '@/lib/utils/general';
-import dynamic from 'next/dynamic'
-import { useMemo } from 'react'
+import dynamic from 'next/dynamic';
 import { MapSkeleton } from '../../skeletons';
-import { ListPropertyInterface } from '@/lib/types/propely.type';
 
-const MapWrapper = ({ items, className }: { items: { id: string, title: string, price: string, bedRooms: number, latitude: string, longitude: string, img: string }[], className?: string }) => {
+// Component is declared once on file initialization
+const Map = dynamic(
+  () => import('@/components/widgets/map/map'),
+  {
+    loading: () => <MapSkeleton />,
+    ssr: false
+  }
+);
 
-  // Dynamically import Map with no SSR and custom loading message
-  const Map = useMemo(() => dynamic(
-    () => import('@/components/widgets/map/map'),
-    {
-      loading: () => <MapSkeleton />, // <- loading text
-      ssr: false  // <- Disable server-side rendering
-    }
-  ), [])
-
-  return  <div className={cn("w-full h-full overflow-hidden", className)}>
-            <Map items={items} />
-          </div>
-
+interface MapWrapperProps {
+  items: {
+    id: string;
+    title: string;
+    price: string;
+    bedRooms: number;
+    latitude: string;
+    longitude: string;
+    img: string;
+  }[];
+  className?: string;
 }
 
-export default MapWrapper
+const MapWrapper = ({ items, className }: MapWrapperProps) => {
+  return (
+    <div className={cn("w-full h-full overflow-hidden", className)}>
+      <Map items={items} />
+    </div>
+  );
+};
+
+export default MapWrapper;

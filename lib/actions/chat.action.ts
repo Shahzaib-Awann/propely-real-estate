@@ -14,7 +14,7 @@ import {
   messagesTable,
 } from "../db/schema";
 
-import { ConversationListItem } from "@/types/propely.chat";
+import { ConversationListItem, RealtimeMessage } from "@/types/propely.chat";
 
 export async function getUserConversations(
   userId: number
@@ -165,13 +165,7 @@ export async function createOrGetConversation({
 }
 
 
-export async function getConversationById({
-  conversationId,
-  userId,
-}: {
-  conversationId: string;
-  userId: number;
-}) {
+export async function getConversationById(conversationId: string, userId: number) {
   const result = await db
     .select({
       id: conversationsTable.id,
@@ -234,16 +228,9 @@ export async function getConversationById({
 }
 
 
-export async function getConversationMessages({
-  conversationId,
-}: { conversationId: string }) {
-  const [conversation] = await db.select({ id: conversationsTable.id }).from(conversationsTable).where(eq(conversationsTable.id, conversationId));
-
-  if (!conversation) {
-    return null;
-  }
-
-  // Load messages
+export async function getConversationMessages(
+  conversationId: string,
+): Promise<RealtimeMessage[]> {
   const messages = await db
     .select({
       id: messagesTable.id,
@@ -253,17 +240,35 @@ export async function getConversationMessages({
       seenAt: messagesTable.seenAt,
       isDeleted: messagesTable.isDeleted,
       createdAt: messagesTable.createdAt,
+
+      buyerId: conversationsTable.buyerId,
+      sellerId: conversationsTable.sellerId,
     })
     .from(messagesTable)
+    .innerJoin(
+      conversationsTable,
+      eq(messagesTable.conversationId, conversationsTable.id),
+    )
     .where(eq(messagesTable.conversationId, conversationId))
     .orderBy(asc(messagesTable.createdAt));
 
-  return messages.map((message) => ({
-  ...message,
-  message: message.isDeleted
-    ? "This message was deleted"
-    : message.message,
-}));
+  return messages.map((msg) => ({
+    id: msg.id,
+    conversationId: msg.conversationId,
+    senderId: msg.senderId,
+    receiverId:
+      msg.senderId === msg.buyerId
+        ? msg.sellerId
+        : msg.buyerId,
+    buyerId: msg.buyerId,
+    sellerId: msg.sellerId,
+    message: msg.isDeleted
+      ? "This message was deleted"
+      : msg.message,
+    seenAt: msg.seenAt,
+    isDeleted: msg.isDeleted,
+    createdAt: msg.createdAt,
+  }));
 }
 
 export async function sendMessage({
@@ -357,13 +362,7 @@ export async function sendMessage({
 
 
 
-export async function markConversationAsSeen({
-  conversationId,
-  viewerId
-}: {
-  conversationId: string;
-  viewerId: number;
-}) {
+export async function markConversationAsSeen(conversationId: string, viewerId: number) {
   // 1. Validate conversation + access
   const [conversation] = await db.select({ id: conversationsTable.id, buyerId: conversationsTable.buyerId, sellerId: conversationsTable.sellerId })
   .from(conversationsTable).where(eq(conversationsTable.id, conversationId));

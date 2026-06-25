@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Marker, Popup } from 'react-leaflet'
-import { ListPropertyInterface } from '@/lib/types/propely.type';
 
 // Pin: Renders one Marker with Popup
 const Pin = ({ item }: { item: { id: string, title: string, price: string, bedRooms: number, latitude: string, longitude: string, img: string } }) => {

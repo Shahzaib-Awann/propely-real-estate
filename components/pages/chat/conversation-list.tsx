@@ -1,13 +1,14 @@
 "use client";
 
-import { socket } from "@/lib/socket/client";
-import { SOCKET_EVENTS } from "@/lib/socket/socket-events";
 // @/components/pages/chat/conversation-list.tsx
 
+import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
+import { socket } from "@/lib/socket/client";
+import { SOCKET_EVENTS } from "@/lib/socket/socket-events";
 import { formatLastMessageTime } from "@/lib/utils/general";
 import { ConversationListItem } from "@/types/propely.chat";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { SideBarUpdatePayload } from "@/lib/socket/socket-types";
 
 interface ConversationListProps {
   userId: number;
@@ -15,103 +16,70 @@ interface ConversationListProps {
   conversations: ConversationListItem[];
 }
 
-const ConversationList = ({ userId, activeConversationId, conversations }: ConversationListProps) => {
+const ConversationList = ({ userId , activeConversationId, conversations }: ConversationListProps) => {
+  const [items, setItems] = useState<ConversationListItem[]>(conversations);
 
-  const [items, setItems] = useState(conversations);
+  // Keep track of the active ID in a mutable ref to prevent socket listener teardowns
+  const activeIdRef = useRef(activeConversationId);
 
   useEffect(() => {
-    console.log(
-    "CONVERSATIONS PROP UPDATED",
-    conversations.map((c) => ({
-      id: c.id,
-      unreadCount: c.unreadCount,
-      lastMessage: c.lastMessage,
-    }))
-  );
-  setItems(conversations);
-}, [conversations]);
+    activeIdRef.current = activeConversationId;
+  }, [activeConversationId]);
 
-useEffect(() => {
-  const handleMessageSeen = ({
-    conversationId,
-  }: {
-    conversationId: string;
-  }) => {
-    setItems((prev) =>
-      prev.map((conversation) => {
-        if (conversation.id !== conversationId) {
-          return conversation;
-        }
-
-        return {
-          ...conversation,
-          unreadCount: 0,
-        };
-      })
-    );
-  };
-
-  socket.on(
-    SOCKET_EVENTS.MESSAGE_SEEN,
-    handleMessageSeen
-  );
-
-  return () => {
-    socket.off(
-      SOCKET_EVENTS.MESSAGE_SEEN,
-      handleMessageSeen
-    );
-  };
-}, []);
-
-useEffect(() => {
-  const handleSidebarUpdate = (payload: any) => {
-
-    setItems((prev) => {
-      const updated = prev.map((conversation) => {
-        if (conversation.id !== payload.conversationId) {
-          return conversation;
-        }
-
-        const isActive = activeConversationId === conversation.id;
-
-        return {
-          ...conversation,
-          lastMessage: payload.lastMessage,
-          lastMessageAt: payload.lastMessageAt,
-          unreadCount: isActive
-            ? 0
-            : (conversation.unreadCount ?? 0) + 1,
-        };
-      });
-
-      return [...updated].sort(
-        (a, b) =>
-          new Date(b.lastMessageAt ?? 0).getTime() -
-          new Date(a.lastMessageAt ?? 0).getTime()
+  // Combined and permanent real-time socket updates
+  useEffect(() => {
+    const handleMessageSeen = ({ conversationId }: { conversationId: string }) => {
+      setItems((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
+        )
       );
-    });
-  };
+    };
 
-  socket.on(SOCKET_EVENTS.SIDEBAR_UPDATE, handleSidebarUpdate);
+    const handleSidebarUpdate = (payload: SideBarUpdatePayload) => {
+      setItems((prev) => {
+        const updated = prev.map((conversation) => {
+          if (conversation.id !== payload.conversationId) {
+            return conversation;
+          }
 
-  return () => {
-    socket.off(SOCKET_EVENTS.SIDEBAR_UPDATE, handleSidebarUpdate);
-  };
-}, [activeConversationId]);
+          // Read the latest active ID from our ref securely without re-binding the event listener
+          const isActive = activeIdRef.current === conversation.id;
+
+          return {
+            ...conversation,
+            lastMessage: payload.lastMessage,
+            lastMessageAt: payload.lastMessageAt,
+            unreadCount: isActive
+              ? 0
+              : (conversation.unreadCount ?? 0) + 1,
+          };
+        });
+
+        return [...updated].sort(
+          (a, b) => new Date(b.lastMessageAt ?? 0).getTime() - new Date(a.lastMessageAt ?? 0).getTime()
+        );
+      });
+    };
+
+    socket.on(SOCKET_EVENTS.MESSAGE_SEEN, handleMessageSeen);
+    socket.on(SOCKET_EVENTS.SIDEBAR_UPDATE, handleSidebarUpdate);
+
+    return () => {
+      socket.off(SOCKET_EVENTS.MESSAGE_SEEN, handleMessageSeen);
+      socket.off(SOCKET_EVENTS.SIDEBAR_UPDATE, handleSidebarUpdate);
+    };
+  }, []);
 
   return (
     <div className="h-full flex flex-col">
       <div className="border-b p-4">
-        <h1 className="text-2xl font-bold">
-          Messages
-        </h1>
+        <h1 className="text-2xl font-bold">Messages</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {items?.map((conversation) => {
-          const isActive =
-            activeConversationId === conversation.id;
+          const isActive = activeConversationId === conversation.id;
 
           return (
             <Link
@@ -122,25 +90,16 @@ useEffect(() => {
               }`}
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">
-                  {conversation.otherUserName}
-                </h3>
-
+                <h3 className="font-semibold">{conversation.otherUserName}</h3>
                 <span className="text-xs text-muted-foreground">
-                  {formatLastMessageTime(conversation.lastMessageAt!)}
+                  {conversation.lastMessageAt ? formatLastMessageTime(conversation.lastMessageAt) : ""}
                 </span>
               </div>
 
-              <p className="text-sm text-muted-foreground">
-                {conversation.propertyTitle}
-              </p>
+              <p className="text-sm text-muted-foreground">{conversation.propertyTitle}</p>
 
               <div className="flex items-center justify-between">
-                <p className="text-sm truncate max-w-[80%]">
-                  {conversation.lastMessage}
-                </p>
-
-                {/* Unread badge */}
+                <p className="text-sm truncate max-w-[80%]">{conversation.lastMessage}</p>
                 {conversation.unreadCount > 0 && (
                   <span className="ml-2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
                     {conversation.unreadCount}
@@ -153,6 +112,6 @@ useEffect(() => {
       </div>
     </div>
   );
-}
+};
 
 export default ConversationList;

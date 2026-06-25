@@ -32,7 +32,7 @@ export interface ListPropertyInterface {
   id: string;
   sellerId: number;
   title: string;
-  img: string | null;
+  img: string;
   bedRooms: number;
   bathRooms: number;
   price: string;

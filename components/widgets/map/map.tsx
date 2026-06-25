@@ -9,7 +9,6 @@ import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
 import Pin from "./pin";
-import { ListPropertyInterface } from '@/lib/types/propely.type';
 
 // Prevent default Leaflet icon lookup
 delete L.Icon.Default.prototype._getIconUrl;
