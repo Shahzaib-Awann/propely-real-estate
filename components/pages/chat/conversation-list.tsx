@@ -92,11 +92,11 @@ const ConversationList = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="border-b p-4">
+      <div className="p-4">
         <h1 className="text-2xl font-bold">Messages</h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto border-t border-foreground/10">
         {items?.map((conversation) => (
           <ConversationRow
             key={conversation.id}
@@ -126,9 +126,9 @@ function ConversationRow({
     <Link
       href={`/chat/${conversation.id}`}
       className={`
-        flex items-center gap-3 px-4 py-3 group border-b
+        flex items-center gap-3 px-4 py-3 group border-b border-foreground/10
         transition-all duration-200
-        ${isActive ? "bg-muted" : "hover:bg-muted/60"}
+        ${isActive ? "bg-primary-foreground/50" : "hover:bg-muted/60"}
       `}
     >
       {/* Avatar */}

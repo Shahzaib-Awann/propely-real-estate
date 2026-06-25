@@ -86,10 +86,10 @@ const BookmarkButton = ({
     <Button
       onClick={handleBookmark}
       disabled={loading}
-      className="p-6 bg-white text-black hover:text-white"
+      className="p-6 bg-white text-black group hover:text-white"
     >
       <Bookmark
-        className={`transition text-black ${isSaved ? "fill-black" : ""}`}
+        className={`transition group-hover:text-white ${isSaved ? "fill-primary text-primary" : ""}`}
       />
 
       {isSaved ? "Saved" : "Save"}

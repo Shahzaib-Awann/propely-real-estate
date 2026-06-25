@@ -13,37 +13,21 @@ interface ChatClientProps {
 
 export default async function ChatContainer({
   activeConversationId,
-  userId
+  userId,
 }: ChatClientProps) {
-
-  const conversations = await getUserConversations(Number(userId))
+  const conversations = await getUserConversations(Number(userId));
 
   return (
-    <main className="h-[calc(100vh-80px)] flex">
-
-  {activeConversationId && (
-    <ConversationSocketRoom
-      conversationId={activeConversationId}
-    />
-  )}
-
-      {/* Left Sidebar */}
-      <aside
-        className={`
-          border-r bg-background
-          w-full lg:w-[380px]
-          ${activeConversationId ? "hidden lg:block" : ""}
-        `}
-      >
-        <ConversationList userId={userId} activeConversationId={activeConversationId} conversations={conversations}/>
-      </aside>
-
-      {/* Right Content */}
+    <main className="h-[calc(100vh-80px)] flex flex-row px-0 lg:px-4">
+      {activeConversationId && (
+        <ConversationSocketRoom conversationId={activeConversationId} />
+      )}
+      {/* Left Content */}
       <section
         className={`
-          flex-1
-          ${!activeConversationId ? "hidden lg:flex" : "flex"}
-        `}
+              flex-3
+              ${!activeConversationId ? "hidden lg:flex" : "flex"}
+            `}
       >
         {activeConversationId ? (
           <ConversationView
@@ -54,6 +38,21 @@ export default async function ChatContainer({
           <EmptyState />
         )}
       </section>
+
+      {/* Right Sidebar */}
+      <aside
+        className={`
+          bg-background lg:bg-side-panel
+          w-full flex-2
+          ${activeConversationId ? "hidden lg:block" : ""}
+        `}
+      >
+        <ConversationList
+          userId={userId}
+          activeConversationId={activeConversationId}
+          conversations={conversations}
+        />
+      </aside>
     </main>
   );
 }

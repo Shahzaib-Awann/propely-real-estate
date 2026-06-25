@@ -19,8 +19,6 @@ import { getUserById } from "@/lib/actions/user.action";
 import ChatBadge from "@/components/pages/chat/chat-badge";
 import { getTotalUnreadMessages } from "@/lib/actions/chat.action";
 
-
-
 const links = [
   { title: "Home", url: "/" },
   { title: "Properties", url: "/properties" },
@@ -28,35 +26,35 @@ const links = [
   { title: "Contact", url: "/contact" },
 ];
 
-
-
 export default async function Navbar() {
-
   let user = null;
   let initialUnreadCount = 0;
   // === Authenticate user ===
-  const session = await auth()
+  const session = await auth();
 
   if (session?.user?.id) {
-    user = await getUserById(Number(session.user.id))
+    user = await getUserById(Number(session.user.id));
 
-    initialUnreadCount = await getTotalUnreadMessages({ userId: Number(session.user.id), scope: "all" })
+    initialUnreadCount = await getTotalUnreadMessages({
+      userId: Number(session.user.id),
+      scope: "all",
+    });
   }
 
   return (
     <nav className="flex items-center justify-between h-20 w-full bg-transparent z-50 relative p-0 px-4">
-      {/* Left: Logo + Desktop Links */}
+      {/* Left Box (flex-3): Logo + Desktop Navigation Links */}
       <div className="flex flex-3 items-center gap-10">
         <Link
           href="/"
-          className="flex items-center gap-2 font-bold text-xl font-geist w-24 h-14 relative"
+          className="flex items-center gap-2 font-bold text-xl font-geist w-24 h-14 relative group overflow-hidden"
         >
           <Image
             src="/images/main-logo-light.png"
             alt="Logo"
             fill
             sizes="100px"
-            className="object-cover hover:scale-105 transition-all duration-200"
+            className="object-cover group-hover:scale-105 transition-all duration-200"
           />
         </Link>
 
@@ -65,7 +63,7 @@ export default async function Navbar() {
             <Link
               key={link.title}
               href={link.url}
-              className="text-base font-lato font-medium text-foreground hover:text-primary hover:scale-110 transition-all duration-200"
+              className="text-base font-lato font-medium text-foreground hover:text-primary hover:scale-110 transition-all duration-200 inline-block"
             >
               {link.title}
             </Link>
@@ -73,54 +71,55 @@ export default async function Navbar() {
         </div>
       </div>
 
-      {/* Right Section: Avatar/Profile + Mobile Menu */}
-      <div className="flex flex-2 lg:bg-side-panel h-full w-full">
-        <div className="w-full h-full gap-4 p-4 flex items-center justify-end">
-          {/* Avatar/Profile */}
+      {/* Right Box (flex-2): Profile/Auth + Mobile Menu Trigger */}
+      <div className="flex flex-2 lg:bg-side-panel h-full dynamic-right-panel justify-end items-center">
+        <div className="w-full h-full gap-4 px-4 flex items-center justify-end">
+          {/* Avatar / Profile State */}
           {user ? (
             <div className="flex items-center gap-4">
               <Link
                 href="/profile"
-                className="flex flex-row gap-2 items-center"
+                className="flex flex-row gap-2 items-center group"
               >
-                <Avatar className="h-10 w-10">
+                <Avatar className="size-10 transition-transform duration-200 group-hover:scale-105">
                   <AvatarImage src={user.avatar ?? undefined} alt={user.name} />
                   <AvatarFallback>
                     {getAvatarFallback(user.name)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="lg:block hidden text-foreground">
+                <span className="lg:block hidden text-foreground group-hover:text-primary transition-colors duration-200 font-lato">
                   {user.name}
                 </span>
               </Link>
 
-              {/* Desktop: show name + profile button */}
+              {/* Chat / Notifications Link Button */}
               <div className="flex items-center gap-4 font-semibold">
                 <Link href="/chat">
-                  <Button className="px-5 h-12 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/80 transition-colors font-lato relative">
+                  <Button className="px-5 h-10 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/80 transition-all duration-200 hover:scale-[1.02] font-lato relative">
                     <ChatBadge initialCount={initialUnreadCount} />
                   </Button>
                 </Link>
               </div>
             </div>
           ) : (
+            /* Desktop Auth Action Trigger Block */
             <div className="hidden md:flex gap-2">
               <Link
                 href="/sign-in"
-                className="px-5 h-12 rounded-radius font-medium text-foreground hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-colors font-lato"
+                className="px-5 h-12 rounded-radius font-medium text-foreground hover:bg-primary hover:text-primary-foreground flex items-center justify-center transition-all duration-200 hover:scale-105 font-lato"
               >
                 Sign in
               </Link>
               <Link
                 href="/sign-up"
-                className="px-5 h-12 rounded-radius bg-primary text-primary-foreground hover:bg-primary/80 flex items-center justify-center font-medium transition-colors font-lato"
+                className="px-5 h-12 rounded-radius bg-primary text-primary-foreground hover:bg-primary/80 flex items-center justify-center font-medium transition-all duration-200 hover:scale-[1.02] font-lato"
               >
                 Sign up
               </Link>
             </div>
           )}
 
-          {/* Mobile Menu */}
+          {/* Responsive Mobile Layout Navigation Trigger */}
           <div className="md:hidden flex items-center">
             <MobileSheet user={!!user} />
           </div>
@@ -130,8 +129,6 @@ export default async function Navbar() {
   );
 }
 
-
-
 // === MOBILE SHEET MENU ===
 const MobileSheet = ({ user }: { user: boolean }) => {
   return (
@@ -139,7 +136,7 @@ const MobileSheet = ({ user }: { user: boolean }) => {
       <SheetTrigger asChild>
         <Button
           size="icon"
-          className="rounded-radius bg-transparent text-foreground focus:outline-none focus:ring-0 hover:bg-card-foreground hover:text-primary-foreground/75 transition-all duration-300"
+          className="rounded-radius bg-transparent text-foreground focus:outline-none focus:ring-0 hover:bg-card-foreground hover:text-primary-foreground/75 transition-all duration-200 hover:scale-105"
         >
           <Menu className="size-5" />
         </Button>
@@ -147,7 +144,9 @@ const MobileSheet = ({ user }: { user: boolean }) => {
 
       <SheetContent
         side="right"
-        closeButton={true}
+        closeButton={
+          false
+        } /* Turned off default to cleanly utilize our layout's exact absolute close button pattern below */
         className="w-64 bg-card-foreground text-foreground border-none flex justify-center items-center"
       >
         <SheetHeader>
@@ -157,29 +156,31 @@ const MobileSheet = ({ user }: { user: boolean }) => {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex flex-col gap-10 mt-4">
+        {/* Links stack utilizing smooth micro-interaction guidelines[cite: 1] */}
+        <div className="flex flex-col gap-10 mt-4 items-center w-full">
           {links.map((link) => (
             <Link
               key={link.title}
               href={link.url}
-              className="text-lg text-primary-foreground hover:text-primary hover:underline transition-colors"
+              className="text-lg text-primary-foreground font-lato hover:text-primary transition-all duration-200 hover:scale-110"
             >
               {link.title}
             </Link>
           ))}
 
-          {/* Mobile Auth Buttons */}
+          {/* Mobile Auth Buttons Stack */}
           {!user && (
             <>
+              <div className="w-1/2 h-1 border-t border-primary-foreground/20" />
               <Link
                 href="/sign-in"
-                className="text-lg text-primary-foreground hover:text-primary hover:underline transition-colors"
+                className="text-lg text-primary-foreground font-lato hover:text-primary transition-all duration-200 hover:scale-110"
               >
                 Sign in
               </Link>
               <Link
                 href="/sign-up"
-                className="text-lg text-primary-foreground hover:text-primary hover:underline transition-colors"
+                className="text-lg font-semibold text-primary font-lato hover:scale-110 transition-transform duration-200"
               >
                 Sign up
               </Link>
@@ -187,9 +188,10 @@ const MobileSheet = ({ user }: { user: boolean }) => {
           )}
         </div>
 
+        {/* Refined Explicit Action Close Overlay Button */}
         <SheetClose asChild>
-          <button className="absolute text-primary-foreground/75 hover:text-primary top-4 right-4 p-2">
-            <X />
+          <button className="absolute text-primary-foreground/75 hover:text-primary top-4 right-4 p-2 transition-transform duration-200 hover:scale-110 focus:outline-none cursor-pointer">
+            <X className="size-6" />
           </button>
         </SheetClose>
       </SheetContent>

@@ -16,12 +16,9 @@ import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useState } from "react";
 
-const Filter = ({ params }: {
-  params: PropertiesQueryParamsInterface;
-}) => {
-
+const Filter = ({ params }: { params: PropertiesQueryParamsInterface }) => {
   // === Local States ===
-  const router = useRouter()
+  const router = useRouter();
   const [query, setQuery] = useState({
     search: params?.search ?? "",
     type: params?.type ?? "any",
@@ -36,7 +33,7 @@ const Filter = ({ params }: {
   const handleChange = useCallback(
     (key: keyof typeof query, value: string) =>
       setQuery((prev) => ({ ...prev, [key]: value })),
-    []
+    [],
   );
 
   // === Build search params & update URL without page reload ===
@@ -58,15 +55,10 @@ const Filter = ({ params }: {
           : undefined,
       property: query.property !== "any" ? query.property : undefined,
       bedroom:
-        query.bedroom && Number(query.bedroom) > 0
-          ? query.bedroom
-          : undefined,
+        query.bedroom && Number(query.bedroom) > 0 ? query.bedroom : undefined,
 
       // Pagination
-      limit:
-        params.limit && Number(params.limit) > 0
-          ? params.limit
-          : "10",
+      limit: params.limit && Number(params.limit) > 0 ? params.limit : "10",
       page: "1",
     };
 
@@ -79,43 +71,47 @@ const Filter = ({ params }: {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-2.5 w-full p-1">
-
       {/* Heading */}
-      <h1 className="text-2xl">
-        Search Result for <b>Pakistan</b>
-      </h1>
-
+      {(params.search || params.location) && (
+        <h1 className="text-2xl">
+          {params.search ? "Search Result for " : "Showing properties in "}
+          <b className="text-primary">{params.search || params.location}</b>
+        </h1>
+      )}
       {/* Location Input */}
       <div className="flex gap-1 flex-wrap">
         <div className="flex-3 flex flex-col min-w-40">
-        <label htmlFor="search" className="text-xs">Search</label>
-        <Input
-          id="search"
-          type="text"
-          variant="simple"
-          placeholder="Search"
-          className="rounded-xs ring-0"
-          value={query.search}
-          onChange={(e) => handleChange("search", e.target.value)}
-        />
+          <label htmlFor="search" className="text-xs">
+            Search
+          </label>
+          <Input
+            id="search"
+            type="text"
+            variant="simple"
+            placeholder="Search"
+            className="rounded-xs ring-0"
+            value={query.search}
+            onChange={(e) => handleChange("search", e.target.value)}
+          />
         </div>
         <div className="flex-1 flex flex-col min-w-32">
-        <label htmlFor="city" className="text-xs">Location</label>
-        <Input
-          id="city"
-          type="text"
-          variant="simple"
-          placeholder="City Location"
-          className="rounded-xs ring-0"
-          value={query.location}
-          onChange={(e) => handleChange("location", e.target.value)}
-        />
+          <label htmlFor="city" className="text-xs">
+            Location
+          </label>
+          <Input
+            id="city"
+            type="text"
+            variant="simple"
+            placeholder="City Location"
+            className="rounded-xs ring-0"
+            value={query.location}
+            onChange={(e) => handleChange("location", e.target.value)}
+          />
         </div>
       </div>
 
       {/* Filters Row */}
       <div className="flex flex-wrap gap-2 w-full justify-between">
-
         {/* Type Selector */}
         <div className="flex-1 flex flex-col min-w-32">
           <label htmlFor="type" className="text-xs">
@@ -124,8 +120,12 @@ const Filter = ({ params }: {
           <Select
             value={query.type}
             onValueChange={(val) => handleChange("type", val)}
-            defaultValue="any">
-            <SelectTrigger id="type" className="w-full shrink-0 rounded-xs border shadow">
+            defaultValue="any"
+          >
+            <SelectTrigger
+              id="type"
+              className="w-full shrink-0 rounded-xs border shadow"
+            >
               <SelectValue placeholder="Select a type" />
             </SelectTrigger>
             <SelectContent>
@@ -148,8 +148,12 @@ const Filter = ({ params }: {
           <Select
             value={query.property}
             onValueChange={(val) => handleChange("property", val)}
-            defaultValue="any">
-            <SelectTrigger id="property" className="w-full shrink-0 rounded-xs border shadow">
+            defaultValue="any"
+          >
+            <SelectTrigger
+              id="property"
+              className="w-full shrink-0 rounded-xs border shadow"
+            >
               <SelectValue placeholder="Select a Property" />
             </SelectTrigger>
             <SelectContent>
@@ -219,13 +223,14 @@ const Filter = ({ params }: {
 
         {/* Search Button */}
         <div className="flex-1 flex justify-end mt-1">
-          <Button type="submit" className="flex-auto max-w-full bg-primary h-12 rounded-none border-none flex items-center justify-center">
+          <Button
+            type="submit"
+            className="flex-auto max-w-full bg-primary h-12 rounded-none border-none flex items-center justify-center"
+          >
             <Search className="size-6" />
           </Button>
         </div>
       </div>
-
-
     </form>
   );
 };

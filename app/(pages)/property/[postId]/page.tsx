@@ -131,14 +131,13 @@ export default async function ViewProperty({
     ? {
         pathname: "/chat",
         query: {
-          messageTo: post.sellerInfo.id,
           property: post.id,
         },
       }
     : null;
 
   const signInHref = `/sign-in?callbackUrl=${encodeURIComponent(
-    `/chat?messageTo=${post.sellerInfo?.id}&propertyId=${post.id}`,
+    `/chat?property=${post.id}`,
   )}`;
 
   return (
