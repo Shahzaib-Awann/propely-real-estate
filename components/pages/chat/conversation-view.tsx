@@ -17,13 +17,18 @@ export default async function ConversationView({
   conversationId,
   userId,
 }: Props) {
-  const conversation = await getConversationById(conversationId, userId);
 
-  const unReadMessages = await getTotalUnreadMessages({ conversationId, userId, scope: "single" })
+  // 1. Kick off all independent database reads concurrently
+  const [conversation, unReadMessages, messages] = await Promise.all([
+    getConversationById(conversationId, userId),
+    getTotalUnreadMessages({ conversationId, userId, scope: "single" }),
+    getConversationMessages({ conversationId, limit: 30, }),
+  ]);
 
-  await markConversationAsSeen(conversationId, userId);
-
-  const messages = await getConversationMessages(conversationId);
+  // 2. Perform the database write update only if a valid conversation exists
+  if (conversation) {
+    await markConversationAsSeen(conversationId, userId);
+  }
 
   return (
     <div className="flex flex-col flex-1">

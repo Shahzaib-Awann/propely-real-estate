@@ -1,75 +1,82 @@
 // @/lib/socket/socket-handlers.ts
 
 import { Server, Socket } from "socket.io";
-
 import { SOCKET_EVENTS } from "./socket-events";
 import { markConversationAsSeen } from "../actions/chat.action";
-
 import { getConversationRoom, getUserRoom } from "./socket-rooms";
 
-// Keep track of active users
-const onlineUsers = new Set<string>();
+/**
+ * Tracks multi-tab connections cleanly.
+ * Key: userId string
+ * Value: Set of active socket.ids for that specific user
+ */
+const onlineUsers = new Map<string, Set<string>>();
 
 export function registerSocketHandlers(io: Server, socket: Socket) {
+
   socket.on(SOCKET_EVENTS.REGISTER_USER, (userId: number) => {
     const userIdStr = String(userId);
-
-    // Store user id on socket
     socket.data.userId = userIdStr;
-
     socket.join(getUserRoom(userId));
 
-    // Online tracking
-    onlineUsers.add(userIdStr);
+    // Multi-tab safe tracking: add this socket instance to the user's connection pool
+    if (!onlineUsers.has(userIdStr)) {
+      onlineUsers.set(userIdStr, new Set());
+    }
+    onlineUsers.get(userIdStr)!.add(socket.id);
 
-    // Broadcast updated online users
-    io.emit(SOCKET_EVENTS.ONLINE_PRESENCE, Array.from(onlineUsers));
-
-    console.log(`${socket.id} registered as online (${userIdStr})`);
+    // Broadcast only unique online user IDs
+    io.emit(SOCKET_EVENTS.ONLINE_PRESENCE, Array.from(onlineUsers.keys()));
+    console.log(`${socket.id} registered online for user (${userIdStr})`);
   });
 
   socket.on(SOCKET_EVENTS.UNREGISTER_USER, (userId: number) => {
     const userIdStr = String(userId);
-
     socket.leave(getUserRoom(userId));
-    onlineUsers.delete(userIdStr);
-    io.emit(SOCKET_EVENTS.ONLINE_PRESENCE, Array.from(onlineUsers));
 
-    console.log(`${socket.id} un-registered ${getUserRoom(userId)}`);
+    // Remove this specific socket connection from the user's pool
+    const userConnections = onlineUsers.get(userIdStr);
+    if (userConnections) {
+      userConnections.delete(socket.id);
+      if (userConnections.size === 0) {
+        onlineUsers.delete(userIdStr);
+      }
+    }
+
+    io.emit(SOCKET_EVENTS.ONLINE_PRESENCE, Array.from(onlineUsers.keys()));
+    console.log(`${socket.id} un-registered room ${getUserRoom(userId)}`);
   });
 
   socket.on(SOCKET_EVENTS.TYPING_START, ({ conversationId, userId }: { conversationId: string; userId: number }) => {
-  const room = getConversationRoom(conversationId);
-  // Broadcast to everyone else in the conversation room
-  socket.to(room).emit(SOCKET_EVENTS.TYPING_START, { conversationId, userId });
-});
+    // Optimization: Cache room string to prevent multiple function executions
+    const room = getConversationRoom(conversationId);
+    socket.to(room).emit(SOCKET_EVENTS.TYPING_START, { conversationId, userId });
+  });
 
-socket.on(SOCKET_EVENTS.TYPING_STOP, ({ conversationId, userId }: { conversationId: string; userId: number }) => {
-  const room = getConversationRoom(conversationId);
-  socket.to(room).emit(SOCKET_EVENTS.TYPING_STOP, { conversationId, userId });
-});
+  socket.on(SOCKET_EVENTS.TYPING_STOP, ({ conversationId, userId }: { conversationId: string; userId: number }) => {
+    const room = getConversationRoom(conversationId);
+    socket.to(room).emit(SOCKET_EVENTS.TYPING_STOP, { conversationId, userId });
+  });
 
-socket.on(SOCKET_EVENTS.MESSAGES_DELETED, ({ conversationId, messageIds }: { conversationId: string; messageIds: string[] }) => {
-  const room = getConversationRoom(conversationId);
-  // Broadcast to everyone in the room (including the sender's open tabs)
-  io.to(room).emit(SOCKET_EVENTS.MESSAGES_DELETED, { conversationId, messageIds });
-});
+  socket.on(SOCKET_EVENTS.MESSAGES_DELETED, ({ conversationId, messageIds }: { conversationId: string; messageIds: string[] }) => {
+    const room = getConversationRoom(conversationId);
+    io.to(room).emit(SOCKET_EVENTS.MESSAGES_DELETED, { conversationId, messageIds });
+  });
 
   socket.on(SOCKET_EVENTS.JOIN_CONVERSATION, (conversationId: string) => {
-    socket.join(getConversationRoom(conversationId));
-
-    console.log(`${socket.id} joined ${getConversationRoom(conversationId)}`);
+    const room = getConversationRoom(conversationId);
+    socket.join(room);
+    console.log(`${socket.id} joined ${room}`);
   });
 
   socket.on(SOCKET_EVENTS.LEAVE_CONVERSATION, (conversationId: string) => {
-    socket.leave(getConversationRoom(conversationId));
-
-    console.log(`${socket.id} left ${getConversationRoom(conversationId)}`);
+    const room = getConversationRoom(conversationId);
+    socket.leave(room);
+    console.log(`${socket.id} left ${room}`);
   });
 
   socket.on(SOCKET_EVENTS.SEND_MESSAGE, (message) => {
     const room = getConversationRoom(message.conversationId);
-
     io.to(room).emit(SOCKET_EVENTS.NEW_MESSAGE, message);
 
     const sidebarPayload = {
@@ -79,40 +86,34 @@ socket.on(SOCKET_EVENTS.MESSAGES_DELETED, ({ conversationId, messageIds }: { con
       senderId: message.senderId,
     };
 
-    io.to(getUserRoom(message.senderId)).emit(
-      SOCKET_EVENTS.SIDEBAR_UPDATE,
-      sidebarPayload,
-    );
-
-    io.to(getUserRoom(message.receiverId)).emit(
-      SOCKET_EVENTS.SIDEBAR_UPDATE,
-      sidebarPayload,
-    );
+    io.to(getUserRoom(message.senderId)).emit(SOCKET_EVENTS.SIDEBAR_UPDATE, sidebarPayload);
+    io.to(getUserRoom(message.receiverId)).emit(SOCKET_EVENTS.SIDEBAR_UPDATE, sidebarPayload);
   });
 
-  socket.on(
-    SOCKET_EVENTS.MESSAGE_SEEN,
-    async ({ conversationId, viewerId }) => {
-      await markConversationAsSeen(conversationId, viewerId);
+  socket.on(SOCKET_EVENTS.MESSAGE_SEEN, async ({ conversationId, viewerId }) => {
+    await markConversationAsSeen(conversationId, viewerId);
 
-      io.to(getConversationRoom(conversationId)).emit(
-        SOCKET_EVENTS.MESSAGE_SEEN,
-        {
-          conversationId,
-          viewerId,
-        },
-      );
-    },
-  );
+    const room = getConversationRoom(conversationId);
+    io.to(room).emit(SOCKET_EVENTS.MESSAGE_SEEN, { conversationId, viewerId });
+  });
 
-  // Base disconnection handler
+  // Safe disconnection handler for multi-tab environments
   socket.on("disconnect", () => {
-    const userId = socket.data.userId;
-    if (userId) {
-      onlineUsers.delete(userId);
-      io.emit(SOCKET_EVENTS.ONLINE_PRESENCE, Array.from(onlineUsers));
-      console.log(`Disconnected clean: ${userId}`);
-    }
+    const userIdStr = socket.data.userId;
+    if (!userIdStr) return;
 
+    const userConnections = onlineUsers.get(userIdStr);
+    if (userConnections) {
+      userConnections.delete(socket.id);
+
+      // Only delete user entirely and broadcast if ALL tabs/sockets are closed
+      if (userConnections.size === 0) {
+        onlineUsers.delete(userIdStr);
+        io.emit(SOCKET_EVENTS.ONLINE_PRESENCE, Array.from(onlineUsers.keys()));
+        console.log(`Disconnected clean: User ${userIdStr} is now offline`);
+      } else {
+        console.log(`Disconnected single tab: User ${userIdStr} still has active connections`);
+      }
+    }
   });
 }

@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import PropertyForm from "@/components/pages/property/property-form";
 import { getPostByIdForEdit } from "@/lib/actions/property.action";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 
 /**
@@ -30,7 +30,7 @@ export default async function EditPropertyPage({ params }: { params: Promise<{ p
 
   // Show fallback if property is not found
   if (!property) {
-    return <div> Property Not Found </div>
+    notFound();
   }
 
   return(

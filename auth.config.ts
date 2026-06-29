@@ -29,7 +29,7 @@ export function authorizeRequest(
    *
    * - Define routes that require user authentication.
    */
-  const protectedRoutes = ["/chat", "/profile"];
+  const protectedRoutes = ["/chat", "/profile", "/property/add"];
   const isProtected = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );

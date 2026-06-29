@@ -2,7 +2,7 @@
 
 // @/lib/actions/chat.action.ts
 
-import { and, asc, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/mysql-core";
 import { v6 as uuidv6 } from 'uuid';
 
@@ -15,6 +15,13 @@ import {
 } from "../db/schema";
 
 import { ConversationHeader, ConversationListItem, RealtimeMessage } from "@/types/propely.chat";
+
+/**
+ * Helper to generate a clean MySQL-compatible timestamp string: YYYY-MM-DD HH:MM:SS
+ */
+function getMysqlTimestamp(): string {
+  return new Date().toISOString().slice(0, 19).replace("T", " ");
+}
 
 export async function getUserConversations(
   userId: number
@@ -267,9 +274,23 @@ export async function getConversationById(conversationId: string, userId: number
 }
 
 
-export async function getConversationMessages(
-  conversationId: string,
-): Promise<RealtimeMessage[]> {
+export async function getConversationMessages({
+  conversationId,
+  cursor,
+  limit = 30,
+}: {
+  conversationId: string;
+  cursor?: string | null; // The timestamp of the oldest loaded message
+  limit?: number;
+}): Promise<RealtimeMessage[]> {
+
+  const conditions = [eq(messagesTable.conversationId, conversationId)];
+
+  // If a cursor is passed, only fetch messages older than this timestamp
+  if (cursor) {
+    conditions.push(lt(messagesTable.createdAt, cursor));
+  }
+
   const messages = await db
     .select({
       id: messagesTable.id,
@@ -279,31 +300,24 @@ export async function getConversationMessages(
       seenAt: messagesTable.seenAt,
       isDeleted: messagesTable.isDeleted,
       createdAt: messagesTable.createdAt,
-
       buyerId: conversationsTable.buyerId,
       sellerId: conversationsTable.sellerId,
     })
     .from(messagesTable)
-    .innerJoin(
-      conversationsTable,
-      eq(messagesTable.conversationId, conversationsTable.id),
-    )
-    .where(eq(messagesTable.conversationId, conversationId))
-    .orderBy(asc(messagesTable.createdAt));
+    .innerJoin(conversationsTable, eq(messagesTable.conversationId, conversationsTable.id))
+    .where(and(...conditions))
+    .orderBy(desc(messagesTable.createdAt)) // Fetch latest entries first relative to cursor
+    .limit(limit);
 
-  return messages.map((msg) => ({
+  // Reverse back to ascending order so it reads chronologically (top to bottom)
+  return messages.reverse().map((msg) => ({
     id: msg.id,
     conversationId: msg.conversationId,
     senderId: msg.senderId,
-    receiverId:
-      msg.senderId === msg.buyerId
-        ? msg.sellerId
-        : msg.buyerId,
+    receiverId: msg.senderId === msg.buyerId ? msg.sellerId : msg.buyerId,
     buyerId: msg.buyerId,
     sellerId: msg.sellerId,
-    message: msg.isDeleted
-      ? "This message was deleted"
-      : msg.message,
+    message: msg.isDeleted ? "This message was deleted" : msg.message,
     seenAt: msg.seenAt,
     isDeleted: msg.isDeleted,
     createdAt: msg.createdAt,
@@ -352,10 +366,7 @@ export async function sendMessage({
         message,
       });
 
-    const now = new Date()
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " ");
+    const now = getMysqlTimestamp();
 
     await tx
       .update(conversationsTable)
@@ -412,10 +423,7 @@ export async function markConversationAsSeen(conversationId: string, viewerId: n
 
   if (!isParticipant) return null;
 
-  const now = new Date()
-  .toISOString()
-  .slice(0, 19)
-  .replace("T", " ");
+  const now = getMysqlTimestamp();
 
   // 2. Mark all incoming messages as seen
   await db
@@ -442,15 +450,14 @@ export async function deleteMessages({ messageIds, userId, conversationId }: {
   try {
     if (!messageIds.length) return { success: false, error: "No messages selected" };
 
-    // Format ISO string format cleanly to MySQL standard: YYYY-MM-DD HH:MM:SS
-    const mysqlTimestamp = new Date().toISOString().slice(0, 19).replace("T", " ");
+    const now = getMysqlTimestamp();
 
     // Update messages in DB: Only allow deleting your own messages in this conversation
     await db
       .update(messagesTable)
       .set({
         isDeleted: true,
-        deletedAt: mysqlTimestamp,
+        deletedAt: now,
       })
       .where(
         and(
