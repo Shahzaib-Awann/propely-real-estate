@@ -56,15 +56,6 @@ export default function ConversationMessages({
   const otherUserTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
-   * Sync incoming server messages into local state
-   */
-  useEffect(() => {
-    setChatMessages(messages);
-    setHasMore(messages.length === 30);
-    isInitialRender.current = true;
-  }, [messages]);
-
-  /**
    * Auto-scroll to latest message when new messages arrive or loading completes
    */
   useEffect(() => {

@@ -33,7 +33,6 @@ import { Trash, X } from "lucide-react";
 import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";
 import { cn } from "@/lib/utils/general";
 import { SinglePostDetailsForEdit } from "@/types/propely.type";
-import { PropertyFormSkeleton } from "@/components/skeletons/property";
 import { defaultAppSettings } from "@/lib/constants";
 
 
@@ -47,133 +46,80 @@ type PropertyFormProps = {
 
 
 const PropertyForm = ({ mode, property }: PropertyFormProps) => {
-
-
   /* === Hooks === */
-  const router = useRouter()
+  const router = useRouter();
+  const isEdit = mode === "edit";
 
-  /* === Local State === */
-  const [isFormHydrated, setIsFormHydrated] = useState(mode === "create");
-  const [images, setImages] = useState<{ id: number | null; imageUrl: string; publicId: string }[]>([]);
+  /* === Local State (Derived directly from props on mount) === */
   const [loading, setLoading] = useState(false);
   const [imagesUploadLoading, setImagesUploadLoading] = useState(false);
   const [imageRemoveLoading, setImageRemoveLoading] = useState(false);
 
+  // Directly initialize images array without an effect pass
+  const [images, setImages] = useState<{ id: number | null; imageUrl: string; publicId: string }[]>(() => {
+    if (isEdit && property?.images) {
+      return property.images.map((img) => ({
+        id: img.id ?? null,
+        imageUrl: img.imageUrl,
+        publicId: img.publicId,
+      }));
+    }
+    return [];
+  });
+
+  /* === Compute Default Form Values Object === */
+  const initialFormValues = {
+    postData: {
+      id: isEdit ? property?.id ?? null : null,
+      title: isEdit ? property?.title ?? "" : "",
+      address: isEdit ? property?.address ?? "" : "",
+      city: isEdit ? property?.city ?? "" : "",
+      bedrooms: isEdit ? property?.bedRooms ?? 0 : 0,
+      bathrooms: isEdit ? property?.bathroom ?? 0 : 0,
+      latitude: isEdit ? Number(property?.latitude) ?? 0 : 0,
+      longitude: isEdit ? Number(property?.longitude) ?? 0 : 0,
+      price: isEdit ? Number(property?.price) ?? 0 : 0,
+      propertyType: isEdit ? property?.ptype : "apartment",
+      listingType: isEdit ? property?.ltype : "rent",
+    },
+    postDetails: {
+      description: isEdit ? String(property?.description) ?? "" : "",
+      state: isEdit ? property?.state ?? "" : "",
+      areaSqft: isEdit ? property?.size ?? 0 : 0,
+      utilitiesPolicy: isEdit ? property?.utilities ?? "owner" : "owner",
+      petPolicy: isEdit ? property?.petPolicy ?? "allowed" : "allowed",
+      incomePolicy: isEdit ? property?.incomePolicy ?? "" : "",
+      schoolDistance: isEdit ? property?.school ?? 0 : 0,
+      busDistance: isEdit ? property?.bus ?? 0 : 0,
+      restaurantDistance: isEdit ? property?.restaurant ?? 0 : 0,
+    },
+    postImages: isEdit ? property?.images ?? [] : [],
+    postFeatures: isEdit && property?.features?.length
+      ? property.features
+      : [{ id: null, title: "", description: "" }],
+  };
 
   /* === React Hook Form Setup === */
   const form = useForm<z.input<typeof createOrUpdatePostSchema>>({
     resolver: zodResolver(createOrUpdatePostSchema),
     shouldUnregister: false,
-    defaultValues: {
-      postData: {
-        id: null,
-        title: "",
-        address: "",
-        city: "",
-        bedrooms: 0,
-        bathrooms: 0,
-        latitude: 0,
-        longitude: 0,
-        price: 0,
-        propertyType: "apartment",
-        listingType: "rent",
-      },
-      postDetails: {
-        description: "",
-        state: "",
-        areaSqft: 0,
-        utilitiesPolicy: "owner",
-        petPolicy: "allowed",
-        incomePolicy: "",
-        schoolDistance: 0,
-        busDistance: 0,
-        restaurantDistance: 0,
-      },
-      postImages: [],
-      postFeatures: [{
-        id: null,
-        title: "",
-        description: ""
-      }],
-    },
+    defaultValues: initialFormValues,
   });
 
-  /* === Dynamic Property Features === */
+  /* === Dynamic Property Features Array Hook === */
   const { fields: featureFields, append: addFeature, remove: removeFeature } = useFieldArray({
     control: form.control,
     name: "postFeatures",
   });
 
-
-  /* === Hydrate form & images in EDIT mode === */
-  useEffect(() => {
-    if (mode === "edit" && property) {
-
-      // Reset form with property values
-      form.reset({
-        postData: {
-          id: property?.id ?? null,
-          title: property?.title ?? "",
-          address: property?.address ?? "",
-          city: property?.city ?? "",
-          bedrooms: property?.bedRooms ?? 0,
-          bathrooms: property?.bathroom ?? 0,
-          latitude: Number(property?.latitude) ?? 0,
-          longitude: Number(property?.longitude) ?? 0,
-          price: Number(property?.price) ?? 0,
-          propertyType: property?.ptype,
-          listingType: property?.ltype,
-        },
-        postDetails: {
-          description: String(property?.description) ?? "",
-          state: property?.state ?? "",
-          areaSqft: property?.size ?? 0,
-          utilitiesPolicy: property?.utilities ?? "owner",
-          petPolicy: property?.petPolicy ?? "allowed",
-          incomePolicy: property.incomePolicy ?? "",
-          schoolDistance: property.school ?? 0,
-          busDistance: property.bus ?? 0,
-          restaurantDistance: property.restaurant ?? 0,
-        },
-        postImages: property.images ?? [],
-        postFeatures:
-          property.features?.length
-            ? property.features
-            : [{ id: null, title: "", description: "" }],
-      });
-
-      // Sync images into local state
-      setImages(
-        (property.images ?? []).map((img) => ({
-          id: img.id ?? null,
-          imageUrl: img.imageUrl,
-          publicId: img.publicId,
-        }))
-      );
-
-      // Prevent render until form state is fully hydrated
-      setIsFormHydrated(true);
-    }
-  }, [mode, property, form]);
-
-
-  /* === Sync images with form state === */
+  /* === Sync local images array changes into form state === */
   useEffect(() => {
     form.setValue("postImages", images);
   }, [images, form]);
 
-
-  /* === Prevent Early Render === */
-  if (!isFormHydrated) {
-    return <PropertyFormSkeleton />;
-  }
-
-
   /* === Submit Handler === */
   async function onSubmit(values: z.infer<typeof createOrUpdatePostSchema>) {
-
     const API_URL = "/api/property";
-    const isEdit = mode === "edit";
 
     const requestOptions = {
       method: isEdit ? "PUT" : "POST",
@@ -181,7 +127,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(values),
-    }
+    };
 
     setLoading(true);
     toast.loading(isEdit ? "Updating property..." : "Saving property...", {
@@ -192,7 +138,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
       const response = await fetch(API_URL, requestOptions);
       const result = await response.json();
 
-      // Map HTTP status codes to error messages
+      // Map HTTP status codes to clean error messages
       const errorMap: Record<number, string> = {
         400: result?.error ?? "Property ID is missing.",
         401: "Your session has expired. Please sign in again.",
@@ -201,7 +147,6 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
         422: "Invalid property data. Please check your inputs.",
       };
 
-      // Handle error responses
       if (!response.ok) {
         const message =
           errorMap[response.status] ??
@@ -211,35 +156,31 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
         return;
       }
 
-      // === Success ===
-      toast.success(result?.message
-        ?? (isEdit
-          ? "Property updated successfully."
-          : "Property created successfully."
-        ), { id: "property-loading" });
+      // === Success Path ===
+      toast.success(
+        result?.message ??
+        (isEdit ? "Property updated successfully." : "Property created successfully."),
+        { id: "property-loading" }
+      );
 
-      router.push(`/property/${result?.propertyId}`)
-
+      router.push(`/property/${result?.propertyId}`);
     } catch (error) {
       console.error("Property save failed:", error);
-      toast.error(
-        "Network error occurred. Please check your connection and try again.", {
+      toast.error("Network error occurred. Please check your connection and try again.", {
         id: "property-loading",
       });
-
     } finally {
       setLoading(false);
       toast.dismiss("property-loading");
     }
   }
 
-
-  // === Remove image from Cloudinary and local state ===
+  /* === Remove image from Cloudinary and local state === */
   async function handleRemoveImage(index: number) {
     const img = images[index];
 
     try {
-      setImageRemoveLoading(true)
+      setImageRemoveLoading(true);
 
       // Delete image from Cloudinary via API
       await fetch("/api/cloudinary/delete", {
@@ -250,20 +191,17 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
 
       // On successful deletion, remove the image from local state
       setImages((prev) => prev.filter((_, i) => i !== index));
-
     } catch {
       toast.error("Could not remove image from Cloudinary");
     } finally {
-      setImageRemoveLoading(false)
+      setImageRemoveLoading(false);
     }
   }
-
 
   /* === Form Validation Error Handler === */
   const onError = () => {
     toast.error("All fields are required.");
   };
-
 
   return (
     <>

@@ -31,6 +31,7 @@ export default async function ConversationView({
   return (
     <div className="flex flex-col flex-1">
       <ConversationMessages
+        key={conversationId}
         messages={messages}
         conversationId={conversationId}
         userId={userId}

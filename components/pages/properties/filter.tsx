@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PropertiesQueryParamsInterface } from "@/lib/types/propely.type";
+import { PropertiesQueryParamsInterface } from "@/types/propely.type";
 import { buildSearchParams } from "@/lib/utils/general";
 import { cn } from "@/lib/utils/general";
 
