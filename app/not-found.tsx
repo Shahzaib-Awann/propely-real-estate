@@ -4,7 +4,7 @@ import { ArrowLeft, Home } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <main className="bg-background text-foreground min-h-screen flex px-4">
+    <main className="bg-background text-foreground max-w-340 min-h-screen mx-auto flex px-4">
       {/* Left Section */}
       <section className="flex-3 flex items-center px-6 lg:px-16">
         <div className="max-w-2xl">

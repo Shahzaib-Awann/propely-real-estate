@@ -39,7 +39,7 @@ const Map = ({ items }: { items: { id: string, title: string, price: string, bed
 
       {/* Map Tiles (OpenStreetMap Layer) */}
       <TileLayer
-        attribution='&copy; OpenStreetMap contributors'
+        attribution='&copy; Propely Real Estate'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 

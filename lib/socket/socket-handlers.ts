@@ -19,13 +19,11 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     socket.data.userId = userIdStr;
     socket.join(getUserRoom(userId));
 
-    // Multi-tab safe tracking: add this socket instance to the user's connection pool
     if (!onlineUsers.has(userIdStr)) {
       onlineUsers.set(userIdStr, new Set());
     }
     onlineUsers.get(userIdStr)!.add(socket.id);
 
-    // Broadcast only unique online user IDs
     io.emit(SOCKET_EVENTS.ONLINE_PRESENCE, Array.from(onlineUsers.keys()));
     console.log(`${socket.id} registered online for user (${userIdStr})`);
   });
@@ -34,7 +32,6 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     const userIdStr = String(userId);
     socket.leave(getUserRoom(userId));
 
-    // Remove this specific socket connection from the user's pool
     const userConnections = onlineUsers.get(userIdStr);
     if (userConnections) {
       userConnections.delete(socket.id);
@@ -47,13 +44,16 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     console.log(`${socket.id} un-registered room ${getUserRoom(userId)}`);
   });
 
+  // CHANGED: Cache typing room state on the socket object
   socket.on(SOCKET_EVENTS.TYPING_START, ({ conversationId, userId }: { conversationId: string; userId: number }) => {
-    // Optimization: Cache room string to prevent multiple function executions
+    socket.data.typingRoom = conversationId;
     const room = getConversationRoom(conversationId);
     socket.to(room).emit(SOCKET_EVENTS.TYPING_START, { conversationId, userId });
   });
 
+  // CHANGED: Reset cached typing room state on the socket object
   socket.on(SOCKET_EVENTS.TYPING_STOP, ({ conversationId, userId }: { conversationId: string; userId: number }) => {
+    socket.data.typingRoom = null;
     const room = getConversationRoom(conversationId);
     socket.to(room).emit(SOCKET_EVENTS.TYPING_STOP, { conversationId, userId });
   });
@@ -97,16 +97,26 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     io.to(room).emit(SOCKET_EVENTS.MESSAGE_SEEN, { conversationId, viewerId });
   });
 
-  // Safe disconnection handler for multi-tab environments
+  // CHANGED: Added cleanup broadcast on abrupt disconnection
   socket.on("disconnect", () => {
     const userIdStr = socket.data.userId;
+    const typingRoom = socket.data.typingRoom;
+
+    // ABRUPT EXIT FIX: If the user closed their tab while typing, notify room before cleaning state
+    if (typingRoom && userIdStr) {
+      const room = getConversationRoom(typingRoom);
+      socket.to(room).emit(SOCKET_EVENTS.TYPING_STOP, {
+        conversationId: typingRoom,
+        userId: Number(userIdStr),
+      });
+    }
+
     if (!userIdStr) return;
 
     const userConnections = onlineUsers.get(userIdStr);
     if (userConnections) {
       userConnections.delete(socket.id);
 
-      // Only delete user entirely and broadcast if ALL tabs/sockets are closed
       if (userConnections.size === 0) {
         onlineUsers.delete(userIdStr);
         io.emit(SOCKET_EVENTS.ONLINE_PRESENCE, Array.from(onlineUsers.keys()));

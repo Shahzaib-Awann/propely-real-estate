@@ -74,7 +74,7 @@ export default async function Properties({ searchParams }: { searchParams: Promi
   );
 
   return (
-    <main className="flex flex-row h-[calc(100vh-80px)] px-4">
+    <main className="flex flex-row h-[calc(100vh-80px)] lg:px-4">
       <PropertiesClient
         key={JSON.stringify(queryParams)}
         initialItems={propertiesResponse.items}

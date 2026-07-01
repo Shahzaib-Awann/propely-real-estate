@@ -3,10 +3,17 @@
 // @/components/pages/chat/chat-header.tsx
 
 import Link from "next/link";
-import { ArrowLeft, Ellipsis } from "lucide-react";
+import { ArrowLeft, Ellipsis, CheckSquare } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ConversationHeader } from "@/types/propely.chat";
 import { usePresenceStore } from "@/lib/store/use-presence-store";
 
@@ -18,41 +25,86 @@ interface ChatHeaderProps {
 export default function ChatHeader({ conversation, onSelectMessagesMode }: ChatHeaderProps) {
   const isOnline = usePresenceStore((state) => state.isUserOnline(String(conversation?.otherUser.id)));
 
+  if (!conversation) return null;
+
   return (
-    <header className="border-b border-border p-4 flex items-center justify-between gap-4 bg-background z-10">
-      <div className="flex items-center gap-3">
-        <Link href="/chat" className="lg:hidden text-foreground hover:text-primary transition-colors duration-200">
+    <header className="h-20 border-b border-border px-6 flex items-center justify-between gap-4 bg-background/90 backdrop-blur-md sticky top-0 z-40 select-none">
+      {/* Left Node: Back Interaction + User Profile Card */}
+      <div className="flex items-center gap-4 min-w-0">
+        <Link
+          href="/chat"
+          className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-radius transition-all duration-200"
+        >
           <ArrowLeft size={20} />
         </Link>
+
+        {/* Profile Avatar Block with Smooth Rings */}
         <div className="relative shrink-0 group">
-          <Avatar className="h-11 w-11 shadow-sm border border-border overflow-hidden">
-            <AvatarImage src={conversation?.otherUser.avatar ?? undefined} alt={conversation?.otherUser.name} className="object-cover group-hover:scale-110 transition-all duration-300" />
-            <AvatarFallback className="bg-muted font-lato text-sm font-semibold text-foreground/70">
-              {conversation?.otherUser.name?.slice(0, 2).toUpperCase() ?? "GU"}
+          <Avatar className="h-11 w-11 shadow-sm border border-border/60 transition-transform duration-300 group-hover:scale-102">
+            <AvatarImage
+              src={conversation.otherUser.avatar ?? undefined}
+              alt={conversation.otherUser.name}
+              className="object-cover"
+            />
+            <AvatarFallback className="bg-muted font-lato text-sm font-bold text-muted-foreground">
+              {conversation.otherUser.name?.slice(0, 2).toUpperCase() ?? "GU"}
             </AvatarFallback>
           </Avatar>
-          {isOnline && <span className="absolute bottom-0 right-0 size-3.5 rounded-full border-2 border-background bg-green-500 shadow-sm animate-pulse" />}
+
+          {/* Status Badge Ring Anchor */}
+          {isOnline && (
+            <span className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-background bg-emerald-500 shadow-2xs transition-transform duration-300 group-hover:scale-110" />
+          )}
         </div>
-        <div>
-          <h2 className="font-lato font-bold text-base text-foreground tracking-tight leading-tight">{conversation?.otherUser.name}</h2>
-          <p className="text-xs font-lato text-foreground/60 mt-0.5 max-w-[200px] sm:max-w-xs truncate">
-            Regarding: <span className="font-medium text-foreground/80">{conversation?.property.title}</span>
-          </p>
+
+        {/* User Identity & Associated Asset String Context */}
+        <div className="min-w-0 flex flex-col justify-center">
+          <h2 className="font-lato font-bold text-base text-foreground tracking-tight leading-none mb-1">
+            {conversation.otherUser.name}
+          </h2>
+
+          {/* Upper-case Micro Badge formatting linking to your site layout syntax */}
+          <div className="flex items-center gap-1 text-[11px] font-sans text-muted-foreground truncate">
+            <span className="uppercase font-medium tracking-wider text-primary/80 text-[10px]">Regarding</span>
+            <span className="text-muted-foreground/40">•</span>
+            <span className="font-medium text-foreground/80 truncate font-lato">
+              {conversation.property.title}
+            </span>
+          </div>
         </div>
       </div>
 
+      {/* Right Node: Dropdown Options Trigger Action Bundle */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="icon" className="rounded-radius bg-transparent text-foreground hover:bg-card-foreground hover:text-primary-foreground/75 transition-all duration-200 cursor-pointer">
-            <Ellipsis className="rotate-90 size-5" />
+          <Button
+            size="icon"
+            className="rounded-radius bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent hover:border-border/40 size-10 transition-all duration-200 shadow-none cursor-pointer"
+          >
+            <Ellipsis className="size-5" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48 bg-background border border-border text-foreground p-1 shadow-md">
+
+        <DropdownMenuContent
+          align="end"
+          sideOffset={6}
+          className="w-52 bg-popover border border-border text-popover-foreground p-1.5 rounded-radius shadow-xl animate-in fade-in-50 slide-in-from-top-1 duration-150"
+        >
           <DropdownMenuGroup>
-            <DropdownMenuLabel className="px-2 py-1.5 text-xs font-lato font-medium text-foreground/50 tracking-wide uppercase">Conversation Actions</DropdownMenuLabel>
-            <DropdownMenuItem asChild className="w-full px-2 py-2 text-sm font-lato rounded-xs cursor-pointer focus:bg-primary focus:text-primary-foreground">
-              <button onClick={onSelectMessagesMode} className="w-full text-left flex items-center justify-between">
-                <span>Select Messages</span>
+            <DropdownMenuLabel className="px-2.5 py-2 text-[10px] font-sans font-bold text-muted-foreground/80 tracking-widest uppercase">
+              Conversation Actions
+            </DropdownMenuLabel>
+
+            <DropdownMenuItem
+              asChild
+              className="w-full px-2.5 py-2 text-sm font-lato rounded-sm cursor-pointer transition-all duration-150 focus:bg-primary focus:text-primary-foreground text-foreground/90 group"
+            >
+              <button
+                onClick={onSelectMessagesMode}
+                className="w-full text-left flex items-center justify-between gap-2"
+              >
+                <span className="font-medium">Select Messages</span>
+                <CheckSquare size={16} className="text-muted-foreground group-focus:text-primary-foreground/80 transition-colors" />
               </button>
             </DropdownMenuItem>
           </DropdownMenuGroup>

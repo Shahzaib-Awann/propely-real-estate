@@ -63,7 +63,7 @@ export default function PropertiesClient({
     return (
         <>
             {/* Property listings and filters section */}
-            <section className="flex-3 h-full overflow-hidden">
+            <section className="flex-3 h-full overflow-hidden pl-4 lg:pl-0">
                 <div className="h-full flex flex-col gap-10 pr-4 lg:pr-10 py-5 overflow-y-scroll pb-12">
 
                     {/* Filter component */}

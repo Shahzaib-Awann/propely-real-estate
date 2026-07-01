@@ -1,6 +1,6 @@
 // @/app/(pages)/chat/chat-container.tsx
 
-import ConversationList from "@/components/pages/chat/conversation-list";
+import ConversationList from "@/components/pages/chat/conversation-sidebar";
 import ConversationView from "@/components/pages/chat/conversation-view";
 import EmptyState from "@/components/pages/chat/empty-state";
 import ConversationSocketRoom from "@/components/providers/socket/conversation-socket-room";
@@ -43,7 +43,7 @@ export default async function ChatContainer({
       <aside
         className={`
           bg-background lg:bg-side-panel
-          w-full flex-2
+          w-full flex-2 lg:max-w-2/5
           ${activeConversationId ? "hidden lg:block" : ""}
         `}
       >
