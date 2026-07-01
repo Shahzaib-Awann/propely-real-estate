@@ -9,6 +9,8 @@ export type SignInUser = {
   updatedAt: string | null;
 };
 
+
+
 /**
  * User data shape (safe version)
  */
@@ -22,6 +24,8 @@ export type SafeUser = {
   createdAt: string;
   updatedAt: string | null;
 };
+
+
 
 /**
  * Full user data (includes password)

@@ -9,7 +9,7 @@ import { deleteCloudinaryAssets } from "@/lib/actions/cloudinary.action";
 /*===========================================================
 === [POST] Deletes a Cloudinary asset using its publicId. ===
 ========================================================== */
-export async function POST(req: NextRequest) { 
+export async function POST(req: NextRequest) {
     try {
         // === Authenticate User ===
         const session = await auth();

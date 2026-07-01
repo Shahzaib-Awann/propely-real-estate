@@ -1,10 +1,8 @@
 "use server";
 
-// @/lib/actions/chat.action.ts
-
-import { and, asc, desc, eq, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/mysql-core";
-import { v6 as uuidv6 } from 'uuid';
+import { v6 as uuidv6 } from "uuid";
 
 import { db } from "../db/connection";
 import {
@@ -14,7 +12,11 @@ import {
   messagesTable,
 } from "../db/schema";
 
-import { ConversationHeader, ConversationListItem, RealtimeMessage } from "@/types/propely.chat";
+import {
+  ConversationHeader,
+  ConversationListItem,
+  RealtimeMessage,
+} from "@/types/propely.chat";
 
 /**
  * Helper to generate a clean MySQL-compatible timestamp string: YYYY-MM-DD HH:MM:SS
@@ -23,13 +25,24 @@ function getMysqlTimestamp(): string {
   return new Date().toISOString().slice(0, 19).replace("T", " ");
 }
 
+/**
+ * === Get User Conversations ===
+ *
+ * Fetches a list of all conversations where the user is either a buyer or seller.
+ * This function is used to power the chat sidebar list in the UI.
+ *
+ * @param userId - The ID of the authenticated user whose conversations are being fetched
+ * @throws DATABASE_ERROR - If the database query fails (e.g. connection or SQL error)
+ * @returns Array of conversation list items ordered by most recent activity
+ */
 export async function getUserConversations(
-  userId: number
+  userId: number,
 ): Promise<ConversationListItem[]> {
-
+  // Create table aliases for the users table.
   const buyer = alias(usersTable, "buyer");
   const seller = alias(usersTable, "seller");
 
+  // Fetch all conversations for a given user.
   const rows = await db
     .select({
       id: conversationsTable.id,
@@ -80,31 +93,39 @@ export async function getUserConversations(
       `,
     })
     .from(conversationsTable)
-    .leftJoin(
-      postsTable,
-      eq(postsTable.id, conversationsTable.postId)
-    )
-    .leftJoin(
-      buyer,
-      eq(buyer.id, conversationsTable.buyerId)
-    )
-    .leftJoin(
-      seller,
-      eq(seller.id, conversationsTable.sellerId)
-    )
+    .leftJoin(postsTable, eq(postsTable.id, conversationsTable.postId))
+    .leftJoin(buyer, eq(buyer.id, conversationsTable.buyerId))
+    .leftJoin(seller, eq(seller.id, conversationsTable.sellerId))
     .where(
       or(
         eq(conversationsTable.buyerId, userId),
-        eq(conversationsTable.sellerId, userId)
-      )
+        eq(conversationsTable.sellerId, userId),
+      ),
     )
-    .orderBy(
-      desc(conversationsTable.lastMessageAt)
-    );
+    .orderBy(desc(conversationsTable.lastMessageAt));
 
+  // Return formatted conversation list for UI rendering
   return rows;
 }
 
+
+
+/**
+ * === Get Total Unread Messages ===
+ *
+ * Counts unread messages for a user either globally (all conversations)
+ * or within a single conversation.
+ *
+ * This function is used for:
+ * - Showing unread badge counts in UI
+ * - Updating notification indicators in real time
+ *
+ * @param userId - The authenticated user ID whose unread messages are being counted
+ * @param conversationId - Optional conversation ID (used when scope is "single")
+ * @param scope - Determines whether to count: ("all" → all conversations | "single" → one specific conversation)
+ * @throws DATABASE_ERROR - If query execution fails
+ * @returns Total number of unread messages as a numeric value
+ */
 export async function getTotalUnreadMessages({
   userId,
   conversationId,
@@ -114,12 +135,11 @@ export async function getTotalUnreadMessages({
   conversationId?: string;
   scope: "all" | "single";
 }): Promise<number> {
-
   // 1. Build core base conditions
   const conditions = [
     or(
       eq(conversationsTable.buyerId, userId),
-      eq(conversationsTable.sellerId, userId)
+      eq(conversationsTable.sellerId, userId),
     ),
     ne(messagesTable.senderId, userId),
     isNull(messagesTable.seenAt),
@@ -130,6 +150,7 @@ export async function getTotalUnreadMessages({
     conditions.push(eq(messagesTable.conversationId, conversationId));
   }
 
+  // Execute aggregate query to count unread messages
   const result = await db
     .select({
       count: sql<number>`COUNT(*)`,
@@ -137,13 +158,34 @@ export async function getTotalUnreadMessages({
     .from(messagesTable)
     .innerJoin(
       conversationsTable,
-      eq(messagesTable.conversationId, conversationsTable.id)
+      eq(messagesTable.conversationId, conversationsTable.id),
     )
     .where(and(...conditions));
 
+  // Return safe numeric count (defaults to 0 if no result found)
   return Number(result[0]?.count ?? 0);
 }
 
+
+
+/**
+ * === Create or Get Conversation ===
+ *
+ * Creates a new conversation between a buyer and a property seller,
+ * or returns an existing one if it already exists.
+ *
+ * Ensures the property exists, prevents self-chat,
+ * and avoids duplicate conversations. Runs inside a DB transaction.
+ *
+ * @param buyerId - ID of the buyer initiating the conversation.
+ * @param postId - ID of the property/post.
+ *
+ * @throws Error "Property not found" - If the post does not exist.
+ * @throws Error "You cannot start a conversation with yourself" - If buyer is the seller.
+ * @throws DATABASE_ERROR - If transaction or query fails.
+ *
+ * @returns Object with conversationId and isNew flag.
+ */
 export async function createOrGetConversation({
   buyerId,
   postId,
@@ -155,7 +197,7 @@ export async function createOrGetConversation({
   isNew: boolean;
 }> {
   return db.transaction(async (tx) => {
-    // 1. Find property
+    // Find property
     const [property] = await tx
       .select({
         sellerId: postsTable.sellerId,
@@ -167,12 +209,12 @@ export async function createOrGetConversation({
       throw new Error("Property not found");
     }
 
-    // 2. Prevent self-chat
+    // Prevent self-chat
     if (property.sellerId === buyerId) {
       throw new Error("You cannot start a conversation with yourself");
     }
 
-    // 3. Check existing conversation
+    // Check existing conversation
     const [existingConversation] = await tx
       .select({
         id: conversationsTable.id,
@@ -182,10 +224,11 @@ export async function createOrGetConversation({
         and(
           eq(conversationsTable.postId, postId),
           eq(conversationsTable.buyerId, buyerId),
-          eq(conversationsTable.sellerId, property.sellerId)
-        )
+          eq(conversationsTable.sellerId, property.sellerId),
+        ),
       );
 
+    // If conversation exists, return it instead of creating a new one
     if (existingConversation) {
       return {
         conversationId: existingConversation.id,
@@ -193,7 +236,7 @@ export async function createOrGetConversation({
       };
     }
 
-    // 4. Create conversation
+    // Create conversation
     const conversationId = uuidv6();
 
     await tx.insert(conversationsTable).values({
@@ -203,6 +246,7 @@ export async function createOrGetConversation({
       sellerId: property.sellerId,
     });
 
+    // Return newly created conversation details
     return {
       conversationId,
       isNew: true,
@@ -211,7 +255,28 @@ export async function createOrGetConversation({
 }
 
 
-export async function getConversationById(conversationId: string, userId: number): Promise<ConversationHeader | null> {
+
+/**
+ * === Get Conversation By ID ===
+ *
+ * Fetches a conversation by ID for a specific user.
+ * Verifies the user is part of the conversation before returning data.
+ *
+ * Returns a structured header with property details
+ * and the other participant (buyer/seller), determined dynamically.
+ *
+ * @param conversationId - ID of the conversation.
+ * @param userId - ID of the requesting user.
+ *
+ * @throws DATABASE_ERROR - If query fails.
+ *
+ * @returns ConversationHeader if found, otherwise null.
+ */
+export async function getConversationById(
+  conversationId: string,
+  userId: number,
+): Promise<ConversationHeader | null> {
+  // Fetch conversation details along with related property and user info.
   const result = await db
     .select({
       id: conversationsTable.id,
@@ -227,10 +292,7 @@ export async function getConversationById(conversationId: string, userId: number
       otherUserAvatar: usersTable.avatar,
     })
     .from(conversationsTable)
-    .innerJoin(
-      postsTable,
-      eq(postsTable.id, conversationsTable.postId)
-    )
+    .innerJoin(postsTable, eq(postsTable.id, conversationsTable.postId))
     .innerJoin(
       usersTable,
       sql`
@@ -240,25 +302,27 @@ export async function getConversationById(conversationId: string, userId: number
           THEN ${conversationsTable.sellerId}
           ELSE ${conversationsTable.buyerId}
         END
-      `
+      `,
     )
     .where(
       and(
         eq(conversationsTable.id, conversationId),
         or(
           eq(conversationsTable.buyerId, userId),
-          eq(conversationsTable.sellerId, userId)
-        )
-      )
+          eq(conversationsTable.sellerId, userId),
+        ),
+      ),
     )
     .limit(1);
 
   const conversation = result[0];
 
+  // If no conversation found or user has no access, return null
   if (!conversation) {
     return null;
   }
 
+  // Format and return the conversation header
   return {
     id: conversation.id,
     property: {
@@ -274,16 +338,34 @@ export async function getConversationById(conversationId: string, userId: number
 }
 
 
+
+/**
+ * === Get Conversation Messages ===
+ *
+ * Fetches paginated messages for a conversation using cursor-based pagination
+ * (for infinite scroll chat history).
+ *
+ * Messages are loaded newest-first, then reversed for UI-friendly order.
+ * Each message is enriched with receiver ID, role metadata, and safe content.
+ *
+ * @param conversationId - ID of the conversation.
+ * @param cursor - Timestamp of the last loaded message.
+ * @param limit - Number of messages to fetch (default: 30).
+ *
+ * @throws DATABASE_ERROR - If query fails.
+ *
+ * @returns Chronologically ordered message array (oldest → newest).
+ */
 export async function getConversationMessages({
   conversationId,
   cursor,
   limit = 30,
 }: {
   conversationId: string;
-  cursor?: string | null; // The timestamp of the oldest loaded message
+  cursor?: string | null;
   limit?: number;
 }): Promise<RealtimeMessage[]> {
-
+  // Build query conditions
   const conditions = [eq(messagesTable.conversationId, conversationId)];
 
   // If a cursor is passed, only fetch messages older than this timestamp
@@ -291,6 +373,7 @@ export async function getConversationMessages({
     conditions.push(lt(messagesTable.createdAt, cursor));
   }
 
+  // Fetch messages along with conversation metadata (buyer/seller IDs)
   const messages = await db
     .select({
       id: messagesTable.id,
@@ -304,12 +387,15 @@ export async function getConversationMessages({
       sellerId: conversationsTable.sellerId,
     })
     .from(messagesTable)
-    .innerJoin(conversationsTable, eq(messagesTable.conversationId, conversationsTable.id))
+    .innerJoin(
+      conversationsTable,
+      eq(messagesTable.conversationId, conversationsTable.id),
+    )
     .where(and(...conditions))
     .orderBy(desc(messagesTable.createdAt)) // Fetch latest entries first relative to cursor
     .limit(limit);
 
-  // Reverse back to ascending order so it reads chronologically (top to bottom)
+  // Reverse messages to restore chronological order (oldest → newest)
   return messages.reverse().map((msg) => ({
     id: msg.id,
     conversationId: msg.conversationId,
@@ -324,6 +410,25 @@ export async function getConversationMessages({
   }));
 }
 
+
+
+/**
+ * === Send Message ===
+ *
+ * Sends a message in an existing conversation.
+ * Validates sender participation, creates the message,
+ * and updates conversation metadata (last message).
+ *
+ * Runs inside a DB transaction to keep data consistent.
+ *
+ * @param conversationId - ID of the conversation.
+ * @param senderId - ID of the sending user.
+ * @param message - Message text content.
+ *
+ * @throws DATABASE_ERROR - If query/transaction fails.
+ *
+ * @returns Newly created message with receiverId, or null if invalid.
+ */
 export async function sendMessage({
   conversationId,
   senderId,
@@ -334,40 +439,49 @@ export async function sendMessage({
   message: string;
 }) {
   // Validate sender
-  const [sender] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, senderId));
+  const [sender] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.id, senderId));
 
   if (!sender) {
     return null;
   }
 
   // Validate conversation + membership
-  const [conversation] = await db.select({ id: conversationsTable.id })
-  .from(conversationsTable).where(and(
-      eq(conversationsTable.id, conversationId),
-      or(
-        eq(conversationsTable.buyerId, senderId),
-        eq(conversationsTable.sellerId, senderId)
-      )
-    ));
+  const [conversation] = await db
+    .select({ id: conversationsTable.id })
+    .from(conversationsTable)
+    .where(
+      and(
+        eq(conversationsTable.id, conversationId),
+        or(
+          eq(conversationsTable.buyerId, senderId),
+          eq(conversationsTable.sellerId, senderId),
+        ),
+      ),
+    );
 
+  // If conversation is invalid or user is not part of it, abort
   if (!conversation) {
     return null;
   }
 
+  // Execute transactional message creation and updates
   return await db.transaction(async (tx) => {
     const messageId = uuidv6();
 
-    await tx
-      .insert(messagesTable)
-      .values({
-        id: messageId,
-        conversationId,
-        senderId,
-        message,
-      });
+    // Insert new message into messages table
+    await tx.insert(messagesTable).values({
+      id: messageId,
+      conversationId,
+      senderId,
+      message,
+    });
 
     const now = getMysqlTimestamp();
 
+    // Update conversation with latest message info
     await tx
       .update(conversationsTable)
       .set({
@@ -376,56 +490,84 @@ export async function sendMessage({
       })
       .where(eq(conversationsTable.id, conversationId));
 
+    // Fetch the newly created message with conversation context
     const [createdMessage] = await tx
-  .select({
-    id: messagesTable.id,
-    conversationId: messagesTable.conversationId,
-    senderId: messagesTable.senderId,
+      .select({
+        id: messagesTable.id,
+        conversationId: messagesTable.conversationId,
+        senderId: messagesTable.senderId,
 
-    // derive receiver properly from conversation
-    buyerId: conversationsTable.buyerId,
-    sellerId: conversationsTable.sellerId,
+        buyerId: conversationsTable.buyerId,
+        sellerId: conversationsTable.sellerId,
 
-    message: messagesTable.message,
-    seenAt: messagesTable.seenAt,
-    isDeleted: messagesTable.isDeleted,
-    createdAt: messagesTable.createdAt,
-  })
-  .from(messagesTable)
-  .innerJoin(
-    conversationsTable,
-    eq(messagesTable.conversationId, conversationsTable.id)
-  )
-  .where(eq(messagesTable.id, messageId));
+        message: messagesTable.message,
+        seenAt: messagesTable.seenAt,
+        isDeleted: messagesTable.isDeleted,
+        createdAt: messagesTable.createdAt,
+      })
+      .from(messagesTable)
+      .innerJoin(
+        conversationsTable,
+        eq(messagesTable.conversationId, conversationsTable.id),
+      )
+      .where(eq(messagesTable.id, messageId));
 
-  const receiverId =
-  createdMessage.senderId === createdMessage.buyerId
-    ? createdMessage.sellerId
-    : createdMessage.buyerId;
+    // Determine receiver dynamically based on sender role
+    const receiverId =
+      createdMessage.senderId === createdMessage.buyerId
+        ? createdMessage.sellerId
+        : createdMessage.buyerId;
 
+    // Return final normalized message object for realtime UI updates
     return {
-  ...createdMessage,
-  receiverId,
-};
+      ...createdMessage,
+      receiverId,
+    };
   });
 }
 
-export async function markConversationAsSeen(conversationId: string, viewerId: number) {
-  // 1. Validate conversation + access
-  const [conversation] = await db.select({ id: conversationsTable.id, buyerId: conversationsTable.buyerId, sellerId: conversationsTable.sellerId })
-  .from(conversationsTable).where(eq(conversationsTable.id, conversationId));
+
+
+/**
+ * === Mark Conversation As Seen ===
+ *
+ * Marks all unread messages in a conversation as seen for a user.
+ * Validates access and updates incoming messages with a seen timestamp.
+ *
+ * Typically triggered when a user opens the chat.
+ *
+ * @param conversationId - ID of the conversation.
+ * @param viewerId - ID of the user viewing the conversation.
+ *
+ * @throws DATABASE_ERROR - If update fails.
+ *
+ * @returns Success flag object, or null if access is invalid.
+ */
+export async function markConversationAsSeen(
+  conversationId: string,
+  viewerId: number,
+) {
+  // Validate conversation + access
+  const [conversation] = await db
+    .select({
+      id: conversationsTable.id,
+      buyerId: conversationsTable.buyerId,
+      sellerId: conversationsTable.sellerId,
+    })
+    .from(conversationsTable)
+    .where(eq(conversationsTable.id, conversationId));
 
   if (!conversation) return null;
 
+  // Ensure the viewer is part of this conversation
   const isParticipant =
-    conversation.buyerId === viewerId ||
-    conversation.sellerId === viewerId;
+    conversation.buyerId === viewerId || conversation.sellerId === viewerId;
 
   if (!isParticipant) return null;
 
   const now = getMysqlTimestamp();
 
-  // 2. Mark all incoming messages as seen
+  // Mark all incoming messages as seen
   await db
     .update(messagesTable)
     .set({
@@ -435,24 +577,49 @@ export async function markConversationAsSeen(conversationId: string, viewerId: n
       and(
         eq(messagesTable.conversationId, conversationId),
         ne(messagesTable.senderId, viewerId),
-        isNull(messagesTable.seenAt)
-      )
+        isNull(messagesTable.seenAt),
+      ),
     );
 
   return { success: true };
 }
 
-export async function deleteMessages({ messageIds, userId, conversationId }: {
+
+
+/**
+ * === Delete Messages ===
+ *
+ * Soft-deletes selected messages in a conversation.
+ * Only allows deletion of messages sent by the requesting user.
+ * Stores deletion timestamp instead of permanently removing data.
+ *
+ * Used for "delete for me" chat behavior.
+ *
+ * @param messageIds - Array of message IDs to delete.
+ * @param userId - ID of the requesting user.
+ * @param conversationId - ID of the conversation.
+ *
+ * @throws DATABASE_ERROR - If update fails.
+ *
+ * @returns Success status with deleted message IDs, or error info.
+ */
+export async function deleteMessages({
+  messageIds,
+  userId,
+  conversationId,
+}: {
   messageIds: string[];
   userId: number;
   conversationId: string;
 }) {
   try {
-    if (!messageIds.length) return { success: false, error: "No messages selected" };
+    // Validate that at least one message is selected for deletion
+    if (!messageIds.length)
+      return { success: false, error: "No messages selected" };
 
     const now = getMysqlTimestamp();
 
-    // Update messages in DB: Only allow deleting your own messages in this conversation
+    // Soft delete messages in DB: Only allow deleting your own messages in this conversation
     await db
       .update(messagesTable)
       .set({
@@ -463,10 +630,11 @@ export async function deleteMessages({ messageIds, userId, conversationId }: {
         and(
           eq(messagesTable.conversationId, conversationId),
           eq(messagesTable.senderId, userId),
-          inArray(messagesTable.id, messageIds)
-        )
+          inArray(messagesTable.id, messageIds),
+        ),
       );
 
+    // Return success response with affected message IDs
     return { success: true, messageIds };
   } catch (error) {
     console.error("Failed to delete messages:", error);

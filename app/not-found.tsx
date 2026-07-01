@@ -51,6 +51,7 @@ export default function NotFound() {
             alt="Luxury property"
             fill
             priority
+            sizes="(min-width: 1024px) 50vw, 0px"
             className="object-cover group-hover:scale-110 transition-all duration-300"
           />
 

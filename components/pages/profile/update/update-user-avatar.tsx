@@ -1,6 +1,5 @@
 "use client";
 
-import { defaultAppSettings } from "@/lib/constants";
 import Image from "next/image";
 import { useState } from "react";
 import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";

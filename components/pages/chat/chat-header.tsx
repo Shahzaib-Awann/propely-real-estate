@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ConversationHeader } from "@/types/propely.chat";
 import { usePresenceStore } from "@/lib/store/use-presence-store";
+import { getAvatarFallback } from "@/lib/utils/general";
 
 interface ChatHeaderProps {
   conversation: ConversationHeader | null;
@@ -23,13 +24,16 @@ interface ChatHeaderProps {
 }
 
 export default function ChatHeader({ conversation, onSelectMessagesMode }: ChatHeaderProps) {
+
+  // Check real-time online status of the other user in the conversation
   const isOnline = usePresenceStore((state) => state.isUserOnline(String(conversation?.otherUser.id)));
 
+  // If conversation data is not available, render nothing
   if (!conversation) return null;
 
   return (
     <header className="h-20 border-b border-border px-6 flex items-center justify-between gap-4 bg-background/90 backdrop-blur-md sticky top-0 z-40 select-none">
-      {/* Left Node: Back Interaction + User Profile Card */}
+      {/* Left Section: Back Interaction + User Profile Card */}
       <div className="flex items-center gap-4 min-w-0">
         <Link
           href="/chat"
@@ -47,7 +51,7 @@ export default function ChatHeader({ conversation, onSelectMessagesMode }: ChatH
               className="object-cover"
             />
             <AvatarFallback className="bg-muted font-lato text-sm font-bold text-muted-foreground">
-              {conversation.otherUser.name?.slice(0, 2).toUpperCase() ?? "GU"}
+              {getAvatarFallback(conversation.otherUser.name)}
             </AvatarFallback>
           </Avatar>
 
@@ -74,7 +78,7 @@ export default function ChatHeader({ conversation, onSelectMessagesMode }: ChatH
         </div>
       </div>
 
-      {/* Right Node: Dropdown Options Trigger Action Bundle */}
+      {/* Right Section: Dropdown Options Trigger Action Bundle */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

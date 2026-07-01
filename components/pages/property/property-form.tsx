@@ -32,7 +32,7 @@ import { createOrUpdatePostSchema } from "@/lib/zod/schema.zod";
 import { Trash, X } from "lucide-react";
 import { CldUploadWidget, CloudinaryUploadWidgetInfo } from "next-cloudinary";
 import { cn } from "@/lib/utils/general";
-import { SinglePostDetailsForEdit } from "@/lib/types/propely.type";
+import { SinglePostDetailsForEdit } from "@/types/propely.type";
 import { PropertyFormSkeleton } from "@/components/skeletons/property";
 import { defaultAppSettings } from "@/lib/constants";
 
@@ -199,7 +199,7 @@ const PropertyForm = ({ mode, property }: PropertyFormProps) => {
         403: result?.error ?? "You are not allowed to edit this property.",
         409: result?.error ?? "This property already exists.",
         422: "Invalid property data. Please check your inputs.",
-      };      
+      };
 
       // Handle error responses
       if (!response.ok) {

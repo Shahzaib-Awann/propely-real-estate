@@ -1,12 +1,10 @@
 "use client";
 
-// @/components/pages/chat/conversation-list.tsx
-
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { socket } from "@/lib/socket/client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket-events";
-import { formatLastMessageTime } from "@/lib/utils/general";
+import { formatLastMessageTime, getAvatarFallback } from "@/lib/utils/general";
 import { ConversationListItem } from "@/types/propely.chat";
 import { SideBarUpdatePayload } from "@/lib/socket/socket-types";
 import { usePresenceStore } from "@/lib/store/use-presence-store";
@@ -25,16 +23,30 @@ const ConversationList = ({
   activeConversationId,
   conversations,
 }: ConversationListProps) => {
+
+  // Local states
   const [items, setItems] = useState<ConversationListItem[]>(conversations);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Ref to keep track of active conversation
   const activeIdRef = useRef(activeConversationId);
 
+  /**
+   * Keep active conversation ref in sync with props
+   */
   useEffect(() => {
     activeIdRef.current = activeConversationId;
   }, [activeConversationId]);
 
+  /**
+   * Socket listeners for real-time sidebar updates
+   */
   useEffect(() => {
+
+    // Handle messages seen event
     const handleMessageSeen = ({ conversationId, viewerId }: { conversationId: string; viewerId: number }) => {
+
+      // Update global unread count if user's messages were seen
       if (Number(viewerId) === Number(userId)) {
         const conversation = items.find((c) => c.id === conversationId);
         if (conversation && conversation.unreadCount > 0) {
@@ -42,11 +54,15 @@ const ConversationList = ({
         }
       }
 
+      // Mark conversation as read locally
       setItems((prev) =>
         prev.map((conv) => (conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv))
       );
     };
 
+    /**
+     * Handles sidebar updates (new messages, updates, etc.)
+     */
     const handleSidebarUpdate = (payload: SideBarUpdatePayload) => {
       setItems((prev) => {
         const updated = prev.map((conversation) => {
@@ -61,28 +77,34 @@ const ConversationList = ({
           };
         });
 
+        // Sort conversations by latest activity
         return [...updated].sort(
           (a, b) => new Date(b.lastMessageAt ?? 0).getTime() - new Date(a.lastMessageAt ?? 0).getTime()
         );
       });
     };
 
+    // Register event listeners
     socket.on(SOCKET_EVENTS.MESSAGE_SEEN, handleMessageSeen);
     socket.on(SOCKET_EVENTS.SIDEBAR_UPDATE, handleSidebarUpdate);
 
     return () => {
+      // Cleanup event listeners
       socket.off(SOCKET_EVENTS.MESSAGE_SEEN, handleMessageSeen);
       socket.off(SOCKET_EVENTS.SIDEBAR_UPDATE, handleSidebarUpdate);
     };
   }, [items, userId]);
 
-  // Filters listings cleanly using search inputs
+  /**
+   * Filter conversations based on search input
+   */
   const filteredItems = items.filter((item) =>
     item.otherUserName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.propertyTitle?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const totalUnread = items.reduce((acc, curr) => acc + (curr.unreadCount || 0), 0);
+  // Calculate total unread count
+  const { totalUnreadCount: totalUnread } = useChatStore();
 
   return (
     <div className="h-full flex flex-col bg-transparent font-sans text-foreground">
@@ -138,8 +160,19 @@ const ConversationList = ({
 
 export default ConversationList;
 
+
+
+/**
+ * === Conversation Row Component ===
+ *
+ * Represents a single conversation item in the sidebar list.
+ */
 function ConversationRow({ conversation, isActive }: { conversation: ConversationListItem; isActive: boolean }) {
+
+  // Check if the other user is currently online
   const isOnline = usePresenceStore((state) => state.isUserOnline(String(conversation.otherUserId)));
+
+  // Check if conversation has unread messages
   const hasUnread = conversation.unreadCount > 0;
 
   return (
@@ -165,7 +198,7 @@ function ConversationRow({ conversation, isActive }: { conversation: Conversatio
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <AvatarFallback className="bg-muted text-muted-foreground font-semibold text-sm">
-            {conversation.otherUserName?.slice(0, 2).toUpperCase() ?? "GU"}
+            {getAvatarFallback(conversation.otherUserName)}
           </AvatarFallback>
         </Avatar>
 

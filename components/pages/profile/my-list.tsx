@@ -1,20 +1,20 @@
-import ListCard from '../properties/list-card'
-import { auth } from '@/auth'
-import { getSavedPropertiesByUserId } from '@/lib/actions/properties.action'
-import ListClient from '../properties/list-client'
+import { auth } from "@/auth";
+import { getSavedPropertiesByUserId } from "@/lib/actions/properties.action";
+import ListClient from "../properties/list-client";
 
 const List = async () => {
-  const session = await auth()
+  const session = await auth();
 
-  const savedList = await getSavedPropertiesByUserId(Number(session?.user?.id))
+  // Fetch saved properties for the logged-in user
+  const savedList = await getSavedPropertiesByUserId(Number(session?.user?.id));
 
   return (
     <div className="grid grid-cols-1 gap-8">
 
-    <ListClient list={savedList} refreshList={true} />
+      {/* Client component responsible for interactive list rendering */}
+      <ListClient list={savedList} refreshList={true} />
+    </div>
+  );
+};
 
-  </div>
-  )
-}
-
-export default List
+export default List;

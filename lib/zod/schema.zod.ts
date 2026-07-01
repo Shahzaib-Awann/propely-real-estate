@@ -1,4 +1,4 @@
-import z, { email } from "zod";
+import z from "zod";
 
 /** Zod schema to validate sign-in form inputs: email and password. */
 export const SignInFormSchema = z.object({

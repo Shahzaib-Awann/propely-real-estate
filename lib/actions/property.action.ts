@@ -7,7 +7,7 @@ import { parseLexicalContent } from "@/components/widgets/editor/plugins/utils";
 import { createOrUpdatePostSchema } from "../zod/schema.zod";
 import z from "zod";
 import { and, asc, eq, inArray, InferInsertModel, not, sql } from "drizzle-orm";
-import { PostImages, SinglePostDetails, SinglePostDetailsForEdit, SinglePostSEO } from "../types/propely.type";
+import { PostImages, SinglePostDetails, SinglePostDetailsForEdit, SinglePostSEO } from "../../types/propely.type";
 import { SerializedEditorState } from "lexical";
 import { defaultAppSettings } from "../constants";
 import { auth } from "@/auth";
@@ -125,8 +125,9 @@ export const addNewProperty = async (
  */
 export const getPostByIdForEdit = async (postId: string, userId: number): Promise<SinglePostDetailsForEdit | null> => {
 
+  return await db.transaction(async (tx) => {
   // Fetch base post + details
-  const [post] = await db.select({
+  const [post] = await tx.select({
     id: postsTable.id,
     title: postsTable.title,
     price: postsTable.price,
@@ -159,12 +160,12 @@ export const getPostByIdForEdit = async (postId: string, userId: number): Promis
 
   // Fetch related data [Post Images, Post Features, Seller Info] in parallel
   const [postImages, postFeatures] = await Promise.all([
-    db
+    tx
       .select({ id: postImagesTable.id, imageUrl: postImagesTable.imageUrl, publicId: postImagesTable.imagePublicId })
       .from(postImagesTable)
       .where(eq(postImagesTable.postId, postId))
       .orderBy(asc(postImagesTable.id)),
-    db.select({
+    tx.select({
       id: postFeaturesTable.id,
       title: postFeaturesTable.title,
       description: postFeaturesTable.description,
@@ -194,10 +195,6 @@ export const getPostByIdForEdit = async (postId: string, userId: number): Promis
   const normalize: SinglePostDetailsForEdit = {
     id: post.id,
     title: post.title,
-
-    // description: typeof post.description === "string"
-    //   ? post.description
-    //   : (post.description as SerializedEditorState),
 
     description: parseLexicalContent(post.description, "to-lexical") as string,
 
@@ -229,7 +226,8 @@ export const getPostByIdForEdit = async (postId: string, userId: number): Promis
     updatedAt: post.updatedAt,
   }
 
-  return normalize
+  return normalize;
+});
 }
 
 
@@ -479,8 +477,10 @@ export const getPostDetailsById = async (
   postId: string,
   userId?: number
 ): Promise<SinglePostDetails | null> => {
+
+  return db.transaction(async (tx) => {
   // Fetch Post + Details + Save Status
-  const [post] = await db
+  const [post] = await tx
     .select({
       id: postsTable.id,
       sellerId: postsTable.sellerId,
@@ -540,7 +540,7 @@ export const getPostDetailsById = async (
 
   // Fetch Related Data
   const [postImages, postFeatures, sellerInfo] = await Promise.all([
-    db
+    tx
       .select({
         url: postImagesTable.imageUrl,
       })
@@ -548,7 +548,7 @@ export const getPostDetailsById = async (
       .where(eq(postImagesTable.postId, postId))
       .orderBy(postImagesTable.id),
 
-    db
+    tx
       .select({
         title: postFeaturesTable.title,
         description: postFeaturesTable.description,
@@ -556,7 +556,7 @@ export const getPostDetailsById = async (
       .from(postFeaturesTable)
       .where(eq(postFeaturesTable.postId, postId)),
 
-    db
+    tx
       .select({
         id: usersTable.id,
         avatar: usersTable.avatar,
@@ -631,6 +631,7 @@ export const getPostDetailsById = async (
     createdAt: post.createdAt,
     updatedAt: post.updatedAt,
   };
+});
 };
 
 
@@ -659,9 +660,10 @@ export async function deletePropertyById(postId: string): Promise<{ success: boo
     throw new Error("Unauthorized access");
   }
 
-  // Fetch Cloudinary publicIds (ownership enforced)
   try {
-    const images = await db
+    return await db.transaction(async (tx) => {
+    // Fetch Cloudinary publicIds (ownership enforced)
+    const images = await tx
       .select({ publicId: postImagesTable.imagePublicId })
       .from(postImagesTable)
       .innerJoin(postsTable, eq(postsTable.id, postImagesTable.postId))
@@ -688,7 +690,7 @@ export async function deletePropertyById(postId: string): Promise<{ success: boo
     }
 
     // Delete post (DB cascades details, images, features)
-    const result = await db
+    const result = await tx
       .delete(postsTable)
       .where(
         and(
@@ -706,7 +708,7 @@ export async function deletePropertyById(postId: string): Promise<{ success: boo
     revalidatePath("/profile");
 
     return { success: true };
-
+  });
   } catch (error) {
     console.error("Property deletion error: ", error);
 

@@ -9,8 +9,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { Bath, BedDouble, MapPin, Bookmark, Pencil, Trash } from "lucide-react";
-import { ListPropertyInterface } from '@/lib/types/propely.type';
 import { Button } from "@/components/ui/button";
+import { ListPropertyInterface } from "@/types/propely.type";
 
 type ListCardActions = {
   onDelete?: (id: string) => void;
@@ -33,7 +33,6 @@ const ListCard = ({ item, actions }: { item: ListPropertyInterface, actions?: Li
             fill
             sizes="(max-width: 640px) 100vw, 160px"
             className="object-cover"
-            loading="eager"
           />
         </Link>
       </CardContent>

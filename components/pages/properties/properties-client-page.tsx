@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ListPropertyInterface, ListPropertiesMeta, PropertiesQueryParamsInterface } from "@/lib/types/propely.type";
 import Filter from "./filter";
 import MapWrapper from "@/components/widgets/map/map-wrapper";
 import { Button } from "@/components/ui/button";
 import { buildSearchParams } from "@/lib/utils/general";
 import ListClient from "./list-client";
+import { ListPropertiesMeta, ListPropertyInterface, PropertiesQueryParamsInterface } from "@/types/propely.type";
 
 
 

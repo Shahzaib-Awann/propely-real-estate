@@ -11,12 +11,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import ListCard from "./list-card";
-import { ListPropertyInterface } from "@/lib/types/propely.type";
 import toast from "react-hot-toast";
 import { Trash } from "lucide-react";
 import { deletePropertyById } from "@/lib/actions/property.action";
 import { toggleBookmark } from "@/lib/actions/properties.action";
 import { useRouter } from "next/navigation";
+import { ListPropertyInterface } from "@/types/propely.type";
 
 export default function ListClient({
   list: initialList,

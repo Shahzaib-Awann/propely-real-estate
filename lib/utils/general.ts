@@ -107,6 +107,8 @@ export const safeImage = (src?: string | null) => {
   return "/images/default-fallback-image.png";
 };
 
+
+
 /**
  * === Format last message time ===
  *
@@ -138,6 +140,16 @@ export function formatLastMessageTime(dateString: string) {
   return date.toLocaleDateString();
 }
 
+
+
+/**
+ * === Format Date Utility (date-fns based) ===
+ *
+ * Formats a date string into readable UI formats.
+ * Supports time, date, full, and smart relative display.
+ *
+ * Handles MySQL datetime strings safely before parsing.
+ */
 export function formatDateFns(
   dateString?: string | null,
   type: "time"
@@ -156,19 +168,19 @@ export function formatDateFns(
 
   switch (type) {
     /**
-     * ⏰ 09:45 PM
+     * 09:45 PM
      */
     case "time":
       return format(date, "hh:mm a");
 
     /**
-     * 📅 Jun 21, 2026
+     * Jun 21, 2026
      */
     case "date":
       return format(date, "MMM d, yyyy");
 
     /**
-     * 📅⏰ Jun 21, 2026 • 09:45 PM
+     * Jun 21, 2026 • 09:45 PM
      */
     case "full":
       return `${format(
@@ -177,7 +189,7 @@ export function formatDateFns(
       )} • ${format(date, "hh:mm a")}`;
 
     /**
-     * 💬 Smart chat format:
+     * Smart chat format:
      * Today / Yesterday / Jun 21, 2026
      */
     case "smart":

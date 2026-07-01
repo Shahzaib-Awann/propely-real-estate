@@ -2,10 +2,10 @@ export const dynamic = "force-dynamic";
 
 
 
-import { PropertiesQueryParamsInterface } from "@/lib/types/propely.type";
 import { getProperties } from "@/lib/actions/properties.action";
 import PropertiesClient from "@/components/pages/properties/properties-client-page";
 import { Metadata } from "next";
+import { PropertiesQueryParamsInterface } from "@/types/propely.type";
 
 
 

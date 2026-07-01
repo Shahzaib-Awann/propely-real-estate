@@ -6,9 +6,11 @@ import { db } from "../db/connection";
 import {
   ListPropertyInterface,
   PropertiesResponse,
-} from "../types/propely.type";
+} from "../../types/propely.type";
 import { defaultAppSettings } from "../constants";
 import { auth } from "@/auth";
+
+
 
 /**
  * === Fetch paginated property listings with optional filters. ===
@@ -129,13 +131,13 @@ export const getProperties = async (
   // 2) Fetch FIFO images for those posts
   const images = postIds.length
     ? await db
-        .select({
-          postId: postImagesTable.postId,
-          url: postImagesTable.imageUrl,
-        })
-        .from(postImagesTable)
-        .where(inArray(postImagesTable.postId, postIds))
-        .orderBy(postImagesTable.id) // FIFO
+      .select({
+        postId: postImagesTable.postId,
+        url: postImagesTable.imageUrl,
+      })
+      .from(postImagesTable)
+      .where(inArray(postImagesTable.postId, postIds))
+      .orderBy(postImagesTable.id) // FIFO
     : [];
 
   // Build a map: postId -> first image
@@ -206,6 +208,8 @@ export const getProperties = async (
   };
 };
 
+
+
 /**
  * === Fetch a list of properties for a specific user. ===
  *
@@ -219,8 +223,9 @@ export const getProperties = async (
 export const getPropertiesByUserId = async (
   userId: number,
 ): Promise<ListPropertyInterface[]> => {
+  return db.transaction(async (tx) => {
   // Fetch properties
-  const items = await db
+  const items = await tx
     .select({
       id: postsTable.id,
       title: postsTable.title,
@@ -246,7 +251,7 @@ export const getPropertiesByUserId = async (
   /**
    * === Images ===
    */
-  const images = await db
+  const images = await tx
     .select({
       postId: postImagesTable.postId,
       url: postImagesTable.imageUrl,
@@ -268,7 +273,7 @@ export const getPropertiesByUserId = async (
   let savedPostSet = new Set<string>();
 
   if (userId) {
-    const saved = await db
+    const saved = await tx
       .select({ postId: savedPostsTable.postId })
       .from(savedPostsTable)
       .where(
@@ -301,7 +306,10 @@ export const getPropertiesByUserId = async (
   });
 
   return normalizedItems;
+  })
 };
+
+
 
 /**
  * === Fetch all saved (bookmarked) properties for a specific user ===
@@ -315,10 +323,12 @@ export const getPropertiesByUserId = async (
 export const getSavedPropertiesByUserId = async (
   userId: number,
 ): Promise<ListPropertyInterface[]> => {
+
+  return db.transaction(async (tx) => {
   /**
-   * 1) Get saved post IDs for this user
+   * Get saved post IDs for this user
    */
-  const saved = await db
+  const saved = await tx
     .select({ postId: savedPostsTable.postId })
     .from(savedPostsTable)
     .where(eq(savedPostsTable.userId, userId));
@@ -328,9 +338,9 @@ export const getSavedPropertiesByUserId = async (
   if (postIds.length === 0) return [];
 
   /**
-   * 2) Fetch posts
+   * Fetch posts
    */
-  const items = await db
+  const items = await tx
     .select({
       id: postsTable.id,
       title: postsTable.title,
@@ -350,9 +360,9 @@ export const getSavedPropertiesByUserId = async (
     .orderBy(desc(postsTable.createdAt));
 
   /**
-   * 3) Fetch images
+   * Fetch images
    */
-  const images = await db
+  const images = await tx
     .select({
       postId: postImagesTable.postId,
       url: postImagesTable.imageUrl,
@@ -370,7 +380,7 @@ export const getSavedPropertiesByUserId = async (
   }
 
   /**
-   * 4) Normalize response
+   * Normalize response
    */
   const normalizedItems: ListPropertyInterface[] = items.map((item) => {
     const isOwner = item.sellerId === userId;
@@ -391,12 +401,27 @@ export const getSavedPropertiesByUserId = async (
   });
 
   return normalizedItems;
+  })
 };
 
+
+
+/**
+ * === Toggle Bookmark (Save / Unsave Property) ===
+ *
+ * Toggles a saved property for the authenticated user.
+ * Adds it if not saved, removes it if already saved.
+ *
+ * @param postId - ID of the property/post.
+ *
+ * @returns Success status with message (and optional error code).
+ */
 export async function toggleBookmark(
   postId: string,
 ): Promise<{ success: boolean; code?: string; message: string }> {
+  // Get authenticated session
   const session = await auth();
+
   if (!session?.user?.id) {
     return {
       success: false,
@@ -407,20 +432,10 @@ export async function toggleBookmark(
 
   const userId = Number(session.user.id);
 
-  const [existing] = await db
-    .select()
-    .from(savedPostsTable)
-    .where(
-      and(
-        eq(savedPostsTable.userId, userId),
-        eq(savedPostsTable.postId, postId),
-      ),
-    );
-
-  // Remove the Bookmark
-  if (existing) {
-    await db
-      .delete(savedPostsTable)
+  return db.transaction(async (tx) => {
+    const [bookmark] = await tx
+      .select()
+      .from(savedPostsTable)
       .where(
         and(
           eq(savedPostsTable.userId, userId),
@@ -428,14 +443,32 @@ export async function toggleBookmark(
         ),
       );
 
-    return { success: true, message: "Property removed from saved list" };
-  }
+    // If bookmark exists → remove it
+    if (bookmark) {
+      await tx
+        .delete(savedPostsTable)
+        .where(
+          and(
+            eq(savedPostsTable.userId, userId),
+            eq(savedPostsTable.postId, postId),
+          ),
+        );
 
-  // add bookmark
-  await db.insert(savedPostsTable).values({
-    userId,
-    postId,
+      return {
+        success: true,
+        message: "Property removed from saved list",
+      };
+    }
+
+    // Otherwise → add bookmark
+    await tx.insert(savedPostsTable).values({
+      userId,
+      postId,
+    });
+
+    return {
+      success: true,
+      message: "Property added to saved list",
+    };
   });
-
-  return { success: true, message: "Property added to saved list" };
 }

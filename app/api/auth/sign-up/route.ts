@@ -6,9 +6,9 @@ import { createUserForSignUp } from "@/lib/actions/user.action";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 
-/* =========================================================
-=== [POST] User Sign-Up + Auto Sign-In
-========================================================= */
+/* ========================================
+=== [POST] User Sign-Up + Auto Sign-In ===
+======================================= */
 export async function POST(req: NextRequest) {
   try {
     // === Parse & Validate Request Body ===

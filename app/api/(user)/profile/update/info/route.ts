@@ -8,9 +8,9 @@ import { ZodError } from "zod";
 
 
 
-/*========================================================
-=== [POST] Update user profile info
-========================================================*/
+/*=====================================
+=== [POST] Update user profile info ===
+=====================================*/
 export async function POST(req: NextRequest) {
   try {
     // === Authenticate User ===

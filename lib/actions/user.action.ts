@@ -3,8 +3,8 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/connection";
 import { usersTable } from "../db/schema";
-import { hashPassword } from "../utils/password-hasher";
-import { FullUser, SafeUser, SignInUser } from "../types/user.type";
+import { hashPassword } from "../utils/bcrypt";
+import { FullUser, SafeUser, SignInUser } from "../../types/user.type";
 
 /**
  * === Fetch user by email for authentication. ===

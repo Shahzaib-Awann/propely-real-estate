@@ -1,4 +1,4 @@
-import Navbar from "@/components/layout/navbar/navbar";
+import Navbar from "@/components/layout/navbar";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default function RootLayout({
       <main className="flex-1">
         {children}
       </main>
-      
+
     </div>
   );
 }

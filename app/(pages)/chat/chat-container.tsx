@@ -15,10 +15,13 @@ export default async function ChatContainer({
   activeConversationId,
   userId,
 }: ChatClientProps) {
+
+  /* Fetch all conversations belonging to the current user. */
   const conversations = await getUserConversations(Number(userId));
 
   return (
     <main className="h-[calc(100vh-80px)] flex flex-row px-0 lg:px-4">
+      {/* Socket connection scoped to conversation */}
       {activeConversationId && (
         <ConversationSocketRoom conversationId={activeConversationId} />
       )}
@@ -29,6 +32,7 @@ export default async function ChatContainer({
               ${!activeConversationId ? "hidden lg:flex" : "flex"}
             `}
       >
+        {/* Render conversation view or empty state */}
         {activeConversationId ? (
           <ConversationView
             conversationId={activeConversationId}
@@ -47,6 +51,7 @@ export default async function ChatContainer({
           ${activeConversationId ? "hidden lg:block" : ""}
         `}
       >
+        {/* Sidebar showing all user conversations. */}
         <ConversationList
           userId={userId}
           activeConversationId={activeConversationId}

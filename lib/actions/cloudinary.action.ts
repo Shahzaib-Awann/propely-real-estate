@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { v2 as cloudinary } from "cloudinary";
 import { db } from "@/lib/db/connection";
 import { usersTable } from "@/lib/db/schema";
-import { CloudinaryDeleteResult } from "../types/cloudinary.type";
+import { CloudinaryDeleteResult } from "../../types/cloudinary.type";
 
 
 

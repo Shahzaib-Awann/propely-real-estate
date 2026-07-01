@@ -12,8 +12,10 @@ interface PageProps {
 export default async function ConversationPage({
   params,
 }: PageProps) {
+  /* Get conversation ID from params */
   const { conversationId } = await params;
 
+  /* Authenticate User */
   const session = await auth()
   const userId = session?.user?.id;
 

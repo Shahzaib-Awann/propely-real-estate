@@ -14,19 +14,20 @@ import { safeImage } from "@/lib/utils/general";
 export default async function Profile() {
   // === Authenticate user ===
   const session = await auth()
+  const userId = Number(session?.user?.id)
 
   if (!session?.user?.id) {
     redirect("/sign-in")
   }
 
   // === Fetch user by ID (safe mode) ===
-  const user = await getUserById(Number(session.user.id))
+  const user = await getUserById(userId)
 
   if (!user) {
     redirect("/sign-in?error=userDeleted")
   }
 
-  const myList = await getPropertiesByUserId(Number(session.user.id))
+  const myList = await getPropertiesByUserId(userId)
 
   return (
     <main className="flex flex-col-reverse lg:flex-row h-[calc(100vh-80px)] px-4 overflow-y-auto lg:overflow-y-hidden scroll-smooth">
@@ -86,7 +87,7 @@ export default async function Profile() {
                 Email: <b>{user.email}</b>
               </p>
             </div>
-            <LogoutUser />
+            <LogoutUser userId={userId} />
           </div>
         </div>
       </aside>

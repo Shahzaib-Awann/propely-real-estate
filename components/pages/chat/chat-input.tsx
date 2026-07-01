@@ -1,7 +1,5 @@
 "use client";
 
-// @/components/pages/chat/chat-input.tsx
-
 import { useState, useRef } from "react";
 import { SendHorizontal, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -25,33 +23,48 @@ export default function ChatInput({
   isPending,
   onSendMessage,
 }: ChatInputProps) {
+
+  // Local states
   const [text, setText] = useState("");
+
+  // Ref to track typing debounce timeout
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  /**
+   * Handles input changes and emits typing events with debounce logic
+   */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
 
+    // Emit typing start event only once per typing session
     if (!typingTimeoutRef.current) {
       socket.emit(SOCKET_EVENTS.TYPING_START, { conversationId, userId });
     }
 
+    // Clear existing timeout to reset debounce timer
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
+    // Emit typing stop after user stops typing for 2 seconds
     typingTimeoutRef.current = setTimeout(() => {
       socket.emit(SOCKET_EVENTS.TYPING_STOP, { conversationId, userId });
       typingTimeoutRef.current = null;
     }, 2000);
   };
 
+  /**
+   * Handles sending message and cleanup of typing state
+   */
   const handleSendTrigger = () => {
     if (!text.trim() || isPending) return;
 
+    // Clear typing timeout and notify server immediately
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
       socket.emit(SOCKET_EVENTS.TYPING_STOP, { conversationId, userId });
       typingTimeoutRef.current = null;
     }
 
+    // Trigger parent send handler
     onSendMessage(text.trim());
     setText("");
   };

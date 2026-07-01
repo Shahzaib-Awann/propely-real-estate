@@ -1,7 +1,5 @@
 "use client";
 
-// @/components/pages/chat/conversation-messages.tsx
-
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Loader2, Ban, Check, CheckCheck, Trash2 } from "lucide-react";
 import { cn, formatDateFns } from "@/lib/utils/general";
@@ -34,7 +32,11 @@ export default function ConversationMessages({
   unReadMessages: unreadCount,
   conversation,
 }: Props) {
+
+  // Handles async UI transitions
   const [isPending, startTransition] = useTransition();
+
+  // Local states
   const [chatMessages, setChatMessages] = useState<RealtimeMessage[]>(messages);
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
 
@@ -50,15 +52,21 @@ export default function ConversationMessages({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isInitialRender = useRef(true);
 
-  // CHANGED: Safety reference map to handle other user's ghost indicators
+  // Safety timeout reference for typing indicator cleanup
   const otherUserTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  /**
+   * Sync incoming server messages into local state
+   */
   useEffect(() => {
     setChatMessages(messages);
     setHasMore(messages.length === 30);
     isInitialRender.current = true;
   }, [messages]);
 
+  /**
+   * Auto-scroll to latest message when new messages arrive or loading completes
+   */
   useEffect(() => {
     if (!scrollContainerRef.current) return;
     if (isInitialRender.current && chatMessages.length > 0) {
@@ -95,6 +103,8 @@ export default function ConversationMessages({
 
             if (olderMessages.length > 0) {
               setChatMessages((prev) => [...olderMessages, ...prev]);
+
+              // Preserve scroll position after prepending messages
               requestAnimationFrame(() => {
                 if (container) {
                   container.scrollTop =
@@ -121,23 +131,33 @@ export default function ConversationMessages({
     };
   }, [hasMore, isLoadingMore, chatMessages, conversationId]);
 
+  /**
+   * Reduce global unread count when entering a conversation
+   */
   useEffect(() => {
     if (unreadCount > 0) useChatStore.getState().reduceUnreadCount(unreadCount);
   }, [unreadCount, conversationId]);
 
-  // Socket Core Connections Pipe Loop
+  /**
+   * Socket Event Handlers
+   * Manages real-time messaging, typing, seen status, and deletions
+   */
   useEffect(() => {
     if (!conversationId) return;
 
+    // Send message seen event on mount
     socket.emit(SOCKET_EVENTS.MESSAGE_SEEN, {
       conversationId,
       viewerId: userId,
     });
 
+    // Handle incoming new messages
     const handleNewMessage = (message: RealtimeMessage) => {
       setChatMessages((prev) =>
         prev.some((m) => m.id === message.id) ? prev : [...prev, message],
       );
+
+      // Auto mark as seen if message is from other user
       if (message.senderId !== userId) {
         socket.emit(SOCKET_EVENTS.MESSAGE_SEEN, {
           conversationId,
@@ -146,6 +166,7 @@ export default function ConversationMessages({
       }
     };
 
+    // Handle seen updates
     const handleMessageSeen = ({
       conversationId: id,
       viewerId,
@@ -163,6 +184,7 @@ export default function ConversationMessages({
       }
     };
 
+    // Handle message deletion
     const handleMessagesDeleted = ({
       messageIds,
     }: {
@@ -177,7 +199,7 @@ export default function ConversationMessages({
       );
     };
 
-    // CHANGED: Added automatic fallback window bounds checking to prevent indicator layout freezing
+    // Handle typing start indicator
     const handleTypingStart = (p: {
       conversationId: string;
       userId: number;
@@ -191,14 +213,14 @@ export default function ConversationMessages({
         if (otherUserTypingTimeoutRef.current)
           clearTimeout(otherUserTypingTimeoutRef.current);
 
-        // Safety Window: If we do not receive a stop or another start pulse within 4s, reset UI
+        // Safety fallback: auto-reset typing state after inactivity
         otherUserTypingTimeoutRef.current = setTimeout(() => {
           setIsOtherUserTyping(false);
         }, 4000);
       }
     };
 
-    // CHANGED: Clean timeout references when explicit stop signals land safely
+    // Handle typing stop indicator
     const handleTypingStop = (p: {
       conversationId: string;
       userId: number;
@@ -215,6 +237,7 @@ export default function ConversationMessages({
       }
     };
 
+    // Register socket listeners
     socket.on(SOCKET_EVENTS.NEW_MESSAGE, handleNewMessage);
     socket.on(SOCKET_EVENTS.MESSAGES_DELETED, handleMessagesDeleted);
     socket.on(SOCKET_EVENTS.MESSAGE_SEEN, handleMessageSeen);
@@ -222,19 +245,23 @@ export default function ConversationMessages({
     socket.on(SOCKET_EVENTS.TYPING_STOP, handleTypingStop);
 
     return () => {
+      // Cleanup listeners on unmount or conversation change
       socket.off(SOCKET_EVENTS.NEW_MESSAGE, handleNewMessage);
       socket.off(SOCKET_EVENTS.MESSAGES_DELETED, handleMessagesDeleted);
       socket.off(SOCKET_EVENTS.MESSAGE_SEEN, handleMessageSeen);
       socket.off(SOCKET_EVENTS.TYPING_START, handleTypingStart);
       socket.off(SOCKET_EVENTS.TYPING_STOP, handleTypingStop);
 
-      // Clean up timer on view unmounts
+      // Clear typing timeout safely
       if (otherUserTypingTimeoutRef.current) {
         clearTimeout(otherUserTypingTimeoutRef.current);
       }
     };
   }, [conversationId, userId]);
 
+  /**
+   * Toggle message selection for bulk actions
+   */
   const toggleSelectMessage = (
     id: string,
     isOwnMessage: boolean,
@@ -246,6 +273,9 @@ export default function ConversationMessages({
     );
   };
 
+  /**
+   * Delete selected messages (bulk delete)
+   */
   const handleDeleteSelected = () => {
     if (!selectedMessageIds.length) return;
     startTransition(async () => {
@@ -265,6 +295,9 @@ export default function ConversationMessages({
     });
   };
 
+  /**
+   * Send a new message
+   */
   const handleSendAction = async (messageText: string) => {
     startTransition(async () => {
       const savedMessage = await sendMessage({
