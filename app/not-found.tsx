@@ -45,7 +45,7 @@ export default function NotFound() {
 
       {/* Right Section */}
       <section className="hidden group lg:flex flex-2 bg-side-panel items-center justify-center p-10">
-        <div className="relative w-full max-w-lg aspect-[4/5] rounded-3xl overflow-hidden shadow-xl">
+        <div className="relative w-full max-w-lg aspect-4/5 rounded-3xl overflow-hidden shadow-xl">
           <Image
             src="/images/img-3.jpg"
             alt="Luxury property"
