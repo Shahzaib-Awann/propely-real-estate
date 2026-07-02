@@ -1,5 +1,3 @@
-// @/app/(pages)/chat/chat-container.tsx
-
 import ConversationList from "@/components/pages/chat/conversation-sidebar";
 import ConversationView from "@/components/pages/chat/conversation-view";
 import EmptyState from "@/components/pages/chat/empty-state";
@@ -21,6 +19,7 @@ export default async function ChatContainer({
 
   return (
     <main className="h-[calc(100vh-80px)] flex flex-row px-0 lg:px-4">
+
       {/* Socket connection scoped to conversation */}
       {activeConversationId && (
         <ConversationSocketRoom conversationId={activeConversationId} />

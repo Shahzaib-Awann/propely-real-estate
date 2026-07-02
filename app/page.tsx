@@ -1,7 +1,14 @@
 import Navbar from "@/components/layout/navbar";
 import SearchBar from "@/components/pages/landing-page/searchBar";
+import { generateSEO } from "@/lib/seo";
 import Image from "next/image";
 
+export const metadata = generateSEO({
+  title: "Buy, Sell & Rent Properties | Propely",
+  description:
+    "Discover houses, apartments, plots and commercial properties.",
+  path: "/",
+});
 export default function Home() {
   return (
     <div className="bg-background text-foreground max-w-340 min-h-screen mx-auto flex flex-col">

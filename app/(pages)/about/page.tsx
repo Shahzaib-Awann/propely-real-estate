@@ -16,6 +16,38 @@ import {
   Network,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { generateSEO } from "@/lib/seo";
+
+/**
+ * Metadata for about page.
+ */
+export const metadata = generateSEO({
+  title: "About Propely & The Engineering Behind It",
+  description:
+    "Explore Propely, a modern real estate platform built by Shahzaib Awan. Learn about the architecture, technology stack, real-time messaging system, property search engine, and engineering decisions powering the platform.",
+
+  path: "/about",
+
+  keywords: [
+    "Propely",
+    "Propely real estate platform",
+    "real estate marketplace",
+    "property management platform",
+    "real estate software",
+    "real estate technology",
+    "Next.js real estate project",
+    "real-time property marketplace",
+    "Socket.io messaging",
+    "property listing platform",
+    "Shahzaib Awan",
+    "full stack software engineer",
+    "Next.js developer",
+    "TypeScript developer",
+    "software architecture",
+    "property search platform",
+    "real estate application",
+  ],
+});
 
 // Custom Github icon implemented using inline SVG
 const GitHubIcon = (props: React.SVGProps<SVGSVGElement>) => (

@@ -4,6 +4,15 @@ import UpdateUserInfo from "@/components/pages/profile/update/update-user-info";
 import { getUserById } from "@/lib/actions/user.action";
 import { redirect } from "next/navigation";
 import React from "react";
+import { generateSEO } from "@/lib/seo";
+
+export const metadata = generateSEO({
+  title: "Update Profile",
+  description:
+    "Update your Propely account information and profile settings.",
+  path: "/profile/update",
+  noIndex: true,
+});
 
 const UpdateProfilePage = async () => {
 

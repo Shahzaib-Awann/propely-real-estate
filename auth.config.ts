@@ -12,9 +12,8 @@ import { NextResponse } from "next/server";
  */
 export function authorizeRequest(
   request: NextRequest,
-  session: Session | null
+  session: Session | null,
 ) {
-
   /**
    * === Extract Path & Session Info ===
    *
@@ -31,8 +30,27 @@ export function authorizeRequest(
    */
   const protectedRoutes = ["/chat", "/profile", "/property/add", "/property/edit"];
   const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
+
+  /**
+   * === Auth Routes Configuration ===
+   *
+   * - Define routes that are related to authentication.
+   */
+  const authRoutes = ["/sign-in", "/sign-up"];
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+
+  /**
+   * === Already Logged In and Trying to access auth routes ===
+   *
+   * If user is logged in and trying to access auth routes, redirect to dashboard
+   */
+  if (isAuthRoute && isLoggedIn) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/profile";
+    return NextResponse.redirect(url);
+  }
 
   /**
    * === Unauthorized Access Handling ===

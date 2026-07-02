@@ -10,6 +10,15 @@ import { getUserById } from "@/lib/actions/user.action";
 import { getPropertiesByUserId } from "@/lib/actions/properties.action";
 import ListClient from "@/components/pages/properties/list-client";
 import { safeImage } from "@/lib/utils/general";
+import { generateSEO } from "@/lib/seo";
+
+export const metadata = generateSEO({
+  title: "My Profile",
+  description:
+    "Manage your Propely account, property listings, saved properties, and profile settings.",
+  path: "/profile",
+  noIndex: true,
+});
 
 export default async function Profile() {
   // === Authenticate user ===
@@ -50,7 +59,7 @@ export default async function Profile() {
           </div>
 
           {/* Saved List Header */}
-          <h1 className="text-2xl font-semibold">Saved List</h1>
+          <h2 className="text-2xl font-semibold">Saved List</h2>
 
           {/* Saved List Component */}
           <List />
@@ -61,7 +70,7 @@ export default async function Profile() {
       <aside className="flex flex-2 h-full bg-side-panel pb-5 lg:pb-0 lg:py-5 rounded-lg lg:rounded-none">
         <div className="pb-10 p-4 h-full w-full">
           <div className="flex flex-row justify-between items-center">
-            <h1 className="text-xl md:text-2xl">User Information</h1>
+            <h2 className="text-xl md:text-2xl">User Information</h2>
             <Link href="/profile/update">
               <Button className="px-5 h-12 min-w-12 rounded-none bg-primary text-white font-medium hover:bg-primary/90 transition-colors">
                 <Pencil /> <span className="hidden md:inline">Update Profile</span>

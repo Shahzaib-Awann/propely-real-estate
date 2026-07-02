@@ -4,8 +4,8 @@ export const dynamic = "force-dynamic";
 
 import { getProperties } from "@/lib/actions/properties.action";
 import PropertiesClient from "@/components/pages/properties/properties-client-page";
-import { Metadata } from "next";
 import { PropertiesQueryParamsInterface } from "@/types/propely.type";
+import { generateSEO } from "@/lib/seo";
 
 
 
@@ -16,39 +16,55 @@ export async function generateMetadata({
   searchParams,
 }: {
   searchParams: Promise<PropertiesQueryParamsInterface>;
-}): Promise<Metadata> {
-  const queryParams = await searchParams;
+}) {
+  const query = await searchParams;
 
-  // Used to build dynamic page title
-  const titleSegments: string[] = [];
+  const listingType =
+    query.type === "sale"
+      ? "For Sale"
+      : query.type === "rent"
+        ? "For Rent"
+        : "";
 
-  // Buy / Rent
-  if (queryParams.type) {
-    titleSegments.push(queryParams.type.charAt(0).toUpperCase() + queryParams.type.slice(1));
-  }
+  const propertyType = query.property
+    ? query.property.charAt(0).toUpperCase() +
+      query.property.slice(1)
+    : "Properties";
 
-  // Property type (house, apartment, etc.)
-  if (queryParams.property) {
-    titleSegments.push(queryParams.property.charAt(0).toUpperCase() + queryParams.property.slice(1));
-  } else {
-    titleSegments.push("Properties");
-  }
+  const location = query.location?.trim();
 
-  // Location
-  if (queryParams.location) {
-    titleSegments.push(`in ${queryParams.location}`);
-  }
+  const titleParts = [
+    propertyType,
+    listingType,
+    location ? `in ${location}` : "",
+  ].filter(Boolean);
 
-  const title = `${titleSegments.join(" ")} | Real Estate`;
+  const title = `${titleParts.join(" ")}`;
 
-  const description = queryParams.location
-    ? `Browse ${titleSegments.join(" ").toLowerCase()} with latest listings, prices, and locations.`
-    : "Browse properties with latest listings, prices, and locations.";
+  const description = location
+    ? `Browse ${propertyType.toLowerCase()} ${listingType.toLowerCase()} in ${location}. Explore verified listings, property prices, photos, amenities, and connect directly with property owners and agents.`
+    : `Browse verified properties for sale and rent across Pakistan. Discover houses, apartments, plots, commercial properties, and investment opportunities on Propely.`;
 
-  return {
+  return generateSEO({
     title,
     description,
-  };
+    path: "/properties",
+
+    keywords: [
+      propertyType,
+      listingType,
+      location ?? "",
+      "property listings",
+      "real estate",
+      "houses",
+      "apartments",
+      "plots",
+      "commercial property",
+      "buy property",
+      "rent property",
+      "Pakistan real estate",
+    ].filter(Boolean),
+  });
 }
 
 

@@ -23,7 +23,7 @@ const links = [
   { title: "Home", url: "/" },
   { title: "Properties", url: "/properties" },
   { title: "About", url: "/about" },
-  { title: "Contact", url: "/contact" },
+  { title: "Contact", url: "https://shahzaib.is-a.dev/contact", newTab: true },
 ];
 
 export default async function Navbar() {
@@ -47,23 +47,25 @@ export default async function Navbar() {
       <div className="flex flex-3 items-center gap-10">
         <Link
           href="/"
-          className="flex items-center gap-2 font-bold text-xl font-geist w-24 h-14 relative group overflow-hidden"
+          className="flex items-center font-bold text-xl font-geist w-28 h-14 relative group overflow-hidden"
         >
           <Image
-            src="/images/main-logo-light.png"
+            src="/images/main-logo-transparent.png"
             alt="Logo"
             fill
-            sizes="100px"
+            sizes="200px"
             className="object-cover group-hover:scale-105 transition-all duration-200"
           />
         </Link>
 
-        <div className="hidden md:flex gap-10">
+        <div className="hidden md:flex gap-10 items-end h-14 pb-1 ">
           {links.map((link) => (
             <Link
               key={link.title}
               href={link.url}
-              className="text-base font-lato font-medium text-foreground hover:text-primary hover:scale-110 transition-all duration-200 inline-block"
+              target={link.newTab ? "_blank" : "_self"}
+              rel={link.newTab ? "noopener noreferrer" : undefined}
+              className="text-base font-lato font-medium text-foreground hover:text-primary transition-all duration-200 inline-block"
             >
               {link.title}
             </Link>
@@ -95,7 +97,7 @@ export default async function Navbar() {
               {/* Chat / Notifications Link Button */}
               <div className="flex items-center gap-4 font-semibold">
                 <Link href="/chat">
-                  <Button className="px-5 h-10 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/80 transition-all duration-200 hover:scale-[1.02] font-lato relative">
+                  <Button className="w-10 h-10 md:px-5 md:h-12 md:w-auto  relative rounded-radius! bg-primary text-primary-foreground hover:bg-primary/80 flex items-center justify-center font-medium transition-all duration-200 hover:scale-[1.02] font-lato">
                     <ChatBadge initialCount={initialUnreadCount} />
                   </Button>
                 </Link>

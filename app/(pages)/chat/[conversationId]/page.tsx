@@ -1,7 +1,15 @@
-// @/app/(pages)/chat/[conversationId]/page.tsx
-
 import { auth } from "@/auth";
 import ChatContainer from "../chat-container";
+
+import { generateSEO } from "@/lib/seo";
+
+export const metadata = generateSEO({
+  title: "Conversation",
+  description:
+    "Private conversation between buyers and sellers.",
+  path: "/chat",
+  noIndex: true,
+});
 
 interface PageProps {
   params: Promise<{

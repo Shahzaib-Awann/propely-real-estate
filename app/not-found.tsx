@@ -1,6 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Home } from "lucide-react";
+import { generateSEO } from "@/lib/seo";
+
+export const metadata = generateSEO({
+  title: "404 - Page Not Found",
+  description:
+    "The page you are looking for does not exist.",
+  noIndex: true,
+});
 
 export default function NotFound() {
   return (

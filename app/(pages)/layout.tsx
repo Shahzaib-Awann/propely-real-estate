@@ -1,12 +1,6 @@
 import Navbar from "@/components/layout/navbar";
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Properties - Propely",
-  description: "Browse available real estate listings on Propely.",
-};
-
-export default function RootLayout({
+export default function PagesLayout({
   children,
 }: {
   children: React.ReactNode;

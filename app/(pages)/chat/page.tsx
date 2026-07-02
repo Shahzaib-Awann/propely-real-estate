@@ -1,9 +1,16 @@
-// @/app/(pages)/chat/page.tsx
-
 import { auth } from "@/auth";
 import ChatContainer from "./chat-container";
 import { createOrGetConversation } from "@/lib/actions/chat.action";
 import { redirect } from "next/navigation";
+import { generateSEO } from "@/lib/seo";
+
+export const metadata = generateSEO({
+  title: "Messages",
+  description:
+    "View and manage your conversations with property buyers and sellers.",
+  path: "/chat",
+  noIndex: true,
+});
 
 interface ChatPageProps {
   searchParams: Promise<{

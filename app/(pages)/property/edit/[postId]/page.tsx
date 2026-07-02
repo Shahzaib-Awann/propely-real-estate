@@ -1,8 +1,19 @@
 import { auth } from "@/auth";
 import PropertyForm from "@/components/pages/property/property-form";
 import { getPostByIdForEdit } from "@/lib/actions/property.action";
+import { generateSEO } from "@/lib/seo";
 import { notFound, redirect } from "next/navigation";
 
+/**
+ * Generate static metadata for the Edit Property Page
+ */
+export const metadata = generateSEO({
+  title: "Edit Property Listing",
+  description:
+    "Update and manage your property listing on Propely.",
+  path: "/property/edit",
+  noIndex: true,
+});
 
 /**
  * Edit Property Page (Server Component)

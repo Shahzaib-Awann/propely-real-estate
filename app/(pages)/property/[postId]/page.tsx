@@ -1,10 +1,7 @@
 import MapWrapper from "@/components/widgets/map/map-wrapper";
 import ImageSlider from "@/components/pages/view-property/image-slider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  getPostDetailsById,
-  getPostSEOById,
-} from "@/lib/actions/property.action";
+import { getPostDetailsById } from "@/lib/actions/property.action";
 import { formatMeters, getAvatarFallback } from "@/lib/utils/general";
 import {
   Bath,
@@ -20,14 +17,16 @@ import {
   ToolCase,
 } from "lucide-react";
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import LexicalViewer from "@/components/widgets/editor/LexicalViewer";
 import BookmarkButton from "../../../../components/pages/property/bookmark-button";
 import { auth } from "@/auth";
 import Link from "next/link";
+import Script from "next/script";
+import { generatePropertySEO } from "@/lib/seo";
 
 /**
- * Generate SEO metadata dynamically based on search filters
+ * Generate SEO metadata dynamically based on post ID
  */
 export async function generateMetadata({
   params,
@@ -36,69 +35,27 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { postId } = await params;
 
-  // Fallback metadata if postId is invalid
-  if (!postId) {
+  const property = await getPostDetailsById(postId);
+
+  if (!property) {
     return {
-      metadataBase: new URL(
-        process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-      ),
-      title: "Property Not Found",
-      description: "The property you are looking for does not exist.",
+      title: "Property Not Found | Propely",
+      description: "The requested property could not be found.",
     };
   }
 
-  const post = await getPostSEOById(postId);
-
-  // Fallback if post not found
-  if (!post) {
-    return {
-      metadataBase: new URL(
-        process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-      ),
-      title: "Property Not Found",
-      description: "The property you are looking for does not exist.",
-    };
-  }
-
-  const {
-    title,
-    city,
-    images,
-    bedRooms,
-    bathroom,
-    ptype,
-    ltype,
-    address,
-    price,
-  } = post;
-
-  const typeLabel = ptype.charAt(0).toUpperCase() + ptype.slice(1);
-  const action = ltype === "rent" ? "for rent" : "for sale";
-
-  const description = `${title} — A ${bedRooms}-bedroom, ${bathroom}-bathroom ${typeLabel.toLowerCase()} ${action} in ${city}. Located at ${address}, this property offers comfortable living at a price of $${price}. Ideal for families or professionals looking for a modern home in a prime location.`;
-
-  return {
-    metadataBase: new URL(
-      process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-    ),
-    title: `${title} in ${city} | Real Estate Listing`,
-    description,
-    openGraph: {
-      title: `${title} in ${city} | Real Estate Listing`,
-      description,
-      siteName: "Propely Real Estate",
-      images:
-        images.length > 0 ? [{ url: images[0], width: 1200, height: 630 }] : [],
-      locale: "en_US",
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${title} in ${city}`,
-      description,
-      images: images.length > 0 ? [images[0]] : [],
-    },
-  };
+  return generatePropertySEO({
+    id: property.id,
+    title: property.title,
+    city: property.city,
+    address: property.address,
+    price: property.price,
+    ptype: property.ptype,
+    ltype: property.ltype,
+    bedRooms: property.bedRooms,
+    bathroom: property.bathroom,
+    images: property.images,
+  });
 }
 
 /**
@@ -113,16 +70,11 @@ export default async function ViewProperty({
   const session = await auth();
   const userId = session?.user?.id ? Number(session.user.id) : undefined;
 
-  // 404 if post not found
-  if (!postId) {
-    redirect("/properties");
-  }
-
   const post = await getPostDetailsById(postId, userId);
 
   // 404 if post not found
   if (!post) {
-    return <div>Not Found</div>;
+    notFound();
   }
 
   const isOwner = userId === post.sellerInfo?.id;
@@ -142,6 +94,31 @@ export default async function ViewProperty({
 
   return (
     <main className="flex flex-col lg:flex-row flex-1 px-4 pb-20 lg:pb-0 max-h-[calc(100vh-80px)] bg-transparent overflow-y-scroll lg:overflow-y-hidden scroll-smooth">
+      <Script
+        id={`property-${post.id}`}
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Residence",
+            name: post.title,
+            description: post.title,
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: post.address,
+              addressLocality: post.city,
+            },
+            numberOfRooms: post.bedRooms,
+            floorSize: {
+              "@type": "QuantitativeValue",
+              value: post.size,
+              unitCode: "FTK",
+            },
+            image: post.images,
+          }),
+        }}
+      />
+
       {/* LEFT: Main Post Content */}
       <section className="flex-3 max-h-full lg:overflow-y-auto scroll-smooth">
         {/* Post Content Container */}

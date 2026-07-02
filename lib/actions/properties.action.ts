@@ -472,3 +472,15 @@ export async function toggleBookmark(
     };
   });
 }
+
+
+export async function getPropertyUrls() {
+  const properties = await db
+    .select({
+      id: postsTable.id,
+      updatedAt: postsTable.updatedAt,
+    })
+    .from(postsTable);
+
+  return properties
+}
