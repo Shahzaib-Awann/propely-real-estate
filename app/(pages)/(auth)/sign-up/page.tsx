@@ -20,51 +20,60 @@ export const metadata = generateSEO({
 });
 
 export default function SignUp() {
-
   return (
     <div className="bg-background text-foreground max-w-340 min-h-[calc(100vh-80px)] mx-auto flex flex-col">
-
       {/* Main Content Section  */}
       <div className="flex flex-row flex-1 px-4">
-
         {/* Left: Heading + Sign-Up Form */}
         <div className="flex-3 flex flex-col justify-center gap-10">
-
           <h1 className="text-3xl text-center font-medium">Sign Up</h1>
           <SignUpForm />
-
         </div>
 
-        {/* Right: Background + Image Grid */}
-        <div className="hidden lg:flex flex-2 justify-end items-center gap-4 lg:bg-side-panel p-0 h-[calc(100vh-80px)]">
-
-          {/* Wrapper */}
-          <div className="w-full h-auto px-6 py-5">
-            {/* Image Grid */}
-            <div className="grid grid-cols-2 gap-6 w-full max-w-xl">
-              {[
-                { src: "/images/img-1.jpg", alt: "Modern luxury residential property", className: "relative w-full xl:w-full h-52 xl:left-0 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
-                { src: "/images/img-2.jpg", alt: "Beautiful coastal home with ocean view", className: "relative w-full xl:w-full h-72 mt-6 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
-                { src: "/images/img-3.jpg", alt: "Spacious urban apartment with city views", className: "relative w-full xl:w-full h-72 -mt-6 xl:left-0 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
-                { src: "/images/img-4.jpg", alt: "Elegant suburban house with garden", className: "relative w-full xl:w-full h-52 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
-              ].map((img, idx) => (
-                <div
-                  key={idx}
-                  className={img.className}
-                >
-                  <Image
-                    src={img.src}
-                    fill
-                    alt={img.alt}
-                    sizes="(max-width: 1000px) 0px, 50vw"
-                    className="object-cover hover:scale-110 transition-all duration-300"
-                    loading="lazy"
-                  />
-                </div>
-              ))}
+        {/* Right: Premium Aspirational Property Panel */}
+        <div className="hidden lg:flex flex-2 justify-end items-center lg:bg-side-panel h-[calc(100vh-80px)] relative overflow-hidden">
+          <div className="relative w-full h-full flex items-center justify-center px-10">
+            {/* HERO IMAGE */}
+            <div className="relative w-85 h-100 rounded-3xl overflow-hidden shadow-xl z-20 border border-black/5">
+              <Image
+                src="https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg"
+                alt="Luxury modern home with warm lighting"
+                fill
+                sizes="(min-width: 1024px) 40vw"
+                className="object-cover hover:scale-105 transition-all duration-300 ease-in-out"
+                priority
+              />
             </div>
-          </div>
 
+            {/* SUB IMAGES */}
+            {[
+              {
+                src: "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg",
+                alt: "Modern glass luxury architecture",
+                className: "absolute top-16 right-10 w-44 h-52 z-10",
+                sizes: "(min-width: 1024px) 180px",
+              },
+              {
+                src: "https://images.pexels.com/photos/21297784/pexels-photo-21297784.jpeg",
+                alt: "Luxury modern living room interior",
+                className: "absolute bottom-16 left-10 w-44 h-52 z-10",
+                sizes: "(min-width: 1024px) 160px",
+              },
+            ].map((img, index) => (
+              <div
+                key={index}
+                className={`${img.className} rounded-2xl overflow-hidden shadow-md border border-black/5`}
+              >
+                <Image
+                  src={img.src}
+                  alt={img.alt}
+                  fill
+                  sizes={img.sizes}
+                  className="object-cover hover:scale-105 transition-all duration-300 ease-in-out"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

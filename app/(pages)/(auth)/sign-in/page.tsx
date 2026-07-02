@@ -28,58 +28,67 @@ export default async function SignIn(props: {
     email?: string;
   }>;
 }) {
-
   const searchParams = await props.searchParams;
-  const callbackUrl = searchParams?.callbackUrl || '/';
+  const callbackUrl = searchParams?.callbackUrl || "/";
   const email = searchParams?.email ?? undefined;
 
   return (
     <div className="bg-background text-foreground max-w-340 min-h-[calc(100vh-80px)] mx-auto flex flex-col">
-
       {/* Main Content Section  */}
       <div className="flex flex-row flex-1 px-4">
-
         {/* Left: Heading + Sign-in Form*/}
         <div className="flex-3 flex flex-col justify-center gap-10">
-
           <h1 className="text-3xl text-center font-medium">Sign In</h1>
 
           <Suspense key={callbackUrl} fallback={<SignInFormSkeleton />}>
             <SignInForm callbackUrl={callbackUrl} email={email} />
           </Suspense>
-
         </div>
 
-        {/* Right: Background + Image Grid */}
-        <div className="hidden lg:flex flex-2 justify-end items-center gap-4 lg:bg-side-panel p-0 h-[calc(100vh-80px)]">
-
-          {/* Wrapper */}
-          <div className="w-full h-auto px-6 py-5">
-            {/* Image Grid */}
-            <div className="grid grid-cols-2 gap-6 w-full max-w-xl">
-              {[
-                { src: "/images/img-1.jpg", alt: "Modern luxury residential property", className: "relative w-full xl:w-full h-52 xl:left-0 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
-                { src: "/images/img-2.jpg", alt: "Beautiful coastal home with ocean view", className: "relative w-full xl:w-full h-72 mt-6 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
-                { src: "/images/img-3.jpg", alt: "Spacious urban apartment with city views", className: "relative w-full xl:w-full h-72 -mt-6 xl:left-0 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
-                { src: "/images/img-4.jpg", alt: "Elegant suburban house with garden", className: "relative w-full xl:w-full h-52 rounded-2xl overflow-hidden shadow-lg hover:scale-[1.02] transition-all duration-200" },
-              ].map((img, idx) => (
-                <div
-                  key={idx}
-                  className={img.className}
-                >
-                  <Image
-                    src={img.src}
-                    fill
-                    alt={img.alt}
-                    sizes="(max-width: 1000px) 0px, 50vw"
-                    className="object-cover hover:scale-110 transition-all duration-300"
-                    loading="lazy"
-                  />
-                </div>
-              ))}
+        {/* Right: Premium Minimal Property Panel */}
+        <div className="hidden lg:flex flex-2 justify-end items-center lg:bg-side-panel h-[calc(100vh-80px)] relative overflow-hidden">
+          <div className="relative w-full h-full flex items-center justify-center px-10">
+            {/* HERO IMAGE */}
+            <div className="relative w-85 h-100 rounded-3xl overflow-hidden shadow-2xl z-20">
+              <Image
+                src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg"
+                alt="Luxury property interior"
+                fill
+                sizes="(min-width: 1024px) 40vw"
+                className="object-cover hover:scale-105 transition-all duration-300 ease-in-out"
+                priority
+              />
             </div>
-          </div>
 
+            {/* SUB IMAGES */}
+            {[
+              {
+                src: "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg",
+                alt: "Luxury house exterior",
+                className: "absolute top-10 left-10 w-44 h-48 z-10",
+                sizes: "(min-width: 1024px) 180px",
+              },
+              {
+                src: "https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg",
+                alt: "Modern villa",
+                className: "absolute bottom-10 right-10 w-40 h-48 z-10",
+                sizes: "(min-width: 1024px) 160px",
+              },
+            ].map((img, index) => (
+              <div
+                key={index}
+                className={`${img.className} rounded-2xl overflow-hidden shadow-lg`}
+              >
+                <Image
+                  src={img.src}
+                  alt={img.alt}
+                  fill
+                  sizes={img.sizes}
+                  className="object-cover hover:scale-105 transition-all duration-300 ease-in-out"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
