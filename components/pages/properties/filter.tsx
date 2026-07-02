@@ -147,7 +147,7 @@ export default function Filter({ params }: { params: PropertiesQueryParamsInterf
         <div className={cn(
           "grid-rows-[0fr] opacity-0 pointer-events-none hidden transition-all duration-300 ease-out mt-0",
           "lg:grid lg:grid-rows-[1fr] lg:opacity-100 lg:pointer-events-auto lg:mt-4", // Normal Desktop View
-          isExpanded && "grid grid-rows-[1fr] opacity-100 pointer-events-auto block mt-4 border-t border-border/40 pt-4" // Toggled Mobile View
+          isExpanded && "grid grid-rows-[1fr] opacity-100 pointer-events-auto mt-4 border-t border-border/40 pt-4" // Toggled Mobile View
         )}>
           <div className="overflow-hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full">
 

@@ -35,7 +35,7 @@ export default function SignInForm({ callbackUrl, email }: { callbackUrl: string
   /* === React Hook Form Setup === */
   const form = useForm<z.infer<typeof SignInFormSchema>>({
     resolver: zodResolver(SignInFormSchema),
-    defaultValues: { 
+    defaultValues: {
       email: email ?? "",
       password: ""
     },
@@ -69,7 +69,7 @@ export default function SignInForm({ callbackUrl, email }: { callbackUrl: string
       }
 
     } catch (e) {
-      console.log("Error from login page: ", e)
+      console.error("Error from login page: ", e)
     } finally {
       setLoading(false)
       toast.dismiss("signin-loading")

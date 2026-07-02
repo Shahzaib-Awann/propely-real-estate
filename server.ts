@@ -28,20 +28,8 @@ app.prepare().then(() => {
   });
 
   io.on("connection", (socket) => {
-    console.log(
-      "Connected:",
-      socket.id
-    );
-
-    registerSocketHandlers(
-      io,
-      socket
-    );
+    registerSocketHandlers(io, socket);
   });
 
-  httpServer.listen(3000, () => {
-    console.log(
-      "Server running on port 3000"
-    );
-  });
+  httpServer.listen(3000);
 });

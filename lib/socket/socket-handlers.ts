@@ -45,8 +45,6 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
 
     // Broadcast updated online users list to all clients
     io.emit(SOCKET_EVENTS.ONLINE_PRESENCE, Array.from(onlineUsers.keys()));
-
-    console.log(`${socket.id} registered online for user (${userIdStr})`);
   });
 
   /**
@@ -69,7 +67,6 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     }
 
     io.emit(SOCKET_EVENTS.ONLINE_PRESENCE, Array.from(onlineUsers.keys()));
-    console.log(`${socket.id} un-registered room ${getUserRoom(userId)}`);
   });
 
   /**
@@ -146,7 +143,6 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   socket.on(SOCKET_EVENTS.JOIN_CONVERSATION, (conversationId: string) => {
     const room = getConversationRoom(conversationId);
     socket.join(room);
-    console.log(`${socket.id} joined ${room}`);
   });
 
   /**
@@ -157,7 +153,6 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   socket.on(SOCKET_EVENTS.LEAVE_CONVERSATION, (conversationId: string) => {
     const room = getConversationRoom(conversationId);
     socket.leave(room);
-    console.log(`${socket.id} left ${room}`);
   });
 
   /**
@@ -247,12 +242,6 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       if (userConnections.size === 0) {
         onlineUsers.delete(userIdStr);
         io.emit(SOCKET_EVENTS.ONLINE_PRESENCE, Array.from(onlineUsers.keys()));
-
-        console.log(`Disconnected clean: User ${userIdStr} is now offline`);
-      } else {
-        console.log(
-          `Disconnected single tab: User ${userIdStr} still has active connections`,
-        );
       }
     }
   });

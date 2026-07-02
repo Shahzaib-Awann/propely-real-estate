@@ -22,6 +22,13 @@ import { verifyPassword } from './lib/utils/bcrypt';
 export const { handlers, signIn, signOut, auth } = NextAuth({
 
   /**
+   * === Auth Secret ===
+   *
+   * The secret key used to sign and verify JWT tokens.
+   */
+  secret: process.env.AUTH_SECRET,
+
+  /**
   * === Pages ===
   *
   * Custom Auth Pages

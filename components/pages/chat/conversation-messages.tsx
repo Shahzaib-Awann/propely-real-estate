@@ -451,7 +451,7 @@ export default function ConversationMessages({
                   ) : (
                     <>
                       {/* Message Payload Body Text */}
-                      <p className="break-words text-sm leading-relaxed font-sans whitespace-pre-wrap tracking-tight text-foreground/90">
+                      <p className="wrap-break-word text-sm leading-relaxed font-sans whitespace-pre-wrap tracking-tight text-foreground/90">
                         {message.message}
                       </p>
 
