@@ -37,6 +37,9 @@ yarn-error.log*
 *.env
 *.env.*
 
+# But except .env.example
+!.env.example
+
 # VS Code settings
 .vscode/
 
