@@ -1,10 +1,10 @@
 <div align="center">
 
-<div style="width:200px; height:110px; overflow:hidden; border-radius:5px;  background-color: #faf8f1; margin-bottom: 15px;">
+<div align="center">
   <img
-    src="./public/images/main-logo-transparent.png"
+    src="./public/images/main-logo-landscape.png"
     alt="Propely Logo"
-    style="width:100%; height:100%; object-fit:cover; object-position:center;"
+    width="200"
   />
 </div>
 
