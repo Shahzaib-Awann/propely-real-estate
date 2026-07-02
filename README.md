@@ -201,6 +201,8 @@ DATABASE_PASSWORD=your_db_password
 DATABASE_HOST=localhost
 DATABASE_PORT=3306
 DATABASE_NAME=Propely_real_estate
+DATABASE_MAX_CONNECTION=
+DATABASE_CA_CERT=
 
 # Authentication
 AUTH_SECRET=your_auth_secret

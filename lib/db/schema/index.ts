@@ -226,3 +226,15 @@ export const messagesTable = mysqlTable(
     index("sender_idx").on(table.senderId),
   ],
 );
+
+
+export const schema = {
+  usersTable,
+  postsTable,
+  postDetailsTable,
+  postImagesTable,
+  postFeaturesTable,
+  savedPostsTable,
+  conversationsTable,
+  messagesTable,
+};
